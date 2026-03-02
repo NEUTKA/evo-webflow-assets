@@ -25,7 +25,7 @@
 
             // Load supabase-js v2
             const s = document.createElement("script");
-            s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+            s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3";
             s.async = true;
             s.onload = () => {
                 if (window.supabase && typeof window.supabase.createClient === "function") {
