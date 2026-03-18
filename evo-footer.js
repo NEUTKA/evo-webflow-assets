@@ -1239,6 +1239,28 @@
             window.EvoProgress.logEvent = logEvent;
             window.EvoProgress.getTracking = () => ({ trackingSlug, lessonType });
 
+            window.EvoProgress.markCompleteOrLogin = async function (progressPercent = 100, extraMeta = {}) {
+                try {
+                    const { data: { user }, error } = await sb.auth.getUser();
+
+                    if (error || !user) {
+                        alert("Please log in to save your lesson progress.");
+                        window.location.href = "/login";
+                        return false;
+                    }
+
+                    currentUserId = user.id;
+
+                    await markComplete(progressPercent, extraMeta);
+                    return true;
+                } catch (e) {
+                    console.warn("[EvoTracker] markCompleteOrLogin error", e);
+                    alert("Please log in to save your lesson progress.");
+                    window.location.href = "/login";
+                    return false;
+                }
+            };
+
             async function init() {
                 if (initialized) return;
                 initialized = true;
