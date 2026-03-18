@@ -462,10 +462,20 @@
 
             async function saveCard() {
                 const btn = document.getElementById("popup-save");
-                btn.disabled = true; btn.textContent = "Saving…";
+                if (!btn) return;
+
+                btn.disabled = true;
+                btn.textContent = "Saving…";
+
                 try {
                     const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) throw new Error("Login first");
+
+                    if (!user) {
+                        alert("Please log in to save words to your cards.");
+                        window.location.href = "/login";
+                        return;
+                    }
+
                     await supabase.from("cards").upsert({
                         user_id: user.id,
                         module_id: await getActiveModule(user.id),
@@ -475,10 +485,11 @@
 
                     btn.textContent = "Saved ✓";
                     setTimeout(removePopup, 800);
+
                 } catch (e) {
-                    alert(e.message || e);
-                    btn.disabled = false;
-                    btn.textContent = "⭐ Save to cards";
+                    console.error("[saveCard]", e);
+                    alert("Please log in to save words to your cards.");
+                    window.location.href = "/login";
                 }
             }
 
