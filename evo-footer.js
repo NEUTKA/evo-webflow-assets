@@ -1243,9 +1243,20 @@
                 try {
                     const { data: { user }, error } = await sb.auth.getUser();
 
+                    // guest -> go to login immediately, with returnTo
                     if (error || !user) {
-                        alert("Please log in to save your lesson progress.");
-                        window.location.href = "/login";
+                        const returnTo =
+                            window.location.pathname +
+                            window.location.search +
+                            window.location.hash;
+
+                        sessionStorage.setItem("evo_pending_complete", JSON.stringify({
+                            progressPercent,
+                            extraMeta,
+                            returnTo
+                        }));
+
+                        window.location.href = "/login?returnTo=" + encodeURIComponent(returnTo);
                         return false;
                     }
 
@@ -1255,8 +1266,19 @@
                     return true;
                 } catch (e) {
                     console.warn("[EvoTracker] markCompleteOrLogin error", e);
-                    alert("Please log in to save your lesson progress.");
-                    window.location.href = "/login";
+
+                    const returnTo =
+                        window.location.pathname +
+                        window.location.search +
+                        window.location.hash;
+
+                    sessionStorage.setItem("evo_pending_complete", JSON.stringify({
+                        progressPercent,
+                        extraMeta,
+                        returnTo
+                    }));
+
+                    window.location.href = "/login?returnTo=" + encodeURIComponent(returnTo);
                     return false;
                 }
             };
@@ -1398,6 +1420,7 @@
             }
 
             function normalizeStatus(rawStatus, progress) {
+                window.EvoProgress
                 const s = String(rawStatus || "").trim().toLowerCase();
                 const p = Number(progress || 0);
 
