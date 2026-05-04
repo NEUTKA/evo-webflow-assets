@@ -146,6 +146,38 @@
         })();
     }
 
+
+    /* ================== UNIVERSAL CARDS BRIDGE ================== */
+    window.EvoCardsBridge = window.EvoCardsBridge || (() => {
+        let provider = null;
+
+        return {
+            register(nextProvider) {
+                provider = nextProvider || null;
+                window.dispatchEvent(new CustomEvent("evo:cards-bridge-provider", { detail: { provider } }));
+            },
+            unregister(nextProvider) {
+                if (!nextProvider || provider === nextProvider) provider = null;
+            },
+            hasProvider() {
+                return !!(provider && typeof provider.saveWord === "function");
+            },
+            async saveWord(payload) {
+                if (!provider || typeof provider.saveWord !== "function") {
+                    throw new Error("Cards app is not ready.");
+                }
+                return provider.saveWord(payload);
+            },
+            async listModules() {
+                if (!provider || typeof provider.listModules !== "function") return [];
+                return provider.listModules();
+            },
+            getProvider() {
+                return provider;
+            }
+        };
+    })();
+
     /* ================== TRANSLATOR POPUP ================== */
     function initTranslatorPopup() {
         (() => {
@@ -447,17 +479,65 @@
                 }
             }
 
+            function getCardsActiveModuleStorageKey(uid, scope = "personal") {
+                return `cards.activeModuleId:${uid}:${scope}`;
+            }
+
             async function getActiveModule(uid) {
-                let mid = localStorage.getItem("cards.activeModuleId");
-                if (mid) return mid;
-                const { data } = await supabase.from("modules").select("id").eq("user_id", uid).limit(1);
+                const key = getCardsActiveModuleStorageKey(uid, "personal");
+                const legacyKey = "cards.activeModuleId";
+                let mid = null;
+
+                try {
+                    mid = localStorage.getItem(key);
+                } catch (_) {}
+
+                if (mid) {
+                    const { data: existing } = await supabase
+                        .from("modules")
+                        .select("id")
+                        .eq("user_id", uid)
+                        .eq("id", mid)
+                        .maybeSingle();
+
+                    if (existing?.id) return existing.id;
+                }
+
+                const { data } = await supabase
+                    .from("modules")
+                    .select("id")
+                    .eq("user_id", uid)
+                    .order("created_at", { ascending: true })
+                    .limit(1);
+
                 mid = data?.[0]?.id;
+
                 if (!mid) {
-                    const { data: n } = await supabase.from("modules").insert({ user_id: uid, name: "Module 1" }).select("id").single();
+                    const { data: n, error } = await supabase
+                        .from("modules")
+                        .insert({ user_id: uid, name: "My Words" })
+                        .select("id")
+                        .single();
+
+                    if (error) throw error;
                     mid = n.id;
                 }
-                localStorage.setItem("cards.activeModuleId", mid);
+
+                try {
+                    localStorage.setItem(key, mid);
+                    localStorage.removeItem(legacyKey);
+                } catch (_) {}
+
                 return mid;
+            }
+
+            async function saveCardFallbackToPersonalVocabulary(user, word, translation) {
+                await supabase.from("cards").upsert({
+                    user_id: user.id,
+                    module_id: await getActiveModule(user.id),
+                    word,
+                    translation
+                }, { onConflict: "user_id,module_id,word_norm" });
             }
 
             async function saveCard() {
@@ -476,20 +556,27 @@
                         return;
                     }
 
-                    await supabase.from("cards").upsert({
-                        user_id: user.id,
-                        module_id: await getActiveModule(user.id),
+                    const payload = {
+                        user,
                         word: selText,
-                        translation: selTranslation
-                    }, { onConflict: "user_id,module_id,word_norm" });
+                        translation: selTranslation,
+                        source: "translator-popup"
+                    };
+
+                    if (window.EvoCardsBridge?.hasProvider?.()) {
+                        await window.EvoCardsBridge.saveWord(payload);
+                    } else {
+                        await saveCardFallbackToPersonalVocabulary(user, payload.word, payload.translation);
+                    }
 
                     btn.textContent = "Saved ✓";
                     setTimeout(removePopup, 800);
 
                 } catch (e) {
                     console.error("[saveCard]", e);
-                    alert("Please log in to save words to your cards.");
-                    window.location.href = "/login";
+                    alert(e?.message || "Could not save this word to your cards.");
+                    btn.disabled = false;
+                    btn.textContent = "⭐ Save to cards";
                 }
             }
 
