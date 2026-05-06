@@ -75,6 +75,236 @@
         });
     }
 
+    
+    
+    /* ================== GLOBAL AUTH GUARD ================== */
+    const EVO_PUBLIC_PATHS = [
+        '/',
+        '/about-us',
+        '/login',
+        '/update-password',
+        '/privacy-policy',
+        '/terms-of-service',
+        '/terms-of-use',
+        '/checkout',
+        '/paypal-checkout',
+        '/order-confirmation',
+
+        '/grammar-a1',
+        '/grammar-a2',
+        '/grammar-b1',
+        '/grammar-b1plus',
+        '/grammar-b2',
+
+        '/vocabulary-a1',
+        '/vocabulary-a2',
+        '/vocabulary-b1-2',
+        '/vocabulary-B1',
+        '/vocabulary-b2',
+
+        '/listening-a1',
+        '/listening-a2',
+        '/listening-b1',
+        '/listening-b1plus',
+        '/listening-b2',
+
+        '/reading-a1',
+        '/reading-a2',
+        '/reading-b1',
+        '/reading-b1plus',
+        '/reading-b2',
+
+        '/books',
+
+        '/welcome',
+        '/for-teachers',
+        '/pricing',
+        '/contact'
+    ];
+
+    const EVO_PROTECTED_PREFIXES = [
+        '/personal-account',
+        '/student-dashboard',
+        '/teacher-dashboard',
+
+        '/grammar-lessons',
+        '/vocabulary-lessons',
+        '/listening',
+        '/reading-lessons',
+
+        '/books/books-section',
+        '/a1-grammar-section',
+
+        '/ai-chat-assistant',
+        '/test'
+    ];
+
+    const EVO_ROLE_HOME = {
+        self_study: '/personal-account',
+        student: '/student-dashboard',
+        teacher: '/teacher-dashboard'
+    };
+
+    function evoNormalizePath(path) {
+        path = String(path || '/').split('?')[0].split('#')[0];
+        if (path.length > 1) path = path.replace(/\/+$/, '');
+        return path || '/';
+    }
+
+    function evoIsPublicPath(path) {
+        path = evoNormalizePath(path);
+        return EVO_PUBLIC_PATHS.indexOf(path) !== -1;
+    }
+
+    function evoIsProtectedPath(path) {
+        path = evoNormalizePath(path);
+
+        if (evoIsPublicPath(path)) return false;
+
+        return EVO_PROTECTED_PREFIXES.some(function (prefix) {
+            return path === prefix || path.indexOf(prefix + '/') === 0;
+        });
+    }
+
+    function evoRevealPage() {
+        document.documentElement.classList.remove('evo-auth-checking');
+    }
+
+    function evoRedirectTo(url) {
+        const current = window.location.pathname + window.location.search;
+        if (current !== url) {
+            window.location.href = url;
+        }
+    }
+
+    function evoLoginWithNext() {
+        const next = window.location.pathname + window.location.search + window.location.hash;
+        evoRedirectTo('/login?tab=signup&next=' + encodeURIComponent(next));
+    }
+
+    async function evoGetProfile(sb, userId) {
+        const result = await sb
+            .from('profiles')
+            .select('id, email, full_name, role')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (result.error) throw result.error;
+        return result.data || null;
+    }
+
+    async function evoHasActiveTeacherLink(sb, userId) {
+        try {
+            const { data, error } = await sb
+                .from('teacher_students')
+                .select('student_id')
+                .eq('student_id', userId)
+                .eq('status', 'active')
+                .limit(1);
+
+            if (error) {
+                console.warn('[Evo Auth Guard] teacher_students check failed:', error);
+                return false;
+            }
+
+            return Array.isArray(data) && data.length > 0;
+        } catch (err) {
+            console.warn('[Evo Auth Guard] teacher_students check error:', err);
+            return false;
+        }
+    }
+
+    async function initGlobalAuthGuard() {
+        if (window.__evoGlobalAuthGuardDone) {
+            evoRevealPage();
+            return true;
+        }
+
+        window.__evoGlobalAuthGuardDone = true;
+
+        const path = evoNormalizePath(window.location.pathname);
+
+        if (!evoIsProtectedPath(path)) {
+            evoRevealPage();
+            return true;
+        }
+
+        const sb = window.supabaseClient || window.supabase || window.sb || null;
+
+        if (!sb || !sb.auth || typeof sb.auth.getUser !== 'function') {
+            console.warn('[Evo Auth Guard] Supabase client is not ready.');
+            evoRevealPage();
+            return true;
+        }
+
+        try {
+            const userResult = await sb.auth.getUser();
+            const user = userResult?.data?.user || null;
+
+            if (!user) {
+                evoLoginWithNext();
+                return false;
+            }
+
+            const profile = await evoGetProfile(sb, user.id);
+            const role = profile?.role || '';
+
+            if (!role) {
+                evoRedirectTo('/welcome');
+                return false;
+            }
+
+            /*
+              /teacher-dashboard:
+              Only real teacher accounts can enter.
+              Trial/subscription check will be added later after SQL is ready.
+            */
+            if (path.indexOf('/teacher-dashboard') === 0 && role !== 'teacher') {
+                evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+                return false;
+            }
+
+            /*
+              /student-dashboard:
+              Allowed if:
+              1) role = student
+              OR
+              2) user is self_study but has an active teacher_students link.
+            */
+            if (path.indexOf('/student-dashboard') === 0) {
+                const hasStudentAccess =
+                    role === 'student' ||
+                    await evoHasActiveTeacherLink(sb, user.id);
+
+                if (!hasStudentAccess) {
+                    evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+                    return false;
+                }
+            }
+
+            /*
+              /personal-account:
+              Allowed for self-study learners and students.
+              Teachers stay in teacher dashboard.
+            */
+            if (path.indexOf('/personal-account') === 0) {
+                const hasPersonalAccess = role === 'self_study' || role === 'student';
+
+                if (!hasPersonalAccess) {
+                    evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+                    return false;
+                }
+            }
+
+            evoRevealPage();
+            return true;
+        } catch (err) {
+            console.error('[Evo Auth Guard]', err);
+            evoRevealPage();
+            return true;
+        }
+    }
+
     /* ================== AUTH UI TOGGLE (login/logout) ================== */
     function initAuthUIToggleAndLogout() {
         injectStyleOnce("auth-ui", `
@@ -1598,6 +1828,10 @@
         try {
             await loadSupabaseLib();
             initClient();                 // makes window.supabase = client
+
+            const canContinue = await initGlobalAuthGuard();
+            if (!canContinue) return;
+
             initAuthUIToggleAndLogout();
             initTranslatorPopup();
             initAssistant();
@@ -1607,6 +1841,7 @@
             initCardStatuses();
         } catch (e) {
             console.warn("[Evo] footer failed:", e?.message || e);
+            evoRevealPage();
         }
     }
 
