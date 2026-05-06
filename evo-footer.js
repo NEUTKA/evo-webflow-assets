@@ -271,30 +271,32 @@
               OR
               2) user is self_study but has an active teacher_students link.
             */
-            if (path.indexOf('/student-dashboard') === 0) {
-                const hasStudentAccess =
-                    role === 'student' ||
-                    await evoHasActiveTeacherLink(sb, user.id);
+          if (path.indexOf('/student-dashboard') === 0) {
+    const hasStudentAccess =
+        role === 'student' ||
+        role === 'self_study';
 
-                if (!hasStudentAccess) {
-                    evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
-                    return false;
-                }
-            }
+    if (!hasStudentAccess) {
+        evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+        return false;
+    }
+}
 
             /*
               /personal-account:
               Allowed for self-study learners and students.
               Teachers stay in teacher dashboard.
             */
-            if (path.indexOf('/personal-account') === 0) {
-                const hasPersonalAccess = role === 'self_study' || role === 'student';
+          if (path.indexOf('/personal-account') === 0) {
+    const hasPersonalAccess =
+        role === 'self_study' ||
+        role === 'student';
 
-                if (!hasPersonalAccess) {
-                    evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
-                    return false;
-                }
-            }
+    if (!hasPersonalAccess) {
+        evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+        return false;
+    }
+}
 
             evoRevealPage();
             return true;
