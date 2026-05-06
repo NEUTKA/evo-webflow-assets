@@ -214,6 +214,296 @@
         }
     }
 
+        async function evoGetTeacherAccess(sb) {
+        if (!sb || typeof sb.rpc !== 'function') {
+            throw new Error('Supabase RPC is not available.');
+        }
+
+        const { data, error } = await sb.rpc('evo_get_teacher_access');
+
+        if (error) throw error;
+
+        return data || {
+            ok: false,
+            has_access: false,
+            reason: 'no_access'
+        };
+    }
+
+    function evoHideTeacherTools() {
+        const selectors = [
+            '#teacher-dashboard-app',
+            '#teacher-dashboard-cards-app',
+            '#teacher-live-lesson-app',
+            '[data-teacher-tool]',
+            '[data-teacher-protected]'
+        ];
+
+        selectors.forEach(function (selector) {
+            document.querySelectorAll(selector).forEach(function (el) {
+                el.style.display = 'none';
+            });
+        });
+    }
+
+    function evoShowTeacherPaywall(access) {
+        evoRevealPage();
+        evoHideTeacherTools();
+
+        if (window.__evoTeacherPaywallObserver) {
+            try { window.__evoTeacherPaywallObserver.disconnect(); } catch (_) {}
+            window.__evoTeacherPaywallObserver = null;
+        }
+
+        window.__evoTeacherPaywallObserver = new MutationObserver(function () {
+            evoHideTeacherTools();
+        });
+
+        try {
+            window.__evoTeacherPaywallObserver.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        } catch (_) {}
+
+        injectStyleOnce('evo-teacher-paywall-css', `
+            #evo-teacher-paywall {
+                max-width: 920px;
+                margin: 36px auto;
+                padding: 0 16px 48px;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                color: #0f172a;
+            }
+
+            #evo-teacher-paywall * {
+                box-sizing: border-box;
+            }
+
+            #evo-teacher-paywall .ep-card {
+                background: #ffffff;
+                border: 1px solid #dbe7f3;
+                border-radius: 22px;
+                box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+                overflow: hidden;
+            }
+
+            #evo-teacher-paywall .ep-head {
+                padding: 30px 26px;
+                background:
+                    radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.10), transparent 28%),
+                    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                border-bottom: 1px solid #edf2f7;
+            }
+
+            #evo-teacher-paywall .ep-kicker {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 7px 12px;
+                border-radius: 999px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: 13px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 12px;
+            }
+
+            #evo-teacher-paywall h1 {
+                margin: 0;
+                font-size: clamp(30px, 4vw, 44px);
+                line-height: 1.08;
+                letter-spacing: -0.03em;
+            }
+
+            #evo-teacher-paywall .ep-sub {
+                max-width: 760px;
+                margin-top: 12px;
+                color: #475569;
+                font-size: 16px;
+                line-height: 1.65;
+            }
+
+            #evo-teacher-paywall .ep-body {
+                padding: 24px 26px 26px;
+                display: grid;
+                gap: 18px;
+            }
+
+            #evo-teacher-paywall .ep-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+
+            #evo-teacher-paywall .ep-feature {
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 14px;
+                background: #ffffff;
+            }
+
+            #evo-teacher-paywall .ep-feature strong {
+                display: block;
+                margin-bottom: 4px;
+                color: #0f172a;
+            }
+
+            #evo-teacher-paywall .ep-feature span {
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.45;
+            }
+
+            #evo-teacher-paywall .ep-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            #evo-teacher-paywall .ep-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 46px;
+                padding: 12px 18px;
+                border-radius: 14px;
+                text-decoration: none;
+                font-weight: 900;
+                font-size: 15px;
+                line-height: 1.15;
+            }
+
+            #evo-teacher-paywall .ep-btn.primary {
+                background: #111213;
+                color: #ffffff;
+                border: 1px solid #111213;
+            }
+
+            #evo-teacher-paywall .ep-btn.secondary {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border: 1px solid #bfdbfe;
+            }
+
+            #evo-teacher-paywall .ep-note {
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+            @media (max-width: 760px) {
+                #evo-teacher-paywall {
+                    margin-top: 24px;
+                    padding: 0 12px 36px;
+                }
+
+                #evo-teacher-paywall .ep-head,
+                #evo-teacher-paywall .ep-body {
+                    padding: 20px;
+                }
+
+                #evo-teacher-paywall .ep-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                #evo-teacher-paywall .ep-actions {
+                    align-items: stretch;
+                    flex-direction: column;
+                }
+
+                #evo-teacher-paywall .ep-btn {
+                    width: 100%;
+                }
+            }
+        `);
+
+        const old = document.getElementById('evo-teacher-paywall');
+        if (old) old.remove();
+
+        const reason = access && access.reason ? access.reason : 'no_access';
+        const status = access && access.status ? access.status : reason;
+
+        let title = 'Your teacher trial has ended';
+        let text = 'Choose a plan to continue using teacher tools: student management, assignments, vocabulary modules and live lessons.';
+
+        if (reason === 'past_due') {
+            title = 'Payment issue';
+            text = 'Please update your billing details to continue using your teacher workspace.';
+        }
+
+        if (reason === 'canceled') {
+            title = 'Your teacher subscription is canceled';
+            text = 'Choose a plan to reactivate your teacher workspace and continue teaching with Evo-English.';
+        }
+
+        if (reason === 'not_authenticated') {
+            title = 'Please log in';
+            text = 'You need to log in to access your teacher workspace.';
+        }
+
+        if (reason === 'not_teacher') {
+            title = 'Teacher account required';
+            text = 'This workspace is available only for teacher accounts.';
+        }
+
+        if (reason === 'verification_failed') {
+            title = 'Could not verify your access';
+            text = 'Please refresh the page. If the issue continues, contact support.';
+        }
+
+        const wrap = document.createElement('div');
+        wrap.id = 'evo-teacher-paywall';
+
+        wrap.innerHTML = `
+            <div class="ep-card">
+                <div class="ep-head">
+                    <div class="ep-kicker">Teacher access</div>
+                    <h1>${title}</h1>
+                    <div class="ep-sub">${text}</div>
+                </div>
+
+                <div class="ep-body">
+                    <div class="ep-grid">
+                        <div class="ep-feature">
+                            <strong>Manage students</strong>
+                            <span>Create a workspace for your learners and track their work.</span>
+                        </div>
+
+                        <div class="ep-feature">
+                            <strong>Create assignments</strong>
+                            <span>Use templates, tasks, feedback and review tools.</span>
+                        </div>
+
+                        <div class="ep-feature">
+                            <strong>Teach live</strong>
+                            <span>Use video lessons, vocabulary cards and teacher tools in one place.</span>
+                        </div>
+                    </div>
+
+                    <div class="ep-actions">
+                        <a class="ep-btn primary" href="/pricing">View plans</a>
+                        <a class="ep-btn secondary" href="/for-teachers">Learn more</a>
+                    </div>
+
+                    <div class="ep-note">
+                        Current teacher access status: ${String(status).replace(/[<>&"]/g, '')}.
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (document.body) {
+            document.body.prepend(wrap);
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.prepend(wrap);
+            }, { once: true });
+        }
+    }
+
     async function initGlobalAuthGuard() {
         if (window.__evoGlobalAuthGuardDone) {
             evoRevealPage();
@@ -259,9 +549,32 @@
               Only real teacher accounts can enter.
               Trial/subscription check will be added later after SQL is ready.
             */
-            if (path.indexOf('/teacher-dashboard') === 0 && role !== 'teacher') {
-                evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
-                return false;
+                        if (path.indexOf('/teacher-dashboard') === 0) {
+                if (role !== 'teacher') {
+                    evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+                    return false;
+                }
+
+                try {
+                    const access = await evoGetTeacherAccess(sb);
+
+                    if (!access || !access.has_access) {
+                        evoShowTeacherPaywall(access || {
+                            reason: 'no_access',
+                            status: 'no_access'
+                        });
+                        return false;
+                    }
+                } catch (err) {
+                    console.error('[Evo Teacher Access Guard]', err);
+
+                    evoShowTeacherPaywall({
+                        reason: 'verification_failed',
+                        status: 'verification_failed'
+                    });
+
+                    return false;
+                }
             }
 
             /*
