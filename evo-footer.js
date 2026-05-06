@@ -136,6 +136,7 @@
         '/a1-grammar-section',
 
         '/ai-chat-assistant',
+        '/billing',
         '/test'
     ];
 
@@ -504,6 +505,24 @@
         }
     }
 
+    function evoAllowTeacherApps() {
+    if (window.__evoTeacherAppsAllowed) return;
+
+    window.__evoTeacherAppsAllowed = true;
+    window.__evoAllowTeacherApp = true;
+
+    window.dispatchEvent(new CustomEvent('evo:teacher-ready'));
+}
+
+function evoAllowStudentApps() {
+    if (window.__evoStudentAppsAllowed) return;
+
+    window.__evoStudentAppsAllowed = true;
+    window.__evoAllowStudentApp = true;
+
+    window.dispatchEvent(new CustomEvent('evo:student-ready'));
+}
+
     async function initGlobalAuthGuard() {
         if (window.__evoGlobalAuthGuardDone) {
             evoRevealPage();
@@ -545,10 +564,22 @@
             }
 
             /*
-              /teacher-dashboard:
-              Only real teacher accounts can enter.
-              Trial/subscription check will be added later after SQL is ready.
-            */
+  /billing:
+  Only teacher accounts can open billing.
+  Important: billing must stay available even if trial expired,
+  because teacher needs this page to pay/reactivate.
+*/
+if (path.indexOf('/billing') === 0) {
+    if (role !== 'teacher') {
+        evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
+        return false;
+    }
+}
+
+            /*
+  /teacher-dashboard:
+  Only teacher accounts with active trial/subscription access can enter.
+*/
                         if (path.indexOf('/teacher-dashboard') === 0) {
                 if (role !== 'teacher') {
                     evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
@@ -556,16 +587,23 @@
                 }
 
                 try {
-                    const access = await evoGetTeacherAccess(sb);
+    const access = await evoGetTeacherAccess(sb);
 
-                    if (!access || !access.has_access) {
-                        evoShowTeacherPaywall(access || {
-                            reason: 'no_access',
-                            status: 'no_access'
-                        });
-                        return false;
-                    }
-                } catch (err) {
+    if (!access || !access.has_access) {
+        evoShowTeacherPaywall(access || {
+            reason: 'no_access',
+            status: 'no_access'
+        });
+
+        // Continue global footer initialization:
+    // auth UI, logout, assistant, consent, etc.
+    // Teacher apps will NOT start because evoAllowTeacherApps() is not called.
+        return true;
+    }
+
+    evoAllowTeacherApps();
+
+} catch (err) {
                     console.error('[Evo Teacher Access Guard]', err);
 
                     evoShowTeacherPaywall({
@@ -593,6 +631,8 @@
         evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
         return false;
     }
+        evoAllowStudentApps();
+
 }
 
             /*
