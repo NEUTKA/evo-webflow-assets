@@ -1149,6 +1149,29 @@ if (path.indexOf('/billing') === 0) {
                 }, { onConflict: "user_id,module_id,word_norm" });
             }
 
+            async function getCurrentCardsUser() {
+                try {
+                    const { data, error } = await supabase.auth.getUser();
+
+                    if (error) {
+                        const message = String(error.message || error || "");
+                        if (/session missing|missing session|auth session/i.test(message)) return null;
+                        throw error;
+                    }
+
+                    return data?.user || null;
+                } catch (err) {
+                    const message = String(err?.message || err || "");
+                    if (/session missing|missing session|auth session/i.test(message)) return null;
+                    throw err;
+                }
+            }
+
+            function redirectToCardsLogin() {
+                const next = window.location.pathname + window.location.search + window.location.hash;
+                window.location.replace("/login?tab=signup&next=" + encodeURIComponent(next));
+            }
+
             async function saveCard() {
                 const btn = document.getElementById("popup-save");
                 if (!btn) return;
@@ -1157,13 +1180,16 @@ if (path.indexOf('/billing') === 0) {
                 btn.textContent = "Saving…";
 
                 try {
-                    const { data: { user } } = await supabase.auth.getUser();
+                    btn.textContent = "Checking account...";
+                    const user = await getCurrentCardsUser();
 
                     if (!user) {
-                        alert("Please log in to save words to your cards.");
-                        window.location.href = "/login";
+                        btn.textContent = "Log in to save";
+                        redirectToCardsLogin();
                         return;
                     }
+
+                    btn.textContent = "Saving...";
 
                     const payload = {
                         user,
