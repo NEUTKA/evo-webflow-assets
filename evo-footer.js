@@ -174,7 +174,7 @@
     function evoRedirectTo(url) {
         const current = window.location.pathname + window.location.search;
         if (current !== url) {
-            window.location.href = url;
+            window.location.replace(url);
         }
     }
 
