@@ -427,32 +427,56 @@
         const reason = access && access.reason ? access.reason : 'no_access';
         const status = access && access.status ? access.status : reason;
 
-        let title = 'Your teacher trial has ended';
-        let text = 'Choose a plan to continue using teacher tools: student management, assignments, vocabulary modules and live lessons.';
+        let title = 'Start your teacher trial';
+        let text = 'Request teacher access to try student management, assignments, vocabulary modules and live lessons.';
+        let primaryHref = '/contact';
+        let primaryLabel = 'Request teacher access';
+        let secondaryHref = '/pricing';
+        let secondaryLabel = 'View plans';
 
         if (reason === 'past_due') {
             title = 'Payment issue';
             text = 'Please update your billing details to continue using your teacher workspace.';
+            primaryHref = '/billing';
+            primaryLabel = 'Update billing';
+            secondaryHref = '/pricing';
+            secondaryLabel = 'View plans';
         }
 
         if (reason === 'canceled') {
             title = 'Your teacher subscription is canceled';
             text = 'Choose a plan to reactivate your teacher workspace and continue teaching with Evo-English.';
+            primaryHref = '/pricing';
+            primaryLabel = 'Reactivate access';
+            secondaryHref = '/for-teachers';
+            secondaryLabel = 'Learn more';
         }
 
         if (reason === 'not_authenticated') {
             title = 'Please log in';
             text = 'You need to log in to access your teacher workspace.';
+            primaryHref = '/login?tab=signup&next=/teacher-dashboard';
+            primaryLabel = 'Create teacher account';
+            secondaryHref = '/login?next=/teacher-dashboard';
+            secondaryLabel = 'Log in';
         }
 
         if (reason === 'not_teacher') {
             title = 'Teacher account required';
             text = 'This workspace is available only for teacher accounts.';
+            primaryHref = '/contact';
+            primaryLabel = 'Request teacher access';
+            secondaryHref = '/for-teachers';
+            secondaryLabel = 'Learn more';
         }
 
         if (reason === 'verification_failed') {
             title = 'Could not verify your access';
             text = 'Please refresh the page. If the issue continues, contact support.';
+            primaryHref = '/contact';
+            primaryLabel = 'Contact support';
+            secondaryHref = '/teacher-dashboard';
+            secondaryLabel = 'Try again';
         }
 
         const wrap = document.createElement('div');
@@ -485,8 +509,8 @@
                     </div>
 
                     <div class="ep-actions">
-                        <a class="ep-btn primary" href="/pricing">View plans</a>
-                        <a class="ep-btn secondary" href="/for-teachers">Learn more</a>
+                        <a class="ep-btn primary" href="${primaryHref}">${primaryLabel}</a>
+                        <a class="ep-btn secondary" href="${secondaryHref}">${secondaryLabel}</a>
                     </div>
 
                     <div class="ep-note">
