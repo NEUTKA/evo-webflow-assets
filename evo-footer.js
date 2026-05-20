@@ -722,6 +722,34 @@ if (path.indexOf('/billing') === 0) {
 
                 let latestSession = null;
                 let latestRole = '';
+                const ACCOUNT_HOME_KEY = 'evo.account.home';
+
+                const rememberAccountHome = (path) => {
+                    const normalized = evoNormalizePath(path);
+
+                    if (
+                        normalized === '/personal-account' ||
+                        normalized === '/student-dashboard' ||
+                        normalized === '/teacher-dashboard'
+                    ) {
+                        try { localStorage.setItem(ACCOUNT_HOME_KEY, normalized); } catch { }
+                    }
+                };
+
+                const getRememberedAccountHome = () => {
+                    try {
+                        const value = localStorage.getItem(ACCOUNT_HOME_KEY);
+                        if (
+                            value === '/personal-account' ||
+                            value === '/student-dashboard' ||
+                            value === '/teacher-dashboard'
+                        ) {
+                            return value;
+                        }
+                    } catch { }
+
+                    return '';
+                };
 
                 const getAccountHref = () => {
                     const path = evoNormalizePath(window.location.pathname);
@@ -729,6 +757,16 @@ if (path.indexOf('/billing') === 0) {
                     if (path.indexOf('/student-dashboard') === 0) return '/student-dashboard';
                     if (path.indexOf('/personal-account') === 0) return '/personal-account';
                     if (path.indexOf('/teacher-dashboard') === 0) return '/teacher-dashboard';
+
+                    if (latestRole === 'teacher') return '/teacher-dashboard';
+
+                    const remembered = getRememberedAccountHome();
+                    if (
+                        remembered === '/personal-account' ||
+                        remembered === '/student-dashboard'
+                    ) {
+                        return remembered;
+                    }
 
                     return EVO_ROLE_HOME[latestRole] || '/personal-account';
                 };
@@ -788,6 +826,7 @@ if (path.indexOf('/billing') === 0) {
 
                 const apply = (session) => {
                     latestSession = session || null;
+                    rememberAccountHome(window.location.pathname);
                     const root = document.documentElement;
                     const logged = !!(session && session.user);
                     root.classList.toggle("auth-logged-in", logged);
