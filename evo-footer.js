@@ -168,6 +168,16 @@
         });
     }
 
+    function evoHidePageDuringAuthCheck() {
+        injectStyleOnce('evo-auth-guard-hide', `
+      html.evo-auth-checking body {
+        visibility: hidden !important;
+      }
+    `);
+
+        document.documentElement.classList.add('evo-auth-checking');
+    }
+
     function evoRevealPage() {
         document.documentElement.classList.remove('evo-auth-checking');
     }
@@ -562,6 +572,8 @@ function evoAllowStudentApps() {
             evoRevealPage();
             return true;
         }
+
+        evoHidePageDuringAuthCheck();
 
         const sb = window.supabaseClient || window.supabase || window.sb || null;
 
