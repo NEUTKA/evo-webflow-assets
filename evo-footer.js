@@ -720,13 +720,82 @@ if (path.indexOf('/billing') === 0) {
                 try { sb = await waitSupabaseClient(7000); }
                 catch (e) { console.warn("[auth-ui]", e.message || e); return; }
 
+                let latestSession = null;
+                let latestRole = '';
+
+                const getAccountHref = () => {
+                    const path = evoNormalizePath(window.location.pathname);
+
+                    if (path.indexOf('/student-dashboard') === 0) return '/student-dashboard';
+                    if (path.indexOf('/personal-account') === 0) return '/personal-account';
+                    if (path.indexOf('/teacher-dashboard') === 0) return '/teacher-dashboard';
+
+                    return EVO_ROLE_HOME[latestRole] || '/personal-account';
+                };
+
+                const syncAccountLinks = () => {
+                    const logged = !!(latestSession && latestSession.user);
+                    if (!logged) return;
+
+                    const href = getAccountHref();
+
+                    document.querySelectorAll('[data-auth="account"]').forEach(link => {
+                        if (link.tagName === 'A') {
+                            link.setAttribute('href', href);
+                        }
+
+                        if (link.__evoAccountLinkBound) return;
+                        link.__evoAccountLinkBound = true;
+
+                        link.addEventListener('click', function (event) {
+                            const target = getAccountHref();
+                            const currentPath = evoNormalizePath(window.location.pathname);
+                            const targetPath = evoNormalizePath(target);
+
+                            if (currentPath === targetPath) {
+                                event.preventDefault();
+                                return;
+                            }
+
+                            if (link.tagName === 'A') {
+                                link.setAttribute('href', target);
+                                return;
+                            }
+
+                            event.preventDefault();
+                            window.location.href = target;
+                        });
+                    });
+                };
+
+                const refreshRole = async (user) => {
+                    latestRole = '';
+
+                    if (!user) {
+                        syncAccountLinks();
+                        return;
+                    }
+
+                    try {
+                        const profile = await evoGetProfile(sb, user.id);
+                        latestRole = profile?.role || '';
+                    } catch (err) {
+                        console.warn('[auth-ui] profile role check:', err?.message || err);
+                    }
+
+                    syncAccountLinks();
+                };
+
                 const apply = (session) => {
+                    latestSession = session || null;
                     const root = document.documentElement;
                     const logged = !!(session && session.user);
                     root.classList.toggle("auth-logged-in", logged);
                     root.classList.toggle("auth-logged-out", !logged);
                     try { localStorage.setItem("auth.last", logged ? "in" : "out"); } catch { }
                     document.getElementById("auth-guard")?.remove();
+                    syncAccountLinks();
+                    refreshRole(logged ? session.user : null);
                 };
 
                 try {
@@ -760,8 +829,13 @@ if (path.indexOf('/billing') === 0) {
                     });
                 };
 
-                bindLogout();
-                new MutationObserver(bindLogout).observe(document.body, { childList: true, subtree: true });
+                const bindDynamicAuthElements = () => {
+                    bindLogout();
+                    syncAccountLinks();
+                };
+
+                bindDynamicAuthElements();
+                new MutationObserver(bindDynamicAuthElements).observe(document.body, { childList: true, subtree: true });
             }
 
             when(() => document.readyState !== "loading", initAuthUI);
