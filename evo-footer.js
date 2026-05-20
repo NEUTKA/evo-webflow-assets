@@ -137,6 +137,7 @@
 
         '/ai-chat-assistant',
         '/billing',
+        '/find-teacher',
         '/test'
     ];
 
