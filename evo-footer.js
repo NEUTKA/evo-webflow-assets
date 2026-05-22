@@ -75,6 +75,224 @@
         });
     }
 
+    /* ================== EVO ANALYTICS ================== */
+    const EVO_ANALYTICS_CONSENT_KEY = "evo_consent_v1";
+
+    function initEvoAnalytics() {
+        if (window.EvoAnalytics && typeof window.EvoAnalytics.track === "function") {
+            return window.EvoAnalytics;
+        }
+
+        const ATTRIBUTION_KEY = "evo_attribution_v1";
+        const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+        const CLICK_KEYS = ["gclid", "fbclid", "msclkid"];
+
+        function readJson(key) {
+            try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; }
+        }
+
+        function writeJson(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }
+        }
+
+        function analyticsAllowed() {
+            const consent = readJson(EVO_ANALYTICS_CONSENT_KEY);
+            return !!(consent && consent.analytics === true);
+        }
+
+        function normalizePath(path) {
+            path = String(path || "/").split("?")[0].split("#")[0];
+            if (path.length > 1) path = path.replace(/\/+$/, "");
+            return path || "/";
+        }
+
+        function cleanEventName(name) {
+            return String(name || "event")
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9_]+/g, "_")
+                .replace(/^_+|_+$/g, "")
+                .slice(0, 40) || "event";
+        }
+
+        function cleanParamKey(key) {
+            return String(key || "")
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9_]+/g, "_")
+                .replace(/^_+|_+$/g, "")
+                .slice(0, 40);
+        }
+
+        function cleanParamValue(value) {
+            if (value === null || value === undefined) return undefined;
+            if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+            if (typeof value === "boolean") return value ? "true" : "false";
+            return String(value).slice(0, 100);
+        }
+
+        function compactParams(raw) {
+            const out = {};
+            Object.keys(raw || {}).forEach((key) => {
+                const cleanKey = cleanParamKey(key);
+                if (!cleanKey) return;
+                const cleanValue = cleanParamValue(raw[key]);
+                if (cleanValue === undefined || cleanValue === "") return;
+                out[cleanKey] = cleanValue;
+            });
+            return out;
+        }
+
+        function referrerSource() {
+            try {
+                const ref = document.referrer ? new URL(document.referrer) : null;
+                if (!ref || ref.hostname === window.location.hostname) return null;
+                const host = ref.hostname.replace(/^www\./, "").toLowerCase();
+                if (host.includes("linkedin")) return "linkedin";
+                if (host.includes("instagram")) return "instagram";
+                if (host.includes("facebook") || host.includes("fb.")) return "facebook";
+                if (host.includes("pinterest")) return "pinterest";
+                if (host.includes("reddit")) return "reddit";
+                if (host.includes("youtube")) return "youtube";
+                if (host.includes("tiktok")) return "tiktok";
+                return host;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function readUrlAttribution() {
+            const params = new URLSearchParams(window.location.search || "");
+            const touch = {};
+            UTM_KEYS.concat(CLICK_KEYS).forEach((key) => {
+                const value = params.get(key);
+                if (value) touch[key] = value.slice(0, 120);
+            });
+
+            if (!touch.utm_source) {
+                const ref = referrerSource();
+                if (ref) {
+                    touch.utm_source = ref;
+                    touch.utm_medium = "referral";
+                }
+            }
+
+            if (!Object.keys(touch).length) return null;
+
+            touch.landing_path = window.location.pathname || "/";
+            touch.captured_at = new Date().toISOString();
+            return touch;
+        }
+
+        function captureAttribution() {
+            const stored = analyticsAllowed() ? (readJson(ATTRIBUTION_KEY) || {}) : (window.__evoAttribution || {});
+            const touch = readUrlAttribution();
+            const next = { ...stored };
+
+            if (touch) {
+                if (!next.first_touch) next.first_touch = touch;
+                next.last_touch = touch;
+                next.updated_at = new Date().toISOString();
+            }
+
+            window.__evoAttribution = next;
+            if (analyticsAllowed() && Object.keys(next).length) {
+                writeJson(ATTRIBUTION_KEY, next);
+            }
+            return next;
+        }
+
+        function getAttribution() {
+            return captureAttribution();
+        }
+
+        function eventParams(params) {
+            const attribution = getAttribution();
+            const last = attribution.last_touch || attribution.first_touch || {};
+            return compactParams({
+                event_source: "evo_site",
+                page_path: window.location.pathname || "/",
+                page_title: document.title || "",
+                utm_source: last.utm_source,
+                utm_medium: last.utm_medium,
+                utm_campaign: last.utm_campaign,
+                utm_content: last.utm_content,
+                utm_term: last.utm_term,
+                ...params
+            });
+        }
+
+        function track(eventName, params = {}) {
+            if (!analyticsAllowed()) return false;
+            const name = cleanEventName(eventName);
+            const payload = eventParams(params);
+            try {
+                window.dispatchEvent(new CustomEvent("evo:analytics", { detail: { event: name, params: payload } }));
+            } catch (e) { }
+
+            if (typeof window.gtag !== "function") return false;
+
+            try {
+                window.gtag("event", name, payload);
+                return true;
+            } catch (e) {
+                console.warn("[EvoAnalytics] track failed:", e?.message || e);
+                return false;
+            }
+        }
+
+        function trackPageContext() {
+            if (!analyticsAllowed()) return false;
+
+            const path = normalizePath(window.location.pathname);
+            const eventByPath = {
+                "/for-teachers": "teacher_landing_view",
+                "/teacher-dashboard": "teacher_dashboard_view",
+                "/student-dashboard": "student_dashboard_view",
+                "/personal-account": "self_study_dashboard_view"
+            };
+
+            let eventName = eventByPath[path] || null;
+            if (!eventName && path.indexOf("/teacher-dashboard/") === 0) eventName = "teacher_dashboard_view";
+            if (!eventName && path.indexOf("/student-dashboard/") === 0) eventName = "student_dashboard_view";
+            if (!eventName) return false;
+
+            const key = `evo_page_event:${eventName}:${path}`;
+            try {
+                if (sessionStorage.getItem(key) === "1") return true;
+            } catch (e) { }
+
+            const sent = track(eventName, { path });
+            if (sent) {
+                try { sessionStorage.setItem(key, "1"); } catch (e) { }
+            }
+            return sent;
+        }
+
+        const api = {
+            version: "2026-05-22",
+            track,
+            captureAttribution,
+            getAttribution,
+            trackPageContext,
+            analyticsAllowed
+        };
+
+        window.EvoAnalytics = api;
+        captureAttribution();
+        setTimeout(trackPageContext, 0);
+        return api;
+    }
+
+    function evoTrack(eventName, params) {
+        try {
+            if (window.EvoAnalytics && typeof window.EvoAnalytics.track === "function") {
+                return window.EvoAnalytics.track(eventName, params || {});
+            }
+        } catch (e) { }
+        return false;
+    }
+
     
     
     /* ================== GLOBAL AUTH GUARD ================== */
@@ -1126,16 +1344,38 @@ if (path.indexOf('/billing') === 0) {
           </div>
         `;
                 document.body.appendChild(el);
+                evoTrack("word_selected", {
+                    feature: "translator_popup",
+                    target_language: currentLang,
+                    word_length: String(word || "").length
+                });
 
-                el.querySelector("#popup-say").onclick = () => window.ttsEn.speak(word);
+                el.querySelector("#popup-say").onclick = () => {
+                    evoTrack("word_tts_clicked", {
+                        source: "translator_popup",
+                        word_length: String(word || "").length
+                    });
+                    window.ttsEn.speak(word);
+                };
                 el.querySelector("#popup-close").onclick = removePopup;
                 el.querySelector("#popup-save").onclick = saveCard;
-                el.querySelector("#popup-ask").onclick = () => { removePopup(); window.openAssistant(selText || word); };
+                el.querySelector("#popup-ask").onclick = () => {
+                    evoTrack("ask_ai_clicked", {
+                        source: "translator_popup",
+                        word_length: String(selText || word || "").length
+                    });
+                    removePopup();
+                    window.openAssistant(selText || word);
+                };
 
                 el.querySelector("#popup-lang").addEventListener("change", (e) => {
                     const code = String(e.target.value || "").trim().toLowerCase();
                     if (!code) return;
                     setLang(code);
+                    evoTrack("translation_language_changed", {
+                        source: "translator_popup",
+                        target_language: code
+                    });
                     const box = document.getElementById("translation");
                     if (box) box.innerHTML = `<em>Translating to ${esc(langName(code))}…</em>`;
                     translateWord(selText || word);
@@ -1207,6 +1447,12 @@ if (path.indexOf('/billing') === 0) {
                     selTranslation = data.translation || "";
                     const box = document.getElementById("translation");
                     if (box) box.innerHTML = `<strong>Translation (${esc(langName(target))}):</strong> ${esc(selTranslation)}`;
+                    evoTrack("word_translated", {
+                        source: "translator_popup",
+                        target_language: target,
+                        word_length: String(word || "").length,
+                        has_translation: !!selTranslation
+                    });
 
                 } catch (e) {
                     const box = document.getElementById("translation");
@@ -1311,6 +1557,10 @@ if (path.indexOf('/billing') === 0) {
 
                     if (!user) {
                         btn.textContent = "Log in to save";
+                        evoTrack("save_to_cards_login_required", {
+                            source: "translator_popup",
+                            word_length: String(selText || "").length
+                        });
                         redirectToCardsLogin();
                         return;
                     }
@@ -1324,13 +1574,21 @@ if (path.indexOf('/billing') === 0) {
                         source: "translator-popup"
                     };
 
-                    if (window.EvoCardsBridge?.hasProvider?.()) {
+                    const provider = window.EvoCardsBridge?.hasProvider?.() ? "bridge" : "fallback";
+
+                    if (provider === "bridge") {
                         await window.EvoCardsBridge.saveWord(payload);
                     } else {
                         await saveCardFallbackToPersonalVocabulary(user, payload.word, payload.translation);
                     }
 
                     btn.textContent = "Saved ✓";
+                    evoTrack("save_to_cards", {
+                        source: "translator_popup",
+                        provider,
+                        word_length: String(payload.word || "").length,
+                        has_translation: !!payload.translation
+                    });
                     setTimeout(removePopup, 800);
 
                 } catch (e) {
@@ -1426,6 +1684,11 @@ if (path.indexOf('/billing') === 0) {
                     });
 
             function openAssistant(prefill = "") {
+                evoTrack("ai_assistant_opened", {
+                    source: prefill ? "translator_popup" : "floating_button",
+                    has_prefill: !!prefill
+                });
+
                 const modal = document.body.appendChild(
                     Object.assign(document.createElement("div"), {
                         className: "ee-as-modal",
@@ -1515,6 +1778,11 @@ if (path.indexOf('/billing') === 0) {
 
                     if (!(await requireAuth())) return;
 
+                    evoTrack("ai_message_sent", {
+                        source: "assistant",
+                        message_length: text.length
+                    });
+
                     add("You", esc(text));
 
                     history.push({ role: "user", content: text });
@@ -1543,6 +1811,7 @@ if (path.indexOf('/billing') === 0) {
                     if (rec) { rec.stop(); return; }
                     if (!(await requireAuth())) return;
                     try {
+                        evoTrack("ai_voice_input_started", { source: "assistant" });
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                         rec = new MediaRecorder(stream);
                         chunks = [];
@@ -1560,7 +1829,13 @@ if (path.indexOf('/billing') === 0) {
                                 });
 
                                 const t = String(text || "").trim().slice(0, 240);
-                                if (t) await send(t);
+                                if (t) {
+                                    evoTrack("ai_voice_transcribed", {
+                                        source: "assistant",
+                                        message_length: t.length
+                                    });
+                                    await send(t);
+                                }
                                 else add("Assistant", "⚠ No speech detected");
                             } catch (e) {
                                 add("Assistant", "⚠ " + e.message);
@@ -1656,7 +1931,12 @@ if (path.indexOf('/billing') === 0) {
 
             var consent = merge(DEFAULTS, load() || {});
             gtagConsentUpdate(consent);
-            if (consent.analytics) loadGA();
+            if (consent.analytics) {
+                loadGA();
+                setTimeout(function () {
+                    try { window.EvoAnalytics?.trackPageContext?.(); } catch (e) { }
+                }, 0);
+            }
 
             function mount() {
                 if (window.__evoConsentMounted) return;
@@ -1942,6 +2222,11 @@ if (path.indexOf('/billing') === 0) {
                         save(consent);
                         gtagConsentUpdate(consent);
                         loadGA();
+                        try {
+                            window.EvoAnalytics?.captureAttribution?.();
+                            window.EvoAnalytics?.track?.("analytics_consent_accepted");
+                            window.EvoAnalytics?.trackPageContext?.();
+                        } catch (e) { }
                         close();
                         return;
                     }
@@ -1950,7 +2235,14 @@ if (path.indexOf('/billing') === 0) {
                         consent.necessary = true;
                         save(consent);
                         gtagConsentUpdate(consent);
-                        if (consent.analytics) loadGA();
+                        if (consent.analytics) {
+                            loadGA();
+                            try {
+                                window.EvoAnalytics?.captureAttribution?.();
+                                window.EvoAnalytics?.track?.("analytics_consent_saved");
+                                window.EvoAnalytics?.trackPageContext?.();
+                            } catch (e) { }
+                        }
                         close();
                         return;
                     }
@@ -2357,6 +2649,7 @@ if (path.indexOf('/billing') === 0) {
     /* ================== boot ================== */
     async function boot() {
         try {
+            initEvoAnalytics();
             await loadSupabaseLib();
             initClient();                 // makes window.supabase = client
 
