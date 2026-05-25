@@ -1,0 +1,528 @@
+<!-- Evo-English Pricing Page Embed -->
+<div id="evo-pricing-page" class="evo-pricing-page" role="main" aria-label="Evo-English pricing">
+  <style>
+    #evo-pricing-page {
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#dbe7f3;
+      --soft:#f6f9fd;
+      --blue:#2557f6;
+      --blue-soft:#eff6ff;
+      --green:#15803d;
+      --green-soft:#ecfdf3;
+      --dark:#111213;
+      --danger:#991b1b;
+      --danger-soft:#fff1f2;
+      width:100%;
+      margin:0;
+      padding:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:var(--soft);
+    }
+
+    #evo-pricing-page * { box-sizing:border-box; }
+    #evo-pricing-page a { color:inherit; text-decoration:none; }
+
+    #evo-pricing-page .ep-band {
+      padding:clamp(42px,7vw,82px) clamp(16px,5vw,56px);
+    }
+
+    #evo-pricing-page .ep-band.white { background:#fff; }
+    #evo-pricing-page .ep-band.dark { background:#111827; color:#fff; }
+
+    #evo-pricing-page .ep-inner {
+      max-width:1180px;
+      margin:0 auto;
+    }
+
+    #evo-pricing-page .ep-hero {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(300px,430px);
+      gap:clamp(24px,5vw,56px);
+      align-items:center;
+    }
+
+    #evo-pricing-page .ep-kicker {
+      display:inline-flex;
+      width:max-content;
+      border:1px solid #bfdbfe;
+      background:var(--blue-soft);
+      color:#1d4ed8;
+      border-radius:8px;
+      padding:8px 10px;
+      font-size:13px;
+      line-height:1;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    #evo-pricing-page h1,
+    #evo-pricing-page h2,
+    #evo-pricing-page h3 {
+      margin:0;
+      letter-spacing:0;
+      color:inherit;
+    }
+
+    #evo-pricing-page h1 {
+      margin-top:18px;
+      max-width:840px;
+      font-size:clamp(42px,6vw,72px);
+      line-height:1;
+    }
+
+    #evo-pricing-page .ep-lead {
+      margin:18px 0 0;
+      max-width:760px;
+      color:var(--muted);
+      font-size:clamp(17px,2vw,21px);
+      line-height:1.6;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-notice {
+      margin-top:18px;
+      border:1px solid #bbf7d0;
+      background:var(--green-soft);
+      color:#14532d;
+      border-radius:8px;
+      padding:14px 16px;
+      font-size:15px;
+      line-height:1.5;
+      font-weight:750;
+    }
+
+    #evo-pricing-page .ep-summary {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 18px 44px rgba(15,23,42,.10);
+      padding:22px;
+    }
+
+    #evo-pricing-page .ep-summary strong {
+      display:block;
+      font-size:22px;
+      margin-bottom:12px;
+    }
+
+    #evo-pricing-page .ep-summary ul {
+      margin:0;
+      padding-left:20px;
+      color:#334155;
+      line-height:1.65;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-section-head {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(260px,390px);
+      gap:22px;
+      align-items:end;
+      margin-bottom:26px;
+    }
+
+    #evo-pricing-page h2 {
+      max-width:850px;
+      font-size:clamp(30px,4vw,48px);
+      line-height:1.08;
+    }
+
+    #evo-pricing-page .ep-section-text {
+      margin:0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.62;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-plans {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+    }
+
+    #evo-pricing-page .ep-plan {
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 12px 30px rgba(15,23,42,.07);
+      overflow:hidden;
+    }
+
+    #evo-pricing-page .ep-plan.featured {
+      border-color:#93c5fd;
+      box-shadow:0 18px 44px rgba(37,87,246,.14);
+    }
+
+    #evo-pricing-page .ep-plan-head {
+      padding:22px;
+      border-bottom:1px solid #edf2f7;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+    }
+
+    #evo-pricing-page .ep-plan-label {
+      display:inline-flex;
+      width:max-content;
+      border:1px solid #bfdbfe;
+      background:#eff6ff;
+      color:#1d4ed8;
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      line-height:1;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+
+    #evo-pricing-page .ep-plan h3 {
+      font-size:25px;
+      line-height:1.15;
+    }
+
+    #evo-pricing-page .ep-price {
+      margin-top:14px;
+      display:grid;
+      gap:6px;
+    }
+
+    #evo-pricing-page .ep-price b {
+      display:block;
+      font-size:clamp(30px,3.4vw,42px);
+      line-height:1;
+      color:#111827;
+    }
+
+    #evo-pricing-page .ep-price span {
+      color:#64748b;
+      font-size:15px;
+      font-weight:750;
+    }
+
+    #evo-pricing-page .ep-plan-body {
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      flex:1;
+      gap:18px;
+    }
+
+    #evo-pricing-page .ep-plan-body p {
+      margin:0;
+      color:#475569;
+      line-height:1.55;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-plan ul {
+      margin:0;
+      padding-left:20px;
+      color:#334155;
+      line-height:1.7;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-actions {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:auto;
+    }
+
+    #evo-pricing-page .ep-btn {
+      min-height:46px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      background:#fff;
+      color:#0f172a;
+      padding:12px 16px;
+      font-size:15px;
+      line-height:1.15;
+      font-weight:900;
+      text-align:center;
+      cursor:pointer;
+    }
+
+    #evo-pricing-page .ep-btn.primary {
+      background:var(--blue);
+      border-color:var(--blue);
+      color:#fff;
+    }
+
+    #evo-pricing-page .ep-btn.dark {
+      background:var(--dark);
+      border-color:var(--dark);
+      color:#fff;
+    }
+
+    #evo-pricing-page .ep-info-grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+
+    #evo-pricing-page .ep-info {
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#fff;
+      padding:18px;
+    }
+
+    #evo-pricing-page .ep-info strong {
+      display:block;
+      font-size:18px;
+      margin-bottom:8px;
+    }
+
+    #evo-pricing-page .ep-info p {
+      margin:0;
+      color:#475569;
+      line-height:1.55;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-legal {
+      border:1px solid #fecaca;
+      background:var(--danger-soft);
+      color:var(--danger);
+      border-radius:8px;
+      padding:16px;
+      line-height:1.55;
+      font-weight:750;
+    }
+
+    #evo-pricing-page .ep-dark-card {
+      border:1px solid #24324a;
+      background:#172033;
+      border-radius:12px;
+      padding:22px;
+    }
+
+    #evo-pricing-page .ep-dark-card p {
+      margin:10px 0 0;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-weight:650;
+    }
+
+    #evo-pricing-page .ep-dark-card a {
+      color:#fff;
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+
+    #evo-pricing-page .ep-dark-card .ep-btn {
+      color:#111827;
+      text-decoration:none;
+    }
+
+    #evo-pricing-page .ep-dark-card .ep-btn.primary {
+      color:#fff;
+    }
+
+    @media (max-width:980px) {
+      #evo-pricing-page .ep-hero,
+      #evo-pricing-page .ep-section-head,
+      #evo-pricing-page .ep-plans,
+      #evo-pricing-page .ep-info-grid {
+        grid-template-columns:1fr;
+      }
+
+      #evo-pricing-page .ep-actions {
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      #evo-pricing-page .ep-btn {
+        width:100%;
+      }
+    }
+  </style>
+
+  <section class="ep-band">
+    <div class="ep-inner ep-hero">
+      <div>
+        <span class="ep-kicker">Pricing</span>
+        <h1>Choose how you use Evo-English</h1>
+        <p class="ep-lead">
+          Evo-English is a learning platform for independent students and English teachers. Teachers pay for platform tools. Lesson payments between teachers and students are arranged separately outside Evo-English.
+        </p>
+        <div class="ep-notice">
+          Existing accounts receive a 14-day free access period starting May 25, 2026. The free period ends on June 8, 2026. No user is charged during the free period unless they actively start a paid subscription.
+        </div>
+      </div>
+
+      <aside class="ep-summary" aria-label="Payment summary">
+        <strong>What people pay for</strong>
+        <ul>
+          <li>Teacher workspace, assignments, templates and review tools.</li>
+          <li>Vocabulary card modules and student practice areas.</li>
+          <li>Self-study access for independent learners.</li>
+          <li>Students linked to a teacher use teacher-assigned materials for free.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="ep-band white">
+    <div class="ep-inner">
+      <div class="ep-section-head">
+        <h2>Monthly subscription plans</h2>
+        <p class="ep-section-text">
+          Prices are shown in AMD, USD and RUB. Payment processing is provided through Acba Bank vPOS.
+        </p>
+      </div>
+
+      <div class="ep-plans">
+        <article class="ep-plan">
+          <div class="ep-plan-head">
+            <span class="ep-plan-label">Independent learner</span>
+            <h3>Self-study student</h3>
+            <div class="ep-price">
+              <b>$10</b>
+              <span>3,900 ֏ / 790 ₽ per month</span>
+            </div>
+          </div>
+          <div class="ep-plan-body">
+            <p>For learners who study English independently without a teacher account.</p>
+            <ul>
+              <li>Personal account</li>
+              <li>Grammar, vocabulary, reading and listening materials</li>
+              <li>Personal vocabulary cards</li>
+              <li>AI assistant access where available</li>
+            </ul>
+            <div class="ep-actions">
+              <a class="ep-btn primary" href="/login?tab=signup&next=%2Fwelcome">Start 14-day trial</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="ep-plan featured">
+          <div class="ep-plan-head">
+            <span class="ep-plan-label">Teachers</span>
+            <h3>Teacher Starter</h3>
+            <div class="ep-price">
+              <b>$37</b>
+              <span>13,900 ֏ / 2700 ₽ per month</span>
+            </div>
+          </div>
+          <div class="ep-plan-body">
+            <p>For teachers working with up to 5 active students. All teacher tools are included.</p>
+            <ul>
+              <li>All teacher dashboard tools</li>
+              <li>Up to 5 active students</li>
+              <li>Assignments and templates</li>
+              <li>Teacher vocabulary card modules</li>
+              <li>Weekly plans and student notes</li>
+              <li>Reteaching workflow</li>
+              <li>Live lesson tools where available</li>
+            </ul>
+            <div class="ep-actions">
+              <a class="ep-btn primary" href="/login?tab=signup&next=%2Fwelcome">Start teacher trial</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="ep-plan">
+          <div class="ep-plan-head">
+            <span class="ep-plan-label">Growing teachers</span>
+            <h3>Teacher Pro</h3>
+            <div class="ep-price">
+              <b>$54</b>
+              <span>19,900 ֏ / 3950 ₽ per month</span>
+            </div>
+          </div>
+          <div class="ep-plan-body">
+            <p>For teachers working with 6 or more active students. The feature set is the same; the student capacity is higher.</p>
+            <ul>
+              <li>All teacher dashboard tools</li>
+              <li>6+ active students</li>
+              <li>Assignments and templates</li>
+              <li>Teacher vocabulary card modules</li>
+              <li>Weekly plans and student notes</li>
+              <li>Reteaching workflow</li>
+              <li>Live lesson tools where available</li>
+            </ul>
+            <div class="ep-actions">
+              <a class="ep-btn primary" href="/login?tab=signup&next=%2Fwelcome">Start teacher trial</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ep-band">
+    <div class="ep-inner">
+      <div class="ep-section-head">
+        <h2>Payment, cancellation and free access</h2>
+        <p class="ep-section-text">
+          This section is written clearly for users and for payment review. Replace the support email if your official bank application uses a different address.
+        </p>
+      </div>
+
+      <div class="ep-info-grid">
+        <div class="ep-info">
+          <strong>Billing period</strong>
+          <p>All paid plans are monthly subscriptions. After a user starts a paid subscription and authorizes card payments, the subscription renews automatically every month until canceled.</p>
+        </div>
+        <div class="ep-info">
+          <strong>Free period</strong>
+          <p>Existing users receive free access from May 25, 2026 until June 8, 2026. A card is not charged during the free period unless the user actively starts a paid subscription.</p>
+        </div>
+        <div class="ep-info">
+          <strong>Teacher-linked students</strong>
+          <p>Students connected to a teacher do not pay Evo-English for teacher-assigned homework, cards or feedback areas.</p>
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="ep-info-grid">
+        <div class="ep-info">
+          <strong>Cancellation</strong>
+          <p>Users may cancel before the next billing period. Cancellation stops the next renewal, and access remains available until the end of the already paid period.</p>
+        </div>
+        <div class="ep-info">
+          <strong>Refund requests</strong>
+          <p>Refund requests are reviewed individually. Please contact support within 14 days of payment and include your account email and payment details.</p>
+        </div>
+        <div class="ep-info">
+          <strong>Contact</strong>
+          <p>For payment, subscription or account questions, contact Evo-English by email: evoenglish@outlook.com.</p>
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="ep-legal">
+        Important: Evo-English subscription payments are for platform access only. Evo-English does not collect or process private lesson payments between teachers and their students.
+      </div>
+    </div>
+  </section>
+
+  <section class="ep-band dark">
+    <div class="ep-inner">
+      <div class="ep-dark-card">
+        <h2>Ready to start?</h2>
+        <p>
+          Create an account, choose your account type and use Evo-English during the free access period. You can review the
+          <a href="/terms-of-service">Terms of Service</a>,
+          <a href="/terms-of-use">Terms of Use</a> and
+          <a href="/privacy-policy">Privacy Policy</a> before subscribing.
+        </p>
+        <div class="ep-actions" style="margin-top:20px">
+          <a class="ep-btn primary" href="/login?tab=signup&next=%2Fwelcome">Create account</a>
+          <a class="ep-btn" href="mailto:evoenglish@outlook.com?subject=Evo-English%20support">Contact support</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
