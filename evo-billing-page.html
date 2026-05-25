@@ -1,0 +1,658 @@
+<!-- Evo-English Billing Page Embed -->
+<div id="evo-billing-page" class="evo-billing-page" role="main" aria-label="Evo-English billing">
+  <style>
+    #evo-billing-page {
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#dbe7f3;
+      --soft:#f6f9fd;
+      --blue:#2557f6;
+      --blue-soft:#eff6ff;
+      --green:#15803d;
+      --green-soft:#ecfdf3;
+      --danger:#b91c1c;
+      --danger-soft:#fff1f2;
+      --dark:#111213;
+      width:100%;
+      margin:0;
+      padding:clamp(28px,5vw,56px) clamp(14px,4vw,42px);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:var(--soft);
+    }
+
+    #evo-billing-page * { box-sizing:border-box; }
+    #evo-billing-page a { color:inherit; }
+
+    #evo-billing-page .eb-wrap {
+      max-width:1040px;
+      margin:0 auto;
+      display:grid;
+      gap:18px;
+    }
+
+    #evo-billing-page .eb-card {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 14px 36px rgba(15,23,42,.07);
+      overflow:hidden;
+    }
+
+    #evo-billing-page .eb-head {
+      padding:26px;
+      border-bottom:1px solid #edf2f7;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+    }
+
+    #evo-billing-page .eb-kicker {
+      display:inline-flex;
+      width:max-content;
+      border:1px solid #bfdbfe;
+      background:var(--blue-soft);
+      color:#1d4ed8;
+      border-radius:8px;
+      padding:8px 10px;
+      font-size:13px;
+      line-height:1;
+      font-weight:900;
+      text-transform:uppercase;
+      margin-bottom:12px;
+    }
+
+    #evo-billing-page h1,
+    #evo-billing-page h2,
+    #evo-billing-page h3 {
+      margin:0;
+      letter-spacing:0;
+      color:inherit;
+    }
+
+    #evo-billing-page h1 {
+      font-size:clamp(34px,5vw,54px);
+      line-height:1.04;
+    }
+
+    #evo-billing-page .eb-sub {
+      margin-top:10px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.6;
+      max-width:760px;
+      font-weight:650;
+    }
+
+    #evo-billing-page .eb-body {
+      padding:22px 26px 26px;
+      display:grid;
+      gap:18px;
+    }
+
+    #evo-billing-page .eb-grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+
+    #evo-billing-page .eb-metric,
+    #evo-billing-page .eb-panel {
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      background:#fff;
+      padding:16px;
+    }
+
+    #evo-billing-page .eb-metric strong {
+      display:block;
+      font-size:28px;
+      line-height:1;
+      margin-bottom:7px;
+    }
+
+    #evo-billing-page .eb-metric span,
+    #evo-billing-page .eb-muted {
+      color:var(--muted);
+      line-height:1.5;
+      font-weight:650;
+    }
+
+    #evo-billing-page .eb-pill {
+      display:inline-flex;
+      width:max-content;
+      max-width:100%;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #bfdbfe;
+      background:#eff6ff;
+      color:#1d4ed8;
+      border-radius:999px;
+      padding:8px 11px;
+      font-size:13px;
+      line-height:1;
+      font-weight:900;
+      white-space:normal;
+    }
+
+    #evo-billing-page .eb-pill.ok {
+      border-color:#bbf7d0;
+      background:var(--green-soft);
+      color:#166534;
+    }
+
+    #evo-billing-page .eb-pill.warn {
+      border-color:#fed7aa;
+      background:#fff7ed;
+      color:#9a3412;
+    }
+
+    #evo-billing-page .eb-pill.danger {
+      border-color:#fecaca;
+      background:var(--danger-soft);
+      color:var(--danger);
+    }
+
+    #evo-billing-page .eb-plan-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+
+    #evo-billing-page .eb-plan {
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    #evo-billing-page .eb-plan.active {
+      border-color:#93c5fd;
+      background:#f8fbff;
+    }
+
+    #evo-billing-page .eb-price {
+      font-size:28px;
+      line-height:1;
+      font-weight:950;
+    }
+
+    #evo-billing-page .eb-actions {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    #evo-billing-page .eb-btn {
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      background:#fff;
+      color:#0f172a;
+      padding:11px 15px;
+      font-size:15px;
+      line-height:1.15;
+      font-weight:900;
+      text-align:center;
+      cursor:pointer;
+      text-decoration:none;
+    }
+
+    #evo-billing-page .eb-btn.primary {
+      background:var(--blue);
+      color:#fff;
+      border-color:var(--blue);
+    }
+
+    #evo-billing-page .eb-btn.danger {
+      background:var(--danger);
+      color:#fff;
+      border-color:var(--danger);
+    }
+
+    #evo-billing-page .eb-btn[disabled] {
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    #evo-billing-page .eb-input {
+      width:100%;
+      min-height:46px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      padding:11px 12px;
+      font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:#fff;
+    }
+
+    #evo-billing-page .eb-input:focus {
+      outline:none;
+      border-color:#60a5fa;
+      box-shadow:0 0 0 4px rgba(96,165,250,.18);
+    }
+
+    #evo-billing-page .eb-message {
+      border-radius:10px;
+      padding:13px 14px;
+      line-height:1.5;
+      font-weight:750;
+    }
+
+    #evo-billing-page .eb-message.info {
+      border:1px solid #bfdbfe;
+      background:#eff6ff;
+      color:#1e3a8a;
+    }
+
+    #evo-billing-page .eb-message.success {
+      border:1px solid #bbf7d0;
+      background:#ecfdf3;
+      color:#166534;
+    }
+
+    #evo-billing-page .eb-message.error {
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#991b1b;
+    }
+
+    @media (max-width:820px) {
+      #evo-billing-page {
+        padding:24px 12px 42px;
+      }
+
+      #evo-billing-page .eb-head,
+      #evo-billing-page .eb-body {
+        padding:20px;
+      }
+
+      #evo-billing-page .eb-grid,
+      #evo-billing-page .eb-plan-grid {
+        grid-template-columns:1fr;
+      }
+
+      #evo-billing-page .eb-actions {
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      #evo-billing-page .eb-btn {
+        width:100%;
+      }
+    }
+  </style>
+
+  <div class="eb-wrap">
+    <div class="eb-card">
+      <div class="eb-head">
+        <div class="eb-kicker">Billing</div>
+        <h1>Loading billing...</h1>
+        <div class="eb-sub">Please wait a moment.</div>
+      </div>
+      <div class="eb-body">
+        <div class="eb-message info">Checking your subscription status...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var ROOT = document.getElementById('evo-billing-page');
+      if (!ROOT || ROOT.__inited) return;
+      ROOT.__inited = true;
+
+      var SUPPORT_MAILTO = 'mailto:evoenglish@outlook.com?subject=Evo-English%20billing%20support';
+      var PLAN_FALLBACKS = {
+        teacher_starter: {
+          plan_key: 'teacher_starter',
+          name: 'Teacher Starter',
+          amd_amount: 13900,
+          usd_amount: 37,
+          rub_amount: 2700,
+          student_limit: 5
+        },
+        teacher_pro: {
+          plan_key: 'teacher_pro',
+          name: 'Teacher Pro',
+          amd_amount: 19900,
+          usd_amount: 54,
+          rub_amount: 3950,
+          student_limit: null
+        }
+      };
+
+      function getSupabase() {
+        return window.supabaseClient || window.supabase || window.sb || null;
+      }
+
+      function waitSupabase(maxMs) {
+        maxMs = maxMs || 8000;
+        return new Promise(function (resolve, reject) {
+          var t0 = Date.now();
+          var timer = window.setInterval(function () {
+            var sb = getSupabase();
+            if (sb && sb.auth && typeof sb.auth.getUser === 'function') {
+              window.clearInterval(timer);
+              resolve(sb);
+              return;
+            }
+            if (Date.now() - t0 > maxMs) {
+              window.clearInterval(timer);
+              reject(new Error('Supabase is not ready. Please refresh the page.'));
+            }
+          }, 120);
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+          return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char] || char;
+        });
+      }
+
+      function formatMoney(plan) {
+        if (!plan) return '—';
+        var amd = Number(plan.amd_amount || 0).toLocaleString('en-US') + ' ֏';
+        var usd = '$' + Number(plan.usd_amount || 0).toLocaleString('en-US');
+        var rub = Number(plan.rub_amount || 0).toLocaleString('en-US') + ' ₽';
+        return amd + ' / ' + usd + ' / ' + rub;
+      }
+
+      function formatDate(value) {
+        if (!value) return '—';
+        try {
+          return new Intl.DateTimeFormat('en', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }).format(new Date(value));
+        } catch (_) {
+          return String(value);
+        }
+      }
+
+      function getStatusClass(status, cancelAtPeriodEnd) {
+        if (cancelAtPeriodEnd) return 'warn';
+        if (status === 'active' || status === 'trialing') return 'ok';
+        if (status === 'past_due' || status === 'canceled' || status === 'expired') return 'danger';
+        return '';
+      }
+
+      function setMessage(type, text) {
+        var el = ROOT.querySelector('[data-eb-message]');
+        if (!el) return;
+        el.className = 'eb-message ' + (type || 'info');
+        el.textContent = text || '';
+        el.hidden = !text;
+      }
+
+      function setBusy(isBusy) {
+        Array.prototype.forEach.call(ROOT.querySelectorAll('button'), function (button) {
+          button.disabled = !!isBusy;
+        });
+      }
+
+      async function loadBilling() {
+        var sb = await waitSupabase();
+        var userResult = await sb.auth.getUser();
+        var user = userResult && userResult.data ? userResult.data.user : null;
+
+        if (!user) {
+          window.location.replace('/login?tab=login&next=' + encodeURIComponent('/billing'));
+          return null;
+        }
+
+        var profileResult = await sb
+          .from('profiles')
+          .select('id,email,full_name,role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileResult.error) throw profileResult.error;
+        var profile = profileResult.data || {};
+
+        if (profile.role !== 'teacher') {
+          throw new Error('Billing is currently available for teacher accounts.');
+        }
+
+        var results = await Promise.all([
+          sb
+            .from('teacher_subscriptions')
+            .select('id,teacher_id,status,plan_key,trial_started_at,trial_ends_at,current_period_start,current_period_end,provider,auto_renews,cancel_at_period_end,canceled_at,cancel_reason')
+            .eq('teacher_id', user.id)
+            .maybeSingle(),
+          sb
+            .from('teacher_students')
+            .select('student_id', { count: 'exact', head: true })
+            .eq('teacher_id', user.id)
+            .eq('status', 'active'),
+          sb
+            .from('evo_pricing_plans')
+            .select('plan_key,name,description,amd_amount,usd_amount,rub_amount,student_limit,features')
+            .eq('audience', 'teacher')
+            .eq('is_active', true)
+            .order('usd_amount', { ascending: true })
+        ]);
+
+        var subResult = results[0];
+        var countResult = results[1];
+        var plansResult = results[2];
+
+        if (subResult.error) throw subResult.error;
+        if (countResult.error) throw countResult.error;
+        if (plansResult.error) throw plansResult.error;
+
+        var plans = {};
+        (plansResult.data || []).forEach(function (plan) {
+          plans[plan.plan_key] = plan;
+        });
+
+        plans.teacher_starter = plans.teacher_starter || PLAN_FALLBACKS.teacher_starter;
+        plans.teacher_pro = plans.teacher_pro || PLAN_FALLBACKS.teacher_pro;
+
+        return {
+          sb: sb,
+          user: user,
+          profile: profile,
+          subscription: subResult.data || null,
+          activeStudents: countResult.count || 0,
+          plans: plans
+        };
+      }
+
+      function render(data) {
+        var profile = data.profile || {};
+        var sub = data.subscription || {};
+        var activeStudents = data.activeStudents || 0;
+        var suggestedPlanKey = activeStudents > 5 ? 'teacher_pro' : 'teacher_starter';
+        var currentPlanKey = sub.plan_key || suggestedPlanKey;
+        var currentPlan = data.plans[currentPlanKey] || data.plans[suggestedPlanKey] || PLAN_FALLBACKS.teacher_starter;
+        var starter = data.plans.teacher_starter || PLAN_FALLBACKS.teacher_starter;
+        var pro = data.plans.teacher_pro || PLAN_FALLBACKS.teacher_pro;
+        var status = sub.status || 'trialing';
+        var cancelAtPeriodEnd = sub.cancel_at_period_end === true;
+        var accessUntil = sub.current_period_end || sub.trial_ends_at || '';
+        var renewalText = cancelAtPeriodEnd
+          ? 'Renewal canceled'
+          : sub.auto_renews
+            ? 'Auto-renewal on'
+            : 'Auto-renewal off';
+        var statusLabel = cancelAtPeriodEnd
+          ? 'Canceling at period end'
+          : status;
+        var upgradeNeeded = currentPlanKey === 'teacher_starter' && activeStudents >= 5;
+
+        ROOT.innerHTML = `
+          <style>${ROOT.querySelector('style') ? ROOT.querySelector('style').textContent : ''}</style>
+          <div class="eb-wrap">
+            <section class="eb-card">
+              <div class="eb-head">
+                <div class="eb-kicker">Billing</div>
+                <h1>Billing and subscription</h1>
+                <div class="eb-sub">Manage your teacher subscription, renewal status and cancellation.</div>
+              </div>
+
+              <div class="eb-body">
+                <div class="eb-grid">
+                  <div class="eb-metric">
+                    <strong>${escapeHtml(currentPlan.name || 'Teacher plan')}</strong>
+                    <span>Current plan</span>
+                  </div>
+                  <div class="eb-metric">
+                    <strong>${escapeHtml(activeStudents)}</strong>
+                    <span>Active students</span>
+                  </div>
+                  <div class="eb-metric">
+                    <strong>${escapeHtml(formatDate(accessUntil))}</strong>
+                    <span>Access until</span>
+                  </div>
+                </div>
+
+                <div class="eb-panel">
+                  <div class="eb-actions" style="justify-content:space-between">
+                    <div>
+                      <h2 style="font-size:24px;margin-bottom:8px;">Subscription status</h2>
+                      <div class="eb-muted">${escapeHtml(profile.email || data.user.email || '')}</div>
+                    </div>
+                    <span class="eb-pill ${getStatusClass(status, cancelAtPeriodEnd)}">${escapeHtml(statusLabel)}</span>
+                  </div>
+                  <div style="height:12px"></div>
+                  <div class="eb-muted">${escapeHtml(renewalText)}. Cancellation stops the next renewal and keeps access until the end of the paid period.</div>
+                </div>
+
+                ${upgradeNeeded ? `
+                  <div class="eb-message info">
+                    You are at the Starter limit. To add a 6th active student, upgrade to Teacher Pro first.
+                  </div>
+                ` : ''}
+
+                <section class="eb-panel">
+                  <h2 style="font-size:24px;margin-bottom:14px;">Teacher plans</h2>
+                  <div class="eb-plan-grid">
+                    ${renderPlan(starter, currentPlanKey === 'teacher_starter', activeStudents)}
+                    ${renderPlan(pro, currentPlanKey === 'teacher_pro', activeStudents)}
+                  </div>
+                </section>
+
+                <section class="eb-panel">
+                  <h2 style="font-size:24px;margin-bottom:10px;">Cancel subscription</h2>
+                  <p class="eb-muted">If you cancel, your next monthly renewal will stop. Your current access stays available until ${escapeHtml(formatDate(accessUntil))}.</p>
+                  <div style="height:12px"></div>
+                  <input class="eb-input" data-eb-cancel-reason placeholder="Optional reason for cancellation" ${cancelAtPeriodEnd ? 'disabled' : ''}>
+                  <div style="height:12px"></div>
+                  <div class="eb-actions">
+                    <button class="eb-btn danger" type="button" data-eb-action="cancel-subscription" ${cancelAtPeriodEnd ? 'disabled' : ''}>
+                      ${cancelAtPeriodEnd ? 'Cancellation scheduled' : 'Cancel subscription'}
+                    </button>
+                    <a class="eb-btn" href="mailto:evoenglish@outlook.com?subject=Evo-English%20billing%20support">Contact support</a>
+                  </div>
+                  <div style="height:12px"></div>
+                  <div class="eb-message info" data-eb-message hidden></div>
+                </section>
+              </div>
+            </section>
+          </div>
+        `;
+
+        ROOT.__billingData = data;
+      }
+
+      function renderPlan(plan, isActive, activeStudents) {
+        var key = plan.plan_key || '';
+        var limitText = key === 'teacher_starter'
+          ? 'Up to 5 active students'
+          : '6+ active students';
+        var action = '';
+
+        if (isActive) {
+          action = '<span class="eb-pill ok">Current plan</span>';
+        } else if (key === 'teacher_pro') {
+          action = '<a class="eb-btn primary" href="mailto:evoenglish@outlook.com?subject=Upgrade%20to%20Teacher%20Pro">Request upgrade</a>';
+        } else {
+          action = '<a class="eb-btn" href="mailto:evoenglish@outlook.com?subject=Downgrade%20to%20Teacher%20Starter">Request downgrade</a>';
+        }
+
+        return `
+          <article class="eb-plan ${isActive ? 'active' : ''}">
+            <div>
+              <h3 style="font-size:22px;margin-bottom:8px;">${escapeHtml(plan.name || 'Teacher plan')}</h3>
+              <div class="eb-price">${escapeHtml(formatMoney(plan))}</div>
+              <div class="eb-muted" style="margin-top:8px">${escapeHtml(limitText)}. All teacher tools are included.</div>
+            </div>
+            <div>${action}</div>
+          </article>
+        `;
+      }
+
+      async function cancelSubscription() {
+        var data = ROOT.__billingData;
+        if (!data || !data.sb) return;
+
+        var ok = window.confirm('Cancel your teacher subscription? Your next renewal will stop, and access will remain until the end of the current period.');
+        if (!ok) return;
+
+        var reason = ROOT.querySelector('[data-eb-cancel-reason]')?.value || '';
+
+        try {
+          setBusy(true);
+          setMessage('info', 'Canceling subscription renewal...');
+
+          var result = await data.sb.functions.invoke('cancel-subscription', {
+            body: {
+              subscription_kind: 'teacher',
+              reason: reason
+            }
+          });
+
+          if (result.error) throw result.error;
+          if (!result.data || result.data.ok !== true) {
+            throw new Error((result.data && result.data.error) || 'Cancellation failed.');
+          }
+
+          setMessage('success', 'Subscription renewal canceled. Your access remains available until the end of the current period.');
+          var fresh = await loadBilling();
+          render(fresh);
+          setMessage('success', 'Subscription renewal canceled. Your access remains available until the end of the current period.');
+        } catch (err) {
+          console.error('[evo-billing] cancel error:', err);
+          setMessage('error', err && err.message ? err.message : 'Could not cancel subscription.');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function boot() {
+        try {
+          var data = await loadBilling();
+          if (data) render(data);
+        } catch (err) {
+          ROOT.innerHTML = `
+            <div class="eb-wrap">
+              <section class="eb-card">
+                <div class="eb-head">
+                  <div class="eb-kicker">Billing</div>
+                  <h1>Billing could not be loaded</h1>
+                  <div class="eb-sub">${escapeHtml(err && err.message ? err.message : 'Please refresh the page.')}</div>
+                </div>
+              </section>
+            </div>
+          `;
+        }
+      }
+
+      ROOT.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-eb-action]');
+        if (!button) return;
+        if (button.getAttribute('data-eb-action') === 'cancel-subscription') {
+          cancelSubscription();
+        }
+      });
+
+      boot();
+    })();
+  </script>
+</div>

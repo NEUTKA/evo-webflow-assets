@@ -296,6 +296,8 @@
     
     
     /* ================== GLOBAL AUTH GUARD ================== */
+    const EVO_SUPPORT_MAILTO = 'mailto:evoenglish@outlook.com?subject=Evo-English%20support';
+
     const EVO_PUBLIC_PATHS = [
         '/',
         '/about-us',
@@ -336,8 +338,7 @@
 
         '/welcome',
         '/for-teachers',
-        '/pricing',
-        '/contact'
+        '/pricing'
     ];
 
     const EVO_PROTECTED_PREFIXES = [
@@ -658,7 +659,7 @@
 
         let title = 'Start your teacher trial';
         let text = 'Request teacher access to try student management, assignments, vocabulary modules and live lessons.';
-        let primaryHref = '/contact';
+        let primaryHref = EVO_SUPPORT_MAILTO;
         let primaryLabel = 'Request teacher access';
         let secondaryHref = '/pricing';
         let secondaryLabel = 'View plans';
@@ -693,7 +694,7 @@
         if (reason === 'not_teacher') {
             title = 'Teacher account required';
             text = 'This workspace is available only for teacher accounts.';
-            primaryHref = '/contact';
+            primaryHref = EVO_SUPPORT_MAILTO;
             primaryLabel = 'Request teacher access';
             secondaryHref = '/for-teachers';
             secondaryLabel = 'Learn more';
@@ -702,7 +703,7 @@
         if (reason === 'verification_failed') {
             title = 'Could not verify your access';
             text = 'Please refresh the page. If the issue continues, contact support.';
-            primaryHref = '/contact';
+            primaryHref = EVO_SUPPORT_MAILTO;
             primaryLabel = 'Contact support';
             secondaryHref = '/teacher-dashboard';
             secondaryLabel = 'Try again';
