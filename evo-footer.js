@@ -298,6 +298,10 @@
     /* ================== GLOBAL AUTH GUARD ================== */
     const EVO_SUPPORT_MAILTO = 'mailto:evoenglish@outlook.com?subject=Evo-English%20support';
 
+    // Keep teacher workspaces available until payment processing is ready.
+    const EVO_BILLING_ENFORCEMENT_ENABLED = false;
+    window.__evoBillingEnforcementEnabled = EVO_BILLING_ENFORCEMENT_ENABLED;
+
     const EVO_PUBLIC_PATHS = [
         '/',
         '/about-us',
@@ -834,40 +838,44 @@ if (path.indexOf('/billing') === 0) {
 
             /*
   /teacher-dashboard:
-  Only teacher accounts with active trial/subscription access can enter.
+  Teacher role is always required. Trial/subscription access is enforced only
+  after payment processing is ready.
 */
-                        if (path.indexOf('/teacher-dashboard') === 0) {
+            if (path.indexOf('/teacher-dashboard') === 0) {
                 if (role !== 'teacher') {
                     evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
                     return false;
                 }
 
-                try {
-    const access = await evoGetTeacherAccess(sb);
+                if (!EVO_BILLING_ENFORCEMENT_ENABLED) {
+                    evoAllowTeacherApps();
+                } else {
+                    try {
+                        const access = await evoGetTeacherAccess(sb);
 
-    if (!access || !access.has_access) {
-        evoShowTeacherPaywall(access || {
-            reason: 'no_access',
-            status: 'no_access'
-        });
+                        if (!access || !access.has_access) {
+                            evoShowTeacherPaywall(access || {
+                                reason: 'no_access',
+                                status: 'no_access'
+                            });
 
-        // Continue global footer initialization:
-    // auth UI, logout, assistant, consent, etc.
-    // Teacher apps will NOT start because evoAllowTeacherApps() is not called.
-        return true;
-    }
+                            // Continue global footer initialization. Teacher apps
+                            // will not start because evoAllowTeacherApps() was not called.
+                            return true;
+                        }
 
-    evoAllowTeacherApps();
+                        evoAllowTeacherApps();
 
-} catch (err) {
-                    console.error('[Evo Teacher Access Guard]', err);
+                    } catch (err) {
+                        console.error('[Evo Teacher Access Guard]', err);
 
-                    evoShowTeacherPaywall({
-                        reason: 'verification_failed',
-                        status: 'verification_failed'
-                    });
+                        evoShowTeacherPaywall({
+                            reason: 'verification_failed',
+                            status: 'verification_failed'
+                        });
 
-                    return false;
+                        return false;
+                    }
                 }
             }
 
