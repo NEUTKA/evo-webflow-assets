@@ -2284,7 +2284,6 @@ if (path.indexOf('/billing') === 0) {
             const sb = window.evoSupabase || window.supabase || window.supabaseClient || null;
             if (!sb) { console.warn("[EvoTracker] Supabase client not found"); return; }
 
-            let lastHeartbeat = Date.now();
             let currentUserId = null;
             let initialized = false;
 
@@ -2328,7 +2327,7 @@ if (path.indexOf('/billing') === 0) {
                 try {
                     const { data: existing } = await sb
                         .from("user_lesson_progress")
-                        .select("id, visits_count, seconds_spent, status, progress_percent")
+                        .select("id, visits_count, status, progress_percent")
                         .eq("user_id", currentUserId)
                         .eq("tracking_slug", trackingSlug)
                         .maybeSingle();
@@ -2342,11 +2341,9 @@ if (path.indexOf('/billing') === 0) {
                     } else {
                         const next = {
                             ...row,
-                            visits_count: (existing.visits_count || 0) + (payload.__countVisit ? 1 : 0),
-                            seconds_spent: (existing.seconds_spent || 0) + (payload.__addSeconds || 0)
+                            visits_count: (existing.visits_count || 0) + (payload.__countVisit ? 1 : 0)
                         };
                         delete next.__countVisit;
-                        delete next.__addSeconds;
 
                         await sb
                             .from("user_lesson_progress")
@@ -2358,19 +2355,14 @@ if (path.indexOf('/billing') === 0) {
                 }
             }
 
-            async function heartbeat() {
-                if (document.hidden) return;
-                const now = Date.now();
-                const deltaSec = Math.max(0, Math.round((now - lastHeartbeat) / 1000));
-                lastHeartbeat = now;
-
-                if (deltaSec > 0) {
-                    await upsertProgress({ __addSeconds: deltaSec });
-                }
-            }
-
             async function markComplete(progressPercent = 100, extraMeta = {}) {
                 if (!currentUserId) return;
+
+                // Save the final active seconds and stop the lesson timer.
+                try {
+                    await window.EvoLessonTimeTracker?.finish?.();
+                } catch (_) { }
+
                 const ts = new Date().toISOString();
 
                 await upsertProgress({
@@ -2449,24 +2441,15 @@ if (path.indexOf('/billing') === 0) {
 
                 await logEvent("page_view", { url: location.pathname });
 
-                setInterval(heartbeat, 30000);
-
-                window.addEventListener("beforeunload", function () {
-                    const now = Date.now();
-                    const deltaSec = Math.max(0, Math.round((now - lastHeartbeat) / 1000));
-                    if (deltaSec > 0) upsertProgress({ __addSeconds: deltaSec });
-                });
-
-                document.addEventListener("visibilitychange", function () {
-                    if (!document.hidden) lastHeartbeat = Date.now();
-                });
+                // Time is recorded only by initTimeTrackerRpc().
+                // Keeping one writer prevents duplicate counting and update races.
             }
 
             init();
         })();
     }
 
-    /* ================== time tracker RPC ================== */
+    /* ================== active lesson time tracker RPC ================== */
     function initTimeTrackerRpc() {
         (function () {
             if (window.__evoTimeTrackerInited) return;
@@ -2485,65 +2468,167 @@ if (path.indexOf('/billing') === 0) {
             const lessonType = getMeta("evo-lesson-type") || "unknown";
             if (!trackingSlug) return;
 
-            let startedAtMs = Date.now();
-            let sentSeconds = 0;
-            let flushing = false;
+            const IDLE_LIMIT_MS = 2 * 60 * 1000;
+            const TICK_MS = 1000;
+            const FLUSH_MS = 15000;
+            const MAX_TICK_SECONDS = 5;
+            const MAX_RPC_SECONDS = 60;
 
-            async function getUserId() {
-                const sb = getSB();
-                if (!sb?.auth?.getUser) return null;
-                try {
-                    const { data, error } = await sb.auth.getUser();
-                    if (error) return null;
-                    return data?.user?.id || null;
-                } catch (e) {
-                    return null;
+            let userId = null;
+            let pendingSeconds = 0;
+            let lastTickMs = performance.now();
+            let lastActivityMs = Date.now();
+            let flushing = false;
+            let stopped = false;
+            let tickInterval = null;
+            let flushInterval = null;
+
+            function mediaIsPlaying() {
+                return Array.from(document.querySelectorAll("audio,video"))
+                    .some(media => !media.paused && !media.ended && media.readyState > 1);
+            }
+
+            function pageHasFocus() {
+                return typeof document.hasFocus !== "function" || document.hasFocus();
+            }
+
+            function isActivelyLearning() {
+                if (stopped || document.hidden || document.visibilityState !== "visible") return false;
+                if (!pageHasFocus()) return false;
+
+                const recentlyActive = (Date.now() - lastActivityMs) <= IDLE_LIMIT_MS;
+                return recentlyActive || mediaIsPlaying();
+            }
+
+            function markActivity() {
+                lastActivityMs = Date.now();
+            }
+
+            function captureTick() {
+                const now = performance.now();
+                const elapsed = Math.max(
+                    0,
+                    Math.min((now - lastTickMs) / 1000, MAX_TICK_SECONDS)
+                );
+                lastTickMs = now;
+
+                if (isActivelyLearning()) {
+                    pendingSeconds += elapsed;
                 }
             }
 
-            async function flushTime(force) {
-                if (flushing) return;
+            async function flushTime(force = false) {
+                if (stopped || flushing || !userId) return false;
+
+                captureTick();
+
+                const wholeSeconds = Math.floor(pendingSeconds);
+                if (!force && wholeSeconds < 10) return false;
+                if (wholeSeconds <= 0) return false;
+
                 const sb = getSB();
-                if (!sb?.rpc) return;
+                if (!sb?.rpc) return false;
 
-                const userId = await getUserId();
-                if (!userId) return;
-
-                const totalElapsed = Math.floor((Date.now() - startedAtMs) / 1000);
-                const delta = totalElapsed - sentSeconds;
-
-                if (!force && delta < 10) return;
-                if (delta <= 0) return;
-
+                const secondsToSend = Math.min(wholeSeconds, MAX_RPC_SECONDS);
                 flushing = true;
+
                 try {
                     const { error } = await sb.rpc("evo_add_lesson_seconds", {
                         p_tracking_slug: trackingSlug,
                         p_lesson_type: lessonType,
-                        p_add_seconds: delta
+                        p_add_seconds: secondsToSend
                     });
 
-                    if (!error) sentSeconds += delta;
-                    else console.warn("evo_add_lesson_seconds error:", error);
+                    if (error) {
+                        console.warn("evo_add_lesson_seconds error:", error);
+                        return false;
+                    }
+
+                    pendingSeconds = Math.max(0, pendingSeconds - secondsToSend);
+                    return true;
                 } catch (e) {
                     console.warn("flushTime failed:", e);
+                    return false;
                 } finally {
                     flushing = false;
                 }
             }
 
-            const interval = setInterval(() => flushTime(false), 15000);
+            function clearTimers() {
+                if (tickInterval) clearInterval(tickInterval);
+                if (flushInterval) clearInterval(flushInterval);
+                tickInterval = null;
+                flushInterval = null;
+            }
 
-            document.addEventListener("visibilitychange", () => {
-                if (document.hidden) flushTime(true);
-            });
+            async function finish() {
+                if (stopped) return;
+                captureTick();
+                await flushTime(true);
+                stopped = true;
+                clearTimers();
+            }
 
-            window.addEventListener("pagehide", () => {
-                flushTime(true);
-                clearInterval(interval);
-            });
+            async function init() {
+                const sb = getSB();
+                if (!sb?.auth?.getSession || !sb?.rpc) return;
 
-            window.addEventListener("beforeunload", () => flushTime(true));
+                try {
+                    // Read the session once. Do not call /auth/v1/user every 15 seconds.
+                    const { data, error } = await sb.auth.getSession();
+                    if (error) return;
+                    userId = data?.session?.user?.id || null;
+                } catch (_) {
+                    userId = null;
+                }
+
+                if (!userId) return;
+
+                ["pointerdown", "keydown", "touchstart", "scroll"].forEach(eventName => {
+                    window.addEventListener(eventName, markActivity, { passive: true });
+                });
+
+                window.addEventListener("focus", () => {
+                    lastTickMs = performance.now();
+                    markActivity();
+                });
+
+                window.addEventListener("blur", () => {
+                    captureTick();
+                    flushTime(true);
+                });
+
+                document.addEventListener("visibilitychange", () => {
+                    captureTick();
+                    lastTickMs = performance.now();
+
+                    if (document.hidden) {
+                        flushTime(true);
+                    } else {
+                        markActivity();
+                    }
+                });
+
+                window.addEventListener("pagehide", () => {
+                    captureTick();
+                    flushTime(true);
+                    clearTimers();
+                });
+
+                // This is best-effort only; frequent flushing limits possible loss.
+                window.addEventListener("beforeunload", () => flushTime(true));
+
+                tickInterval = setInterval(captureTick, TICK_MS);
+                flushInterval = setInterval(() => flushTime(false), FLUSH_MS);
+
+                window.EvoLessonTimeTracker = {
+                    flush: flushTime,
+                    finish,
+                    getPendingSeconds: () => Math.floor(pendingSeconds)
+                };
+            }
+
+            init();
         })();
     }
 
