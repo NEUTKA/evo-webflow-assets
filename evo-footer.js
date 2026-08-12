@@ -338,6 +338,13 @@
         '/reading-b1plus',
         '/reading-b2',
 
+        /* Writing course pages — PUBLIC */
+'/writing-a1',
+'/writing-a2',
+'/writing-b1',
+'/writing-b1-upper-intermediate',
+'/writing-b2-pre-advanced',
+
         '/books',
 
         '/welcome',
@@ -354,6 +361,7 @@
         '/vocabulary-lessons',
         '/listening',
         '/reading-lessons',
+        '/writing',
 
         '/books/books-section',
         '/a1-grammar-section',
