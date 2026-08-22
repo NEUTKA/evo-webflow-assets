@@ -2759,6 +2759,14 @@ if (path.indexOf('/billing') === 0) {
 
             const STORAGE_KEY = "evo_lesson_language";
             const DEFAULT_LANGUAGE = "en";
+            const PREVIEW_PARAM = "evo-translation-preview";
+            const previewRequested = (() => {
+                try {
+                    return new URL(window.location.href).searchParams.get(PREVIEW_PARAM) === "1";
+                } catch (_) {
+                    return false;
+                }
+            })();
             const LANGUAGES = [
                 { code: "en", label: "English", dir: "ltr" },
                 { code: "es", label: "Español", dir: "ltr" },
@@ -2786,6 +2794,7 @@ if (path.indexOf('/billing') === 0) {
             let preferredLanguage = DEFAULT_LANGUAGE;
             let displayedLanguage = DEFAULT_LANGUAGE;
             let loadingLanguage = false;
+            let previewActive = false;
 
             function getSB() {
                 return window.supabaseClient || window.supabase || window.sb || null;
@@ -2927,10 +2936,29 @@ if (path.indexOf('/billing') === 0) {
             }
 
             function applyEnglishFallback(reason) {
+                previewActive = false;
                 applyContent(DEFAULT_LANGUAGE, null);
                 document.querySelectorAll("[data-evo-lesson-language-select]").forEach(select => {
                     select.title = reason || "";
                 });
+            }
+
+            function setPreviewBanner(message, state = "idle") {
+                if (!previewRequested) return;
+                document.querySelectorAll("[data-evo-lesson-preview-status]").forEach(el => {
+                    el.textContent = message;
+                    el.setAttribute("data-state", state);
+                });
+            }
+
+            function exitPreviewMode() {
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete(PREVIEW_PARAM);
+                    window.location.assign(url.toString());
+                } catch (_) {
+                    window.location.reload();
+                }
             }
 
             async function fetchPublishedTranslation(sb, lessonId, languageCode) {
@@ -2949,6 +2977,25 @@ if (path.indexOf('/billing') === 0) {
                 return data;
             }
 
+            async function fetchDraftPreview(sb, lessonId, languageCode) {
+                if (!previewRequested || !sb?.functions?.invoke || !lessonId || languageCode === DEFAULT_LANGUAGE) {
+                    return null;
+                }
+
+                const { data, error } = await sb.functions.invoke("translate_lesson_theory", {
+                    body: {
+                        action: "preview",
+                        lesson_id: lessonId,
+                        language_code: languageCode,
+                        source_version: getSourceVersion()
+                    }
+                });
+
+                if (error) throw error;
+                if (!data?.content || typeof data.content !== "object" || data.status !== "draft") return null;
+                return data;
+            }
+
             async function showLanguage(languageCode, options = {}) {
                 const sb = getSB();
                 const lessonId = getLessonId();
@@ -2962,20 +3009,47 @@ if (path.indexOf('/billing') === 0) {
                 }
 
                 if (normalized === DEFAULT_LANGUAGE) {
+                    previewActive = false;
                     applyContent(DEFAULT_LANGUAGE, null);
+                    setPreviewBanner("Draft preview mode: English original", "idle");
                     return;
                 }
 
                 loadingLanguage = true;
                 syncSwitcher();
+                if (previewRequested) {
+                    setPreviewBanner("Checking administrator draft preview...", "loading");
+                }
 
                 try {
-                    const row = await fetchPublishedTranslation(sb, lessonId, normalized);
+                    let row = await fetchPublishedTranslation(sb, lessonId, normalized);
+                    let isDraftPreview = false;
+
+                    if (!row && previewRequested) {
+                        try {
+                            row = await fetchDraftPreview(sb, lessonId, normalized);
+                            isDraftPreview = !!row;
+                        } catch (_) {
+                            applyEnglishFallback("Draft preview is unavailable. Sign in with the administrator account.");
+                            setPreviewBanner("Draft preview unavailable: administrator sign-in required", "error");
+                            return;
+                        }
+                    }
+
                     if (!row) {
                         applyEnglishFallback("Translation is not published for this lesson yet. Showing English.");
+                        setPreviewBanner("No current draft is available for this language", "error");
                         return;
                     }
+
+                    previewActive = isDraftPreview;
                     applyContent(normalized, row.content);
+                    const languageLabel = LANGUAGE_MAP.get(normalized)?.label || normalized;
+                    if (isDraftPreview) {
+                        setPreviewBanner(`Draft preview: ${languageLabel}. Not visible to students.`, "active");
+                    } else {
+                        setPreviewBanner(`Published translation: ${languageLabel}`, "published");
+                    }
                 } finally {
                     loadingLanguage = false;
                     syncSwitcher();
@@ -3041,11 +3115,16 @@ if (path.indexOf('/billing') === 0) {
 
             function renderSwitcher() {
                 injectStyleOnce("evo-lesson-language-style", `
-          .evo-lesson-language{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:14px 0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+          .evo-lesson-language{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
           .evo-lesson-language label{display:inline-flex;align-items:center;gap:8px;color:#223044;font-size:14px;font-weight:650}
           .evo-lesson-language select{min-width:168px;border:1px solid #c7d8ee;border-radius:8px;background:#fff;color:#122033;padding:8px 34px 8px 10px;font:inherit}
           .evo-lesson-language select:disabled{opacity:.62;cursor:wait}
-          @media (max-width:640px){.evo-lesson-language{justify-content:stretch}.evo-lesson-language label{width:100%;justify-content:space-between}.evo-lesson-language select{min-width:0;flex:1}}
+          .evo-lesson-preview{display:flex;align-items:center;gap:8px;border:1px solid #e3a72f;border-radius:8px;background:#fff7df;padding:7px 8px;color:#49340b;font-size:13px;font-weight:650}
+          .evo-lesson-preview [data-state="active"]{color:#166534}
+          .evo-lesson-preview [data-state="error"]{color:#9f1239}
+          .evo-lesson-preview button{border:0;border-left:1px solid #d7bd79;background:transparent;color:#49340b;padding:2px 4px 2px 10px;font:inherit;cursor:pointer}
+          .evo-lesson-preview button:hover{text-decoration:underline}
+          @media (max-width:640px){.evo-lesson-language{justify-content:stretch}.evo-lesson-language label,.evo-lesson-preview{width:100%;justify-content:space-between}.evo-lesson-language select{min-width:0;flex:1}}
         `);
 
                 let host = document.querySelector("[data-evo-lesson-language-switcher]");
@@ -3060,6 +3139,11 @@ if (path.indexOf('/billing') === 0) {
                 host.setAttribute("data-evo-ready", "1");
                 host.classList.add("evo-lesson-language");
                 host.innerHTML = `
+          ${previewRequested ? `
+          <div class="evo-lesson-preview" role="status" aria-live="polite">
+            <span data-evo-lesson-preview-status data-state="loading">Checking administrator draft preview...</span>
+            <button type="button" data-evo-exit-preview>Exit preview</button>
+          </div>` : ""}
           <label>
             <span>Explanations</span>
             <select data-evo-lesson-language-select aria-label="Lesson explanation language">
@@ -3067,6 +3151,8 @@ if (path.indexOf('/billing') === 0) {
             </select>
           </label>
         `;
+
+                host.querySelector("[data-evo-exit-preview]")?.addEventListener("click", exitPreviewMode);
 
                 host.querySelector("[data-evo-lesson-language-select]")?.addEventListener("change", async (event) => {
                     const next = normalizeLocale(event.target.value) || DEFAULT_LANGUAGE;
@@ -3122,7 +3208,9 @@ if (path.indexOf('/billing') === 0) {
                     getState: () => ({
                         preferredLanguage,
                         displayedLanguage,
-                        userId: currentUserId
+                        userId: currentUserId,
+                        previewRequested,
+                        previewActive
                     })
                 };
             }
