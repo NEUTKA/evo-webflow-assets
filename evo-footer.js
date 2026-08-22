@@ -3098,6 +3098,66 @@ if (path.indexOf('/billing') === 0) {
                 return data;
             }
 
+            async function generateUnpublishedDrafts(button) {
+                const sb = getSB();
+                const lessonId = getLessonId();
+                const statusEl = document.querySelector("[data-evo-translation-generation-status]");
+                if (!sb || !lessonId || !statusEl) throw new Error("Translation controls are not ready");
+
+                button.disabled = true;
+                statusEl.hidden = false;
+                statusEl.setAttribute("data-state", "loading");
+                statusEl.textContent = "Checking published languages...";
+
+                try {
+                    const { data: publishedRows, error } = await sb
+                        .from("lesson_theory_translations")
+                        .select("language_code")
+                        .eq("lesson_id", lessonId)
+                        .eq("source_version", getSourceVersion())
+                        .eq("status", "published");
+
+                    if (error) throw error;
+
+                    const published = new Set((publishedRows || []).map(row => row.language_code));
+                    const targets = LANGUAGES.filter(lang => lang.code !== DEFAULT_LANGUAGE && !published.has(lang.code));
+
+                    if (!targets.length) {
+                        statusEl.setAttribute("data-state", "active");
+                        statusEl.textContent = "All translations are already published.";
+                        return;
+                    }
+
+                    const drafts = [];
+                    const failed = [];
+
+                    for (let index = 0; index < targets.length; index += 1) {
+                        const lang = targets[index];
+                        statusEl.textContent = `Generating ${lang.label} (${index + 1}/${targets.length})...`;
+
+                        try {
+                            const result = await generateTranslations({ languages: [lang.code] });
+                            const languageResult = result?.results?.find(item => item.language_code === lang.code);
+                            if (languageResult?.status === "draft") {
+                                drafts.push(lang.code);
+                            } else {
+                                failed.push(lang.code);
+                            }
+                        } catch (error) {
+                            failed.push(lang.code);
+                            console.warn(`[EvoLessonLanguage] ${lang.code} generation failed:`, error?.message || error);
+                        }
+                    }
+
+                    statusEl.setAttribute("data-state", failed.length ? "error" : "active");
+                    statusEl.textContent = failed.length
+                        ? `Created ${drafts.length} drafts. Failed: ${failed.join(", ")}.`
+                        : `Created ${drafts.length} drafts. Review before publishing.`;
+                } finally {
+                    button.disabled = false;
+                }
+            }
+
             async function publishTranslations(options = {}) {
                 const sb = getSB();
                 if (!sb?.functions?.invoke) throw new Error("Supabase Functions client is not ready");
@@ -3123,6 +3183,7 @@ if (path.indexOf('/billing') === 0) {
           .evo-lesson-preview [data-state="active"]{color:#166534}
           .evo-lesson-preview [data-state="error"]{color:#9f1239}
           .evo-lesson-preview button{border:0;border-left:1px solid #d7bd79;background:transparent;color:#49340b;padding:2px 4px 2px 10px;font:inherit;cursor:pointer}
+          .evo-lesson-preview button:disabled{opacity:.55;cursor:wait;text-decoration:none}
           .evo-lesson-preview button:hover{text-decoration:underline}
           @media (max-width:640px){.evo-lesson-language{justify-content:stretch}.evo-lesson-language label,.evo-lesson-preview{width:100%;justify-content:space-between}.evo-lesson-language select{min-width:0;flex:1}}
         `);
@@ -3142,6 +3203,8 @@ if (path.indexOf('/billing') === 0) {
           ${previewRequested ? `
           <div class="evo-lesson-preview" role="status" aria-live="polite">
             <span data-evo-lesson-preview-status data-state="loading">Checking administrator draft preview...</span>
+            <span data-evo-translation-generation-status data-state="idle" hidden></span>
+            <button type="button" data-evo-generate-unpublished>Generate unpublished</button>
             <button type="button" data-evo-exit-preview>Exit preview</button>
           </div>` : ""}
           <label>
@@ -3153,6 +3216,19 @@ if (path.indexOf('/billing') === 0) {
         `;
 
                 host.querySelector("[data-evo-exit-preview]")?.addEventListener("click", exitPreviewMode);
+                host.querySelector("[data-evo-generate-unpublished]")?.addEventListener("click", async (event) => {
+                    try {
+                        await generateUnpublishedDrafts(event.currentTarget);
+                    } catch (error) {
+                        const statusEl = host.querySelector("[data-evo-translation-generation-status]");
+                        if (statusEl) {
+                            statusEl.hidden = false;
+                            statusEl.setAttribute("data-state", "error");
+                            statusEl.textContent = error?.message || "Translation generation failed.";
+                        }
+                        event.currentTarget.disabled = false;
+                    }
+                });
 
                 host.querySelector("[data-evo-lesson-language-select]")?.addEventListener("change", async (event) => {
                     const next = normalizeLocale(event.target.value) || DEFAULT_LANGUAGE;
