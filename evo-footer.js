@@ -2748,6 +2748,389 @@ if (path.indexOf('/billing') === 0) {
         })();
     }
 
+    /* ================== lesson theory localization ================== */
+    function initLessonTheoryLocalization() {
+        (function () {
+            if (window.__evoLessonTheoryLocalizationInited) return;
+            window.__evoLessonTheoryLocalizationInited = true;
+
+            const theoryEls = Array.from(document.querySelectorAll("[data-evo-theory] [data-evo-translate]"));
+            if (!theoryEls.length) return;
+
+            const STORAGE_KEY = "evo_lesson_language";
+            const DEFAULT_LANGUAGE = "en";
+            const LANGUAGES = [
+                { code: "en", label: "English", dir: "ltr" },
+                { code: "es", label: "Español", dir: "ltr" },
+                { code: "pt", label: "Português", dir: "ltr" },
+                { code: "de", label: "Deutsch", dir: "ltr" },
+                { code: "fr", label: "Français", dir: "ltr" },
+                { code: "it", label: "Italiano", dir: "ltr" },
+                { code: "ru", label: "Русский", dir: "ltr" },
+                { code: "hy", label: "Հայերեն", dir: "ltr" },
+                { code: "zh-Hans", label: "简体中文", dir: "ltr" },
+                { code: "ja", label: "日本語", dir: "ltr" },
+                { code: "ko", label: "한국어", dir: "ltr" },
+                { code: "hi", label: "हिन्दी", dir: "ltr" },
+                { code: "bn", label: "বাংলা", dir: "ltr" },
+                { code: "ur", label: "اردو", dir: "rtl" },
+                { code: "ar", label: "العربية", dir: "rtl" },
+                { code: "id", label: "Bahasa Indonesia", dir: "ltr" },
+                { code: "tr", label: "Türkçe", dir: "ltr" },
+                { code: "vi", label: "Tiếng Việt", dir: "ltr" }
+            ];
+            const LANGUAGE_MAP = new Map(LANGUAGES.map(lang => [lang.code, lang]));
+            const SUPPORTED_BASE_CODES = new Set(LANGUAGES.map(lang => lang.code).filter(code => !code.includes("-")));
+
+            let currentUserId = null;
+            let preferredLanguage = DEFAULT_LANGUAGE;
+            let displayedLanguage = DEFAULT_LANGUAGE;
+            let loadingLanguage = false;
+
+            function getSB() {
+                return window.supabaseClient || window.supabase || window.sb || null;
+            }
+
+            function getLessonId() {
+                const root = document.querySelector("[data-evo-lesson-id]");
+                const meta = document.querySelector('meta[name="evo-tracking-slug"]');
+                return (
+                    root?.getAttribute("data-evo-lesson-id") ||
+                    document.body?.getAttribute("data-evo-lesson-id") ||
+                    meta?.content ||
+                    ""
+                ).trim();
+            }
+
+            function getSourceVersion() {
+                const root = document.querySelector("[data-evo-lesson-id]") || document.querySelector("[data-evo-theory]");
+                const raw = root?.getAttribute("data-evo-source-version") || document.body?.getAttribute("data-evo-source-version") || "1";
+                const version = Number(raw);
+                return Number.isInteger(version) && version > 0 ? version : 1;
+            }
+
+            function normalizeLocale(value) {
+                const raw = String(value || "").trim().replace(/_/g, "-");
+                if (!raw) return "";
+
+                const exact = LANGUAGES.find(lang => lang.code.toLowerCase() === raw.toLowerCase());
+                if (exact) return exact.code;
+
+                const lower = raw.toLowerCase();
+                const parts = lower.split("-");
+                const base = parts[0] || "";
+
+                if (base === "zh") {
+                    const region = parts[1] || "";
+                    if (lower.includes("hans") || region === "cn" || region === "sg") return "zh-Hans";
+                    return "";
+                }
+
+                if (SUPPORTED_BASE_CODES.has(base)) return base;
+                return "";
+            }
+
+            function getBrowserLanguage() {
+                const candidates = Array.isArray(navigator.languages) && navigator.languages.length
+                    ? navigator.languages
+                    : [navigator.language];
+
+                for (const locale of candidates) {
+                    const normalized = normalizeLocale(locale);
+                    if (normalized) return normalized;
+                }
+
+                return DEFAULT_LANGUAGE;
+            }
+
+            function readLocalPreference() {
+                try {
+                    return normalizeLocale(localStorage.getItem(STORAGE_KEY));
+                } catch (_) {
+                    return "";
+                }
+            }
+
+            function writeLocalPreference(languageCode) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, languageCode);
+                } catch (_) { }
+            }
+
+            async function getSessionUser(sb) {
+                if (!sb?.auth?.getSession) return null;
+                try {
+                    const { data } = await sb.auth.getSession();
+                    return data?.session?.user || null;
+                } catch (_) {
+                    return null;
+                }
+            }
+
+            async function readRemotePreference(sb, userId) {
+                if (!sb || !userId) return "";
+                try {
+                    const { data, error } = await sb
+                        .from("user_lesson_preferences")
+                        .select("preferred_lesson_language")
+                        .eq("user_id", userId)
+                        .maybeSingle();
+
+                    if (error) return "";
+                    return normalizeLocale(data?.preferred_lesson_language);
+                } catch (_) {
+                    return "";
+                }
+            }
+
+            async function saveRemotePreference(sb, userId, languageCode) {
+                if (!sb || !userId || !LANGUAGE_MAP.has(languageCode)) return;
+                try {
+                    await sb.from("user_lesson_preferences").upsert({
+                        user_id: userId,
+                        preferred_lesson_language: languageCode,
+                        updated_at: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.warn("[EvoLessonLanguage] preference sync failed:", e?.message || e);
+                }
+            }
+
+            function rememberOriginals() {
+                theoryEls.forEach(el => {
+                    if (!el.hasAttribute("data-evo-original-text")) {
+                        el.setAttribute("data-evo-original-text", (el.textContent || "").trim());
+                    }
+                });
+            }
+
+            function applyContent(languageCode, content) {
+                const lang = LANGUAGE_MAP.get(languageCode) || LANGUAGE_MAP.get(DEFAULT_LANGUAGE);
+                const dir = lang?.dir || "ltr";
+
+                theoryEls.forEach(el => {
+                    const key = el.getAttribute("data-evo-translate") || "";
+                    const translated = content && typeof content[key] === "string" ? content[key] : "";
+                    const original = el.getAttribute("data-evo-original-text") || "";
+                    el.textContent = translated || original;
+                    el.setAttribute("lang", languageCode);
+                    el.setAttribute("dir", dir);
+                });
+
+                document.querySelectorAll("[data-evo-theory]").forEach(root => {
+                    root.setAttribute("data-evo-active-language", languageCode);
+                    root.setAttribute("data-evo-text-direction", dir);
+                });
+
+                displayedLanguage = languageCode;
+                syncSwitcher();
+            }
+
+            function applyEnglishFallback(reason) {
+                applyContent(DEFAULT_LANGUAGE, null);
+                document.querySelectorAll("[data-evo-lesson-language-select]").forEach(select => {
+                    select.title = reason || "";
+                });
+            }
+
+            async function fetchPublishedTranslation(sb, lessonId, languageCode) {
+                if (!sb || !lessonId || languageCode === DEFAULT_LANGUAGE) return null;
+
+                const { data, error } = await sb
+                    .from("lesson_theory_translations")
+                    .select("content,status,source_version,source_hash")
+                    .eq("lesson_id", lessonId)
+                    .eq("language_code", languageCode)
+                    .eq("source_version", getSourceVersion())
+                    .eq("status", "published")
+                    .maybeSingle();
+
+                if (error || !data?.content || typeof data.content !== "object") return null;
+                return data;
+            }
+
+            async function showLanguage(languageCode, options = {}) {
+                const sb = getSB();
+                const lessonId = getLessonId();
+                const normalized = normalizeLocale(languageCode) || DEFAULT_LANGUAGE;
+                preferredLanguage = normalized;
+
+                if (!LANGUAGE_MAP.has(normalized)) {
+                    preferredLanguage = DEFAULT_LANGUAGE;
+                    applyEnglishFallback("Unsupported language. Showing English.");
+                    return;
+                }
+
+                if (normalized === DEFAULT_LANGUAGE) {
+                    applyContent(DEFAULT_LANGUAGE, null);
+                    return;
+                }
+
+                loadingLanguage = true;
+                syncSwitcher();
+
+                try {
+                    const row = await fetchPublishedTranslation(sb, lessonId, normalized);
+                    if (!row) {
+                        applyEnglishFallback("Translation is not published for this lesson yet. Showing English.");
+                        return;
+                    }
+                    applyContent(normalized, row.content);
+                } finally {
+                    loadingLanguage = false;
+                    syncSwitcher();
+                }
+
+                if (options.persist) {
+                    writeLocalPreference(normalized);
+                    await saveRemotePreference(sb, currentUserId, normalized);
+                }
+            }
+
+            function collectTheoryPayload(extra = {}) {
+                const lessonId = getLessonId();
+                if (!lessonId) throw new Error("Missing lesson id. Add data-evo-lesson-id or meta[name='evo-tracking-slug'].");
+
+                const theory = {};
+                theoryEls.forEach(el => {
+                    const key = el.getAttribute("data-evo-translate") || "";
+                    if (!key) return;
+                    theory[key] = (el.getAttribute("data-evo-original-text") || el.textContent || "").trim();
+                });
+
+                const lockedTerms = Array.from(document.querySelectorAll(
+                    "[data-evo-theory] [data-evo-locked-term], [data-evo-theory] [data-evo-keep-english], [data-evo-theory] code"
+                ))
+                    .map(el => (el.textContent || "").trim())
+                    .filter(Boolean)
+                    .filter((value, index, arr) => arr.indexOf(value) === index);
+
+                return {
+                    action: "generate",
+                    lesson_id: lessonId,
+                    source_version: getSourceVersion(),
+                    theory,
+                    locked_terms: lockedTerms,
+                    ...extra
+                };
+            }
+
+            async function generateTranslations(options = {}) {
+                const sb = getSB();
+                if (!sb?.functions?.invoke) throw new Error("Supabase Functions client is not ready");
+                const body = collectTheoryPayload(options);
+                const { data, error } = await sb.functions.invoke("translate_lesson_theory", { body });
+                if (error) throw error;
+                return data;
+            }
+
+            async function publishTranslations(options = {}) {
+                const sb = getSB();
+                if (!sb?.functions?.invoke) throw new Error("Supabase Functions client is not ready");
+                const lessonId = getLessonId();
+                const body = {
+                    action: "publish",
+                    lesson_id: lessonId,
+                    source_version: getSourceVersion(),
+                    ...options
+                };
+                const { data, error } = await sb.functions.invoke("translate_lesson_theory", { body });
+                if (error) throw error;
+                return data;
+            }
+
+            function renderSwitcher() {
+                injectStyleOnce("evo-lesson-language-style", `
+          .evo-lesson-language{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:14px 0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+          .evo-lesson-language label{display:inline-flex;align-items:center;gap:8px;color:#223044;font-size:14px;font-weight:650}
+          .evo-lesson-language select{min-width:168px;border:1px solid #c7d8ee;border-radius:8px;background:#fff;color:#122033;padding:8px 34px 8px 10px;font:inherit}
+          .evo-lesson-language select:disabled{opacity:.62;cursor:wait}
+          @media (max-width:640px){.evo-lesson-language{justify-content:stretch}.evo-lesson-language label{width:100%;justify-content:space-between}.evo-lesson-language select{min-width:0;flex:1}}
+        `);
+
+                let host = document.querySelector("[data-evo-lesson-language-switcher]");
+                if (!host) {
+                    host = document.createElement("div");
+                    host.setAttribute("data-evo-lesson-language-switcher", "auto");
+                    const firstTheory = document.querySelector("[data-evo-theory]");
+                    firstTheory?.parentNode?.insertBefore(host, firstTheory);
+                }
+
+                if (!host || host.getAttribute("data-evo-ready") === "1") return;
+                host.setAttribute("data-evo-ready", "1");
+                host.classList.add("evo-lesson-language");
+                host.innerHTML = `
+          <label>
+            <span>Explanations</span>
+            <select data-evo-lesson-language-select aria-label="Lesson explanation language">
+              ${LANGUAGES.map(lang => `<option value="${lang.code}">${lang.label}</option>`).join("")}
+            </select>
+          </label>
+        `;
+
+                host.querySelector("[data-evo-lesson-language-select]")?.addEventListener("change", async (event) => {
+                    const next = normalizeLocale(event.target.value) || DEFAULT_LANGUAGE;
+                    writeLocalPreference(next);
+                    await saveRemotePreference(getSB(), currentUserId, next);
+                    await showLanguage(next, { persist: false });
+                    try {
+                        window.evoTrack?.("lesson_language_changed", {
+                            lesson_id: getLessonId(),
+                            preferred_language: next,
+                            displayed_language: displayedLanguage
+                        });
+                    } catch (_) { }
+                });
+            }
+
+            function syncSwitcher() {
+                document.querySelectorAll("[data-evo-lesson-language-select]").forEach(select => {
+                    select.value = preferredLanguage;
+                    select.disabled = loadingLanguage;
+                    select.setAttribute("data-evo-displayed-language", displayedLanguage);
+                });
+            }
+
+            async function init() {
+                rememberOriginals();
+                renderSwitcher();
+
+                const sb = getSB();
+                const user = await getSessionUser(sb);
+                currentUserId = user?.id || null;
+
+                const remote = await readRemotePreference(sb, currentUserId);
+                const local = readLocalPreference();
+                const browser = getBrowserLanguage();
+
+                preferredLanguage = remote || local || browser || DEFAULT_LANGUAGE;
+
+                if (currentUserId && !remote && local) {
+                    await saveRemotePreference(sb, currentUserId, local);
+                }
+
+                await showLanguage(preferredLanguage, { persist: false });
+
+                window.EvoLessonTheoryLocalization = {
+                    languages: LANGUAGES.slice(),
+                    getLessonId,
+                    getSourceVersion,
+                    collectTheoryPayload,
+                    generateTranslations,
+                    publishTranslations,
+                    showLanguage: (languageCode) => showLanguage(languageCode, { persist: true }),
+                    getState: () => ({
+                        preferredLanguage,
+                        displayedLanguage,
+                        userId: currentUserId
+                    })
+                };
+            }
+
+            init().catch(e => console.warn("[EvoLessonLanguage]", e?.message || e));
+        })();
+    }
+
     /* ================== boot ================== */
     async function boot() {
         try {
@@ -2765,6 +3148,7 @@ if (path.indexOf('/billing') === 0) {
             initProgressTracker();
             initTimeTrackerRpc();
             initCardStatuses();
+            initLessonTheoryLocalization();
         } catch (e) {
             console.warn("[Evo] footer failed:", e?.message || e);
             evoRevealPage();
