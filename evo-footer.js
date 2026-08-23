@@ -2776,6 +2776,7 @@ if (path.indexOf('/billing') === 0) {
                 { code: "it", label: "Italiano", dir: "ltr" },
                 { code: "ru", label: "Русский", dir: "ltr" },
                 { code: "kk", label: "Қазақша", dir: "ltr" },
+                { code: "uz", label: "O‘zbekcha", dir: "ltr" },
                 { code: "hy", label: "Հայերեն", dir: "ltr" },
                 { code: "zh-Hans", label: "简体中文", dir: "ltr" },
                 { code: "ja", label: "日本語", dir: "ltr" },
