@@ -3108,24 +3108,27 @@ if (path.indexOf('/billing') === 0) {
                 button.disabled = true;
                 statusEl.hidden = false;
                 statusEl.setAttribute("data-state", "loading");
-                statusEl.textContent = "Checking published languages...";
+                statusEl.textContent = "Checking translation statuses...";
 
                 try {
-                    const { data: publishedRows, error } = await sb
-                        .from("lesson_theory_translations")
-                        .select("language_code")
-                        .eq("lesson_id", lessonId)
-                        .eq("source_version", getSourceVersion())
-                        .eq("status", "published");
+                    const { data: statusData, error } = await sb.functions.invoke("translate_lesson_theory", {
+                        body: {
+                            action: "status",
+                            lesson_id: lessonId,
+                            source_version: getSourceVersion()
+                        }
+                    });
 
                     if (error) throw error;
 
-                    const published = new Set((publishedRows || []).map(row => row.language_code));
-                    const targets = LANGUAGES.filter(lang => lang.code !== DEFAULT_LANGUAGE && !published.has(lang.code));
+                    const ready = new Set((statusData?.translations || [])
+                        .filter(row => ["draft", "published", "generating"].includes(row.status))
+                        .map(row => row.language_code));
+                    const targets = LANGUAGES.filter(lang => lang.code !== DEFAULT_LANGUAGE && !ready.has(lang.code));
 
                     if (!targets.length) {
                         statusEl.setAttribute("data-state", "active");
-                        statusEl.textContent = "All translations are already published.";
+                        statusEl.textContent = "All translations have drafts or are already published.";
                         return;
                     }
 
