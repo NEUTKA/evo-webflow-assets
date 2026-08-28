@@ -2816,8 +2816,8 @@ if (path.indexOf('/billing') === 0) {
             function getSourceVersion() {
                 const lessonRoot = document.querySelector("[data-evo-lesson-id][data-evo-source-version]");
                 const theoryRoot = document.querySelector("[data-evo-theory][data-evo-source-version]");
-                const raw = lessonRoot?.getAttribute("data-evo-source-version") ||
-                    theoryRoot?.getAttribute("data-evo-source-version") ||
+                const raw = theoryRoot?.getAttribute("data-evo-source-version") ||
+                    lessonRoot?.getAttribute("data-evo-source-version") ||
                     document.body?.getAttribute("data-evo-source-version") ||
                     "1";
                 const version = Number(raw);
