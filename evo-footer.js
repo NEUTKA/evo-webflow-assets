@@ -3079,7 +3079,9 @@ if (path.indexOf('/billing') === 0) {
                 ))
                     .map(el => (el.textContent || "").trim())
                     .filter(Boolean)
-                    .filter((value, index, arr) => arr.indexOf(value) === index);
+                    .filter(value => value.length <= 160)
+                    .filter((value, index, arr) => arr.indexOf(value) === index)
+                    .slice(0, 120);
 
                 return {
                     action: "generate",
