@@ -2814,8 +2814,12 @@ if (path.indexOf('/billing') === 0) {
             }
 
             function getSourceVersion() {
-                const root = document.querySelector("[data-evo-lesson-id]") || document.querySelector("[data-evo-theory]");
-                const raw = root?.getAttribute("data-evo-source-version") || document.body?.getAttribute("data-evo-source-version") || "1";
+                const lessonRoot = document.querySelector("[data-evo-lesson-id][data-evo-source-version]");
+                const theoryRoot = document.querySelector("[data-evo-theory][data-evo-source-version]");
+                const raw = lessonRoot?.getAttribute("data-evo-source-version") ||
+                    theoryRoot?.getAttribute("data-evo-source-version") ||
+                    document.body?.getAttribute("data-evo-source-version") ||
+                    "1";
                 const version = Number(raw);
                 return Number.isInteger(version) && version > 0 ? version : 1;
             }
