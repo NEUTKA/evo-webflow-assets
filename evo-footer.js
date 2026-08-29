@@ -3035,9 +3035,17 @@ if (path.indexOf('/billing') === 0) {
                         try {
                             row = await fetchDraftPreview(sb, lessonId, normalized);
                             isDraftPreview = !!row;
-                        } catch (_) {
-                            applyEnglishFallback("Draft preview is unavailable. Sign in with the administrator account.");
-                            setPreviewBanner("Draft preview unavailable: administrator sign-in required", "error");
+                        } catch (error) {
+                            const status = Number(error?.context?.status || error?.status || 0);
+                            const authError = status === 401 || status === 403;
+                            const notFound = status === 404;
+                            const message = authError
+                                ? "Draft preview unavailable: administrator sign-in required"
+                                : notFound
+                                    ? "No current draft is available for this language"
+                                    : "Draft preview is temporarily unavailable";
+                            applyEnglishFallback(message);
+                            setPreviewBanner(message, "error");
                             return;
                         }
                     }
@@ -3306,6 +3314,354 @@ if (path.indexOf('/billing') === 0) {
         })();
     }
 
+    /* ================== lesson theory batch admin ================== */
+    function initLessonTheoryBatchAdmin() {
+        (function () {
+            if (window.__evoLessonTheoryBatchAdminInited) return;
+
+            let pageUrl;
+            try {
+                pageUrl = new URL(window.location.href);
+            } catch (_) {
+                return;
+            }
+
+            const path = pageUrl.pathname.replace(/\/+$/, "") || "/";
+            const previewRequested = pageUrl.searchParams.get("evo-translation-preview") === "1";
+            if (!previewRequested || path !== "/grammar-a1") return;
+
+            window.__evoLessonTheoryBatchAdminInited = true;
+
+            const LANGUAGE_CODES = [
+                "es", "pt", "de", "fr", "it", "ru", "kk", "uz", "hy", "zh-Hans",
+                "ja", "ko", "hi", "bn", "ur", "ar", "id", "tr", "vi"
+            ];
+            const DEFAULT_START = 6;
+            const DEFAULT_END = 10;
+            let scannedLessons = [];
+
+            function getSB() {
+                return window.supabaseClient || window.supabase || window.sb || null;
+            }
+
+            function setStatus(host, message, state = "idle") {
+                const status = host.querySelector("[data-evo-batch-status]");
+                if (!status) return;
+                status.textContent = message;
+                status.setAttribute("data-state", state);
+            }
+
+            function readRange(host) {
+                const startInput = host.querySelector("[data-evo-batch-start]");
+                const endInput = host.querySelector("[data-evo-batch-end]");
+                const start = Math.max(1, Number.parseInt(startInput?.value || DEFAULT_START, 10));
+                const end = Math.max(start, Number.parseInt(endInput?.value || DEFAULT_END, 10));
+                if (end - start > 9) {
+                    throw new Error("За один запуск можно обработать не более 10 уроков");
+                }
+                if (startInput) startInput.value = String(start);
+                if (endInput) endInput.value = String(end);
+                return { start, end };
+            }
+
+            function collectCatalogLessons() {
+                const seen = new Set();
+                const lessons = [];
+
+                document.querySelectorAll('a[href*="/grammar-lessons/"]').forEach((anchor, index) => {
+                    let url;
+                    try {
+                        url = new URL(anchor.href, window.location.href);
+                    } catch (_) {
+                        return;
+                    }
+
+                    if (url.origin !== window.location.origin || !url.pathname.startsWith("/grammar-lessons/")) return;
+                    const key = url.pathname.replace(/\/+$/, "");
+                    if (seen.has(key)) return;
+                    seen.add(key);
+
+                    const card = anchor.closest(".w-dyn-item, [role='listitem'], article, li");
+                    const label = (card?.textContent || anchor.textContent || "").replace(/\s+/g, " ").trim();
+                    const match = label.match(/(?:Grammar\s+)?Lesson\s+(\d+)/i);
+                    const fallbackNumber = lessons.length + 1;
+                    lessons.push({
+                        number: match ? Number(match[1]) : fallbackNumber,
+                        title: label || `Lesson ${fallbackNumber}`,
+                        url: url.toString()
+                    });
+                });
+
+                return lessons.sort((a, b) => a.number - b.number);
+            }
+
+            function extractLessonPayload(html, sourceUrl) {
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const theoryEls = Array.from(doc.querySelectorAll("[data-evo-theory] [data-evo-translate]"));
+                if (!theoryEls.length) throw new Error("Theory translation markers were not found");
+
+                const theoryRoot = doc.querySelector("[data-evo-theory][data-evo-source-version]") ||
+                    doc.querySelector("[data-evo-theory]");
+                const lessonRoot = doc.querySelector("[data-evo-lesson-id]");
+                const meta = doc.querySelector('meta[name="evo-tracking-slug"]');
+                const lessonId = (
+                    lessonRoot?.getAttribute("data-evo-lesson-id") ||
+                    doc.body?.getAttribute("data-evo-lesson-id") ||
+                    meta?.content ||
+                    ""
+                ).trim();
+
+                if (!lessonId) throw new Error("Lesson ID was not found");
+
+                const rawVersion = theoryRoot?.getAttribute("data-evo-source-version") ||
+                    lessonRoot?.getAttribute("data-evo-source-version") ||
+                    "1";
+                const sourceVersion = Number(rawVersion);
+                if (!Number.isInteger(sourceVersion) || sourceVersion < 1) {
+                    throw new Error("Invalid source version");
+                }
+
+                const theory = {};
+                theoryEls.forEach(el => {
+                    const key = (el.getAttribute("data-evo-translate") || "").trim();
+                    const value = (el.textContent || "").trim();
+                    if (key && value) theory[key] = value;
+                });
+
+                const lockedTerms = Array.from(doc.querySelectorAll(
+                    "[data-evo-theory] [data-evo-locked-term], [data-evo-theory] [data-evo-keep-english], [data-evo-theory] code"
+                ))
+                    .map(el => (el.textContent || "").trim())
+                    .filter(Boolean)
+                    .filter(value => value.length >= 2 && value.length <= 160)
+                    .filter((value, index, values) => values.indexOf(value) === index)
+                    .slice(0, 120);
+
+                return {
+                    lesson_id: lessonId,
+                    source_version: sourceVersion,
+                    theory,
+                    locked_terms: lockedTerms,
+                    source_url: sourceUrl
+                };
+            }
+
+            async function loadLesson(item) {
+                const response = await fetch(item.url, {
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: { Accept: "text/html" }
+                });
+                if (!response.ok) throw new Error(`Page returned HTTP ${response.status}`);
+                const payload = extractLessonPayload(await response.text(), item.url);
+                return { ...item, payload, fieldCount: Object.keys(payload.theory).length };
+            }
+
+            async function fetchReadyLanguages(sb, payload, options = {}) {
+                const includeGenerating = options.includeGenerating !== false;
+                const { data, error } = await sb.functions.invoke("translate_lesson_theory", {
+                    body: {
+                        action: "status",
+                        lesson_id: payload.lesson_id,
+                        source_version: payload.source_version
+                    }
+                });
+                if (error) throw error;
+                return new Set((data?.translations || [])
+                    .filter(row => {
+                        if (["draft", "published"].includes(row.status)) return true;
+                        if (!includeGenerating || row.status !== "generating") return false;
+                        const updatedAt = Date.parse(row.updated_at || "");
+                        return !Number.isFinite(updatedAt) || Date.now() - updatedAt < 15 * 60 * 1000;
+                    })
+                    .map(row => row.language_code));
+            }
+
+            async function confirmLanguageReady(sb, payload, languageCode) {
+                for (let attempt = 0; attempt < 4; attempt += 1) {
+                    await new Promise(resolve => setTimeout(resolve, 900 + attempt * 500));
+                    const ready = await fetchReadyLanguages(sb, payload, { includeGenerating: false });
+                    if (ready.has(languageCode)) return true;
+                }
+                return false;
+            }
+
+            async function generateLanguage(sb, payload, languageCode) {
+                const body = {
+                    action: "generate",
+                    lesson_id: payload.lesson_id,
+                    source_version: payload.source_version,
+                    theory: payload.theory,
+                    locked_terms: payload.locked_terms,
+                    languages: [languageCode]
+                };
+
+                try {
+                    const { data, error } = await sb.functions.invoke("translate_lesson_theory", { body });
+                    if (error) throw error;
+                    const result = data?.results?.find(item => item.language_code === languageCode);
+                    if (result?.status === "draft" || result?.status === "published") return true;
+                } catch (error) {
+                    if (await confirmLanguageReady(sb, payload, languageCode)) return true;
+                    throw error;
+                }
+
+                return confirmLanguageReady(sb, payload, languageCode);
+            }
+
+            function renderScanResults(host, lessons) {
+                const list = host.querySelector("[data-evo-batch-results]");
+                if (!list) return;
+                list.replaceChildren();
+                lessons.forEach(lesson => {
+                    const item = document.createElement("li");
+                    item.textContent = `Урок ${lesson.number}: найдено полей для перевода: ${lesson.fieldCount}`;
+                    list.appendChild(item);
+                });
+                list.hidden = !lessons.length;
+            }
+
+            async function scanRange(host) {
+                const lessons = collectCatalogLessons();
+                const { start, end } = readRange(host);
+                const selected = lessons.filter(item => item.number >= start && item.number <= end);
+                if (!selected.length) throw new Error(`Не найдены ссылки на уроки ${start}-${end}`);
+
+                scannedLessons = [];
+                const failures = [];
+                for (let index = 0; index < selected.length; index += 1) {
+                    const item = selected[index];
+                    setStatus(host, `Проверяю урок ${item.number} (${index + 1}/${selected.length})...`, "loading");
+                    try {
+                        scannedLessons.push(await loadLesson(item));
+                    } catch (error) {
+                        failures.push(`${item.number}: ${error?.message || error}`);
+                    }
+                }
+
+                renderScanResults(host, scannedLessons);
+                const generateButton = host.querySelector("[data-evo-batch-generate]");
+                if (generateButton) generateButton.disabled = !scannedLessons.length;
+
+                if (failures.length) {
+                    setStatus(host, `Готово уроков: ${scannedLessons.length}. Нужна проверка: ${failures.join("; ")}`, "error");
+                } else {
+                    setStatus(host, `Проверено уроков: ${scannedLessons.length}. Можно создавать черновики.`, "active");
+                }
+            }
+
+            async function generateBatch(host) {
+                const sb = getSB();
+                if (!sb?.functions?.invoke) throw new Error("Подключение к Supabase ещё не готово");
+                if (!scannedLessons.length) throw new Error("Сначала проверьте диапазон уроков");
+
+                const { data: sessionData } = await sb.auth.getSession();
+                if (!sessionData?.session?.user) throw new Error("Нужно войти в аккаунт администратора");
+
+                const confirmed = window.confirm(
+                    `Создать недостающие черновики для ${scannedLessons.length} уроков? Переводы не будут опубликованы автоматически.`
+                );
+                if (!confirmed) {
+                    setStatus(host, "Создание черновиков отменено.", "idle");
+                    return;
+                }
+
+                const scanButton = host.querySelector("[data-evo-batch-scan]");
+                const generateButton = host.querySelector("[data-evo-batch-generate]");
+                if (scanButton) scanButton.disabled = true;
+                if (generateButton) generateButton.disabled = true;
+
+                let created = 0;
+                const failed = [];
+
+                try {
+                    for (let lessonIndex = 0; lessonIndex < scannedLessons.length; lessonIndex += 1) {
+                        const lesson = scannedLessons[lessonIndex];
+                        const ready = await fetchReadyLanguages(sb, lesson.payload);
+                        const targets = LANGUAGE_CODES.filter(code => !ready.has(code));
+
+                        for (let languageIndex = 0; languageIndex < targets.length; languageIndex += 1) {
+                            const languageCode = targets[languageIndex];
+                            setStatus(
+                                host,
+                                `Урок ${lesson.number} (${lessonIndex + 1}/${scannedLessons.length}): ${languageCode} (${languageIndex + 1}/${targets.length})...`,
+                                "loading"
+                            );
+                            try {
+                                if (await generateLanguage(sb, lesson.payload, languageCode)) created += 1;
+                                else failed.push(`${lesson.number}:${languageCode}`);
+                            } catch (error) {
+                                failed.push(`${lesson.number}:${languageCode}`);
+                                console.warn("[EvoLessonBatch] generation failed:", lesson.number, languageCode, error?.message || error);
+                            }
+                        }
+                    }
+                } finally {
+                    if (scanButton) scanButton.disabled = false;
+                    if (generateButton) generateButton.disabled = false;
+                }
+
+                if (failed.length) {
+                    setStatus(host, `Создано черновиков: ${created}. Нужно повторить: ${failed.join(", ")}`, "error");
+                } else {
+                    setStatus(host, `Создано черновиков: ${created}. Уроки готовы к проверке.`, "active");
+                }
+            }
+
+            injectStyleOnce("evo-lesson-batch-style", `
+              .evo-lesson-batch{max-width:1100px;margin:16px auto;padding:14px;border:1px solid #b8cee8;border-radius:8px;background:#f7fbff;color:#172337;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+              .evo-lesson-batch h2{margin:0 0 10px;font-size:18px;letter-spacing:0}
+              .evo-lesson-batch-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px}
+              .evo-lesson-batch label{display:grid;gap:4px;font-size:13px;font-weight:650}
+              .evo-lesson-batch input{width:76px;border:1px solid #aebfd2;border-radius:6px;padding:7px;font:inherit}
+              .evo-lesson-batch button{border:1px solid #1768b2;border-radius:6px;background:#1768b2;color:#fff;padding:8px 12px;font:inherit;font-weight:650;cursor:pointer}
+              .evo-lesson-batch button[data-evo-batch-scan]{background:#fff;color:#1768b2}
+              .evo-lesson-batch button:disabled{opacity:.5;cursor:not-allowed}
+              .evo-lesson-batch [data-evo-batch-status]{display:block;margin-top:10px;font-size:13px}
+              .evo-lesson-batch [data-state="active"]{color:#166534}
+              .evo-lesson-batch [data-state="error"]{color:#9f1239}
+              .evo-lesson-batch ul{margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.5}
+            `);
+
+            const host = document.createElement("section");
+            host.className = "evo-lesson-batch";
+            host.setAttribute("data-evo-lesson-batch-admin", "");
+            host.innerHTML = `
+              <h2>Пакетный перевод уроков</h2>
+              <div class="evo-lesson-batch-controls">
+                <label>От урока <input type="number" min="1" max="99" value="${DEFAULT_START}" data-evo-batch-start></label>
+                <label>До урока <input type="number" min="1" max="99" value="${DEFAULT_END}" data-evo-batch-end></label>
+                <button type="button" data-evo-batch-scan>Проверить уроки</button>
+                <button type="button" data-evo-batch-generate disabled>Создать черновики</button>
+              </div>
+              <span data-evo-batch-status data-state="idle">Сначала опубликуйте размеченные уроки, затем проверьте диапазон.</span>
+              <ul data-evo-batch-results hidden></ul>
+            `;
+
+            const main = document.querySelector("main") || document.body;
+            main.insertBefore(host, main.firstChild);
+
+            host.querySelector("[data-evo-batch-scan]")?.addEventListener("click", async event => {
+                event.currentTarget.disabled = true;
+                try {
+                    await scanRange(host);
+                } catch (error) {
+                    setStatus(host, error?.message || "Не удалось проверить уроки", "error");
+                } finally {
+                    event.currentTarget.disabled = false;
+                }
+            });
+
+            host.querySelector("[data-evo-batch-generate]")?.addEventListener("click", async () => {
+                try {
+                    await generateBatch(host);
+                } catch (error) {
+                    setStatus(host, error?.message || "Не удалось создать черновики", "error");
+                }
+            });
+        })();
+    }
+
     /* ================== boot ================== */
     async function boot() {
         try {
@@ -3324,6 +3680,7 @@ if (path.indexOf('/billing') === 0) {
             initTimeTrackerRpc();
             initCardStatuses();
             initLessonTheoryLocalization();
+            initLessonTheoryBatchAdmin();
         } catch (e) {
             console.warn("[Evo] footer failed:", e?.message || e);
             evoRevealPage();
