@@ -3087,7 +3087,7 @@ if (path.indexOf('/billing') === 0) {
                 });
 
                 const lockedTerms = Array.from(document.querySelectorAll(
-                    "[data-evo-theory] [data-evo-locked-term], [data-evo-theory] [data-evo-keep-english], [data-evo-theory] code"
+                    "[data-evo-theory] [data-evo-locked-term]"
                 ))
                     .map(el => (el.textContent || "").trim())
                     .filter(Boolean)
@@ -3429,7 +3429,7 @@ if (path.indexOf('/billing') === 0) {
                 });
 
                 const lockedTerms = Array.from(doc.querySelectorAll(
-                    "[data-evo-theory] [data-evo-locked-term], [data-evo-theory] [data-evo-keep-english], [data-evo-theory] code"
+                    "[data-evo-theory] [data-evo-locked-term]"
                 ))
                     .map(el => (el.textContent || "").trim())
                     .filter(Boolean)
