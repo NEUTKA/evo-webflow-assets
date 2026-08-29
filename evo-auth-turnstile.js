@@ -9,6 +9,8 @@
     const siteKey = String(loaderScript?.dataset?.sitekey || "").trim();
     const TURNSTILE_API = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     const CAPTCHA_MESSAGE = "Complete the security check and try again.";
+    let turnstileState = window.turnstile ? "ready" : "idle";
+    let visibilityFrame = 0;
 
     const flows = {
         signup: {
@@ -72,6 +74,9 @@
         const anchor = document.querySelector(flow.anchor);
         if (!anchor) return null;
 
+        const existing = document.getElementById(`evo-turnstile-${flowName}`);
+        if (existing) return existing;
+
         const host = document.createElement("div");
         host.id = `evo-turnstile-${flowName}`;
         host.className = "evo-turnstile";
@@ -111,60 +116,132 @@
         return flows[flowName]?.token || "";
     }
 
-    function renderWidgets() {
-        Object.keys(flows).forEach((flowName) => {
-            const flow = flows[flowName];
-            const host = insertHost(flowName);
-            if (!host) return;
+    function isVisible(element) {
+        if (!element || !element.isConnected || element.getClientRects().length === 0) {
+            return false;
+        }
 
-            flow.widgetId = window.turnstile.render(host, {
-                sitekey: siteKey,
-                action: flow.action,
-                theme: "auto",
-                size: "flexible",
-                appearance: "always",
-                callback(token) {
-                    flow.token = token;
-                    host.classList.remove("evo-turnstile-error");
-                },
-                "expired-callback"() {
-                    flow.token = "";
-                },
-                "timeout-callback"() {
-                    flow.token = "";
-                },
-                "error-callback"() {
-                    flow.token = "";
-                    showError(flowName, "Security check unavailable. Please reload the page.");
-                }
-            });
+        let current = element;
+        while (current && current !== document.documentElement) {
+            const style = window.getComputedStyle(current);
+            if (
+                current.hidden ||
+                current.getAttribute("aria-hidden") === "true" ||
+                style.display === "none" ||
+                style.visibility === "hidden" ||
+                style.visibility === "collapse"
+            ) {
+                return false;
+            }
+            current = current.parentElement;
+        }
+        return true;
+    }
+
+    function visibleFlowNames() {
+        const resetAnchor = document.querySelector(flows.reset.anchor);
+        if (isVisible(resetAnchor)) return ["reset"];
+
+        return ["signup", "login"].filter((flowName) => (
+            isVisible(document.querySelector(flows[flowName].anchor))
+        ));
+    }
+
+    function renderFlow(flowName) {
+        const flow = flows[flowName];
+        if (!flow || flow.widgetId !== null || !window.turnstile) return;
+
+        const host = insertHost(flowName);
+        if (!host) return;
+
+        flow.widgetId = window.turnstile.render(host, {
+            sitekey: siteKey,
+            action: flow.action,
+            theme: "auto",
+            size: "flexible",
+            appearance: "always",
+            callback(token) {
+                flow.token = token;
+                host.classList.remove("evo-turnstile-error");
+            },
+            "expired-callback"() {
+                flow.token = "";
+            },
+            "timeout-callback"() {
+                flow.token = "";
+            },
+            "error-callback"() {
+                flow.token = "";
+                showError(flowName, "Security check unavailable. Please reload the page.");
+            }
         });
     }
 
-    function loadTurnstile() {
+    function handleTurnstileLoad() {
+        turnstileState = "ready";
+        visibleFlowNames().forEach(renderFlow);
+    }
+
+    function handleTurnstileError() {
+        turnstileState = "failed";
+        visibleFlowNames().forEach((flowName) => {
+            insertHost(flowName);
+            showError(flowName, "Security check unavailable. Please reload the page.");
+        });
+    }
+
+    function ensureTurnstileForVisibleFlow() {
+        const visibleFlows = visibleFlowNames();
+        if (!visibleFlows.length) return;
+
+        visibleFlows.forEach(insertHost);
+
         if (window.turnstile) {
-            renderWidgets();
+            handleTurnstileLoad();
             return;
         }
+
+        if (turnstileState === "loading" || turnstileState === "failed") return;
 
         const existing = document.querySelector(`script[src^="${TURNSTILE_API.split("?")[0]}"]`);
         if (existing) {
-            existing.addEventListener("load", renderWidgets, { once: true });
+            turnstileState = "loading";
+            existing.addEventListener("load", handleTurnstileLoad, { once: true });
+            existing.addEventListener("error", handleTurnstileError, { once: true });
             return;
         }
 
+        turnstileState = "loading";
         const script = document.createElement("script");
         script.src = TURNSTILE_API;
         script.async = true;
         script.defer = true;
-        script.addEventListener("load", renderWidgets, { once: true });
-        script.addEventListener("error", () => {
-            Object.keys(flows).forEach((flowName) => {
-                if (!document.getElementById(`evo-turnstile-${flowName}`)) insertHost(flowName);
-                showError(flowName, "Security check unavailable. Please reload the page.");
-            });
-        }, { once: true });
+        script.addEventListener("load", handleTurnstileLoad, { once: true });
+        script.addEventListener("error", handleTurnstileError, { once: true });
         document.head.appendChild(script);
+    }
+
+    function scheduleVisibilitySync() {
+        if (visibilityFrame) return;
+        visibilityFrame = window.requestAnimationFrame(() => {
+            visibilityFrame = 0;
+            ensureTurnstileForVisibleFlow();
+        });
+    }
+
+    function watchFlowVisibility() {
+        const observer = new MutationObserver(scheduleVisibilitySync);
+        observer.observe(document.body, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["class", "style", "hidden", "aria-hidden"]
+        });
+
+        document.addEventListener("click", scheduleVisibilitySync, true);
+        window.addEventListener("hashchange", scheduleVisibilitySync);
+        window.addEventListener("popstate", scheduleVisibilitySync);
+        scheduleVisibilitySync();
     }
 
     function findSupabaseClient() {
@@ -275,6 +352,10 @@
     }
 
     addStyles();
-    loadTurnstile();
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", watchFlowVisibility, { once: true });
+    } else {
+        watchFlowVisibility();
+    }
     waitForSupabase();
 })();
