@@ -3375,8 +3375,8 @@ if (path.indexOf('/billing') === 0) {
                 "es", "pt", "de", "fr", "it", "ru", "kk", "uz", "hy", "zh-Hans",
                 "ja", "ko", "hi", "bn", "ur", "ar", "id", "tr", "vi"
             ];
-            const DEFAULT_START = 6;
-            const DEFAULT_END = 10;
+            const DEFAULT_START = 11;
+            const DEFAULT_END = 16;
             let scannedLessons = [];
 
             function getSB() {
@@ -3407,7 +3407,9 @@ if (path.indexOf('/billing') === 0) {
                 const seen = new Set();
                 const lessons = [];
 
-                document.querySelectorAll('a[href*="/grammar-lessons/"]').forEach((anchor, index) => {
+                document.querySelectorAll(
+                    'a[href*="/grammar-lessons/"], a[href*="/a1-grammar-section"]'
+                ).forEach((anchor, index) => {
                     let url;
                     try {
                         url = new URL(anchor.href, window.location.href);
@@ -3415,7 +3417,9 @@ if (path.indexOf('/billing') === 0) {
                         return;
                     }
 
-                    if (url.origin !== window.location.origin || !url.pathname.startsWith("/grammar-lessons/")) return;
+                    const isGrammarLesson = url.pathname.startsWith("/grammar-lessons/") ||
+                        url.pathname.startsWith("/a1-grammar-section");
+                    if (url.origin !== window.location.origin || !isGrammarLesson) return;
                     const key = url.pathname.replace(/\/+$/, "");
                     if (seen.has(key)) return;
                     seen.add(key);
