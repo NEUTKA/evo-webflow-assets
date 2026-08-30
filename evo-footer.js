@@ -2791,6 +2791,32 @@ if (path.indexOf('/billing') === 0) {
             ];
             const LANGUAGE_MAP = new Map(LANGUAGES.map(lang => [lang.code, lang]));
             const SUPPORTED_BASE_CODES = new Set(LANGUAGES.map(lang => lang.code).filter(code => !code.includes("-")));
+            const localizationRoot = document.querySelector("[data-evo-theory]");
+            const localizationContext = localizationRoot?.getAttribute("data-evo-language-context") === "homepage"
+                ? "homepage"
+                : "lesson";
+            const HOMEPAGE_LANGUAGE_LABELS = {
+                en: "Language",
+                es: "Idioma",
+                pt: "Idioma",
+                de: "Sprache",
+                fr: "Langue",
+                it: "Lingua",
+                ru: "Язык",
+                kk: "Тіл",
+                uz: "Til",
+                hy: "Լեզու",
+                "zh-Hans": "语言",
+                ja: "言語",
+                ko: "언어",
+                hi: "भाषा",
+                bn: "ভাষা",
+                ur: "زبان",
+                ar: "اللغة",
+                id: "Bahasa",
+                tr: "Dil",
+                vi: "Ngôn ngữ"
+            };
 
             let currentUserId = null;
             let preferredLanguage = DEFAULT_LANGUAGE;
@@ -3234,8 +3260,8 @@ if (path.indexOf('/billing') === 0) {
             <button type="button" data-evo-exit-preview>Exit preview</button>
           </div>` : ""}
           <label>
-            <span>Explanations</span>
-            <select data-evo-lesson-language-select aria-label="Lesson explanation language">
+            <span data-evo-language-switcher-label>${localizationContext === "homepage" ? "Language" : "Explanations"}</span>
+            <select data-evo-lesson-language-select aria-label="${localizationContext === "homepage" ? "Homepage language" : "Lesson explanation language"}">
               ${LANGUAGES.map(lang => `<option value="${lang.code}">${lang.label}</option>`).join("")}
             </select>
           </label>
@@ -3262,7 +3288,7 @@ if (path.indexOf('/billing') === 0) {
                     await saveRemotePreference(getSB(), currentUserId, next);
                     await showLanguage(next, { persist: false });
                     try {
-                        window.evoTrack?.("lesson_language_changed", {
+                        window.evoTrack?.(localizationContext === "homepage" ? "homepage_language_changed" : "lesson_language_changed", {
                             lesson_id: getLessonId(),
                             preferred_language: next,
                             displayed_language: displayedLanguage
@@ -3272,6 +3298,12 @@ if (path.indexOf('/billing') === 0) {
             }
 
             function syncSwitcher() {
+                const labelText = localizationContext === "homepage"
+                    ? (HOMEPAGE_LANGUAGE_LABELS[displayedLanguage] || HOMEPAGE_LANGUAGE_LABELS[preferredLanguage] || "Language")
+                    : "Explanations";
+                document.querySelectorAll("[data-evo-language-switcher-label]").forEach(label => {
+                    label.textContent = labelText;
+                });
                 document.querySelectorAll("[data-evo-lesson-language-select]").forEach(select => {
                     select.value = preferredLanguage;
                     select.disabled = loadingLanguage;
