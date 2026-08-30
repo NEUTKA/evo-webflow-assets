@@ -2797,6 +2797,7 @@ if (path.indexOf('/billing') === 0) {
             let displayedLanguage = DEFAULT_LANGUAGE;
             let loadingLanguage = false;
             let previewActive = false;
+            let languageRequestSequence = 0;
 
             function getSB() {
                 return window.supabaseClient || window.supabase || window.sb || null;
@@ -3003,6 +3004,7 @@ if (path.indexOf('/billing') === 0) {
             }
 
             async function showLanguage(languageCode, options = {}) {
+                const requestSequence = ++languageRequestSequence;
                 const sb = getSB();
                 const lessonId = getLessonId();
                 const normalized = normalizeLocale(languageCode) || DEFAULT_LANGUAGE;
@@ -3036,6 +3038,7 @@ if (path.indexOf('/billing') === 0) {
                             row = await fetchDraftPreview(sb, lessonId, normalized);
                             isDraftPreview = !!row;
                         } catch (error) {
+                            if (requestSequence !== languageRequestSequence) return;
                             const status = Number(error?.context?.status || error?.status || 0);
                             const authError = status === 401 || status === 403;
                             const notFound = status === 404;
@@ -3051,11 +3054,13 @@ if (path.indexOf('/billing') === 0) {
                     }
 
                     if (!row) {
+                        if (requestSequence !== languageRequestSequence) return;
                         applyEnglishFallback("Translation is not published for this lesson yet. Showing English.");
                         setPreviewBanner("No current draft is available for this language", "error");
                         return;
                     }
 
+                    if (requestSequence !== languageRequestSequence) return;
                     previewActive = isDraftPreview;
                     applyContent(normalized, row.content);
                     const languageLabel = LANGUAGE_MAP.get(normalized)?.label || normalized;
@@ -3065,8 +3070,10 @@ if (path.indexOf('/billing') === 0) {
                         setPreviewBanner(`Published translation: ${languageLabel}`, "published");
                     }
                 } finally {
-                    loadingLanguage = false;
-                    syncSwitcher();
+                    if (requestSequence === languageRequestSequence) {
+                        loadingLanguage = false;
+                        syncSwitcher();
+                    }
                 }
 
                 if (options.persist) {
