@@ -3367,7 +3367,12 @@ if (path.indexOf('/billing') === 0) {
 
             const path = pageUrl.pathname.replace(/\/+$/, "") || "/";
             const previewRequested = pageUrl.searchParams.get("evo-translation-preview") === "1";
-            if (!previewRequested || path !== "/grammar-a1") return;
+            const batchPages = {
+                "/grammar-a1": { level: "A1", start: 11, end: 16 },
+                "/grammar-a2": { level: "A2", start: 1, end: 6 }
+            };
+            const batchPage = batchPages[path];
+            if (!previewRequested || !batchPage) return;
 
             window.__evoLessonTheoryBatchAdminInited = true;
 
@@ -3375,8 +3380,8 @@ if (path.indexOf('/billing') === 0) {
                 "es", "pt", "de", "fr", "it", "ru", "kk", "uz", "hy", "zh-Hans",
                 "ja", "ko", "hi", "bn", "ur", "ar", "id", "tr", "vi"
             ];
-            const DEFAULT_START = 11;
-            const DEFAULT_END = 16;
+            const DEFAULT_START = batchPage.start;
+            const DEFAULT_END = batchPage.end;
             let scannedLessons = [];
 
             function getSB() {
@@ -3408,7 +3413,7 @@ if (path.indexOf('/billing') === 0) {
                 const lessons = [];
 
                 document.querySelectorAll(
-                    'a[href*="/grammar-lessons/"], a[href*="/a1-grammar-section"]'
+                    'a[href*="/grammar-lessons/"], a[href*="/a1-grammar-section"], a[href*="/a2-grammar-section"]'
                 ).forEach((anchor, index) => {
                     let url;
                     try {
@@ -3418,7 +3423,8 @@ if (path.indexOf('/billing') === 0) {
                     }
 
                     const isGrammarLesson = url.pathname.startsWith("/grammar-lessons/") ||
-                        url.pathname.startsWith("/a1-grammar-section");
+                        url.pathname.startsWith("/a1-grammar-section") ||
+                        url.pathname.startsWith("/a2-grammar-section");
                     if (url.origin !== window.location.origin || !isGrammarLesson) return;
                     const key = url.pathname.replace(/\/+$/, "");
                     if (seen.has(key)) return;
@@ -3670,7 +3676,7 @@ if (path.indexOf('/billing') === 0) {
             host.className = "evo-lesson-batch";
             host.setAttribute("data-evo-lesson-batch-admin", "");
             host.innerHTML = `
-              <h2>Пакетный перевод уроков</h2>
+              <h2>Пакетный перевод уроков ${batchPage.level}</h2>
               <div class="evo-lesson-batch-controls">
                 <label>От урока <input type="number" min="1" max="99" value="${DEFAULT_START}" data-evo-batch-start></label>
                 <label>До урока <input type="number" min="1" max="99" value="${DEFAULT_END}" data-evo-batch-end></label>
