@@ -306,6 +306,7 @@
         '/',
         '/about-us',
         '/login',
+        '/ai-chat-assistant',
         '/update-password',
         '/privacy-policy',
         '/terms-of-service',
@@ -366,7 +367,6 @@
         '/books/books-section',
         '/a1-grammar-section',
 
-        '/ai-chat-assistant',
         '/billing',
         '/find-teacher',
         '/test'
