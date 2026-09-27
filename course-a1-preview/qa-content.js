@@ -139,6 +139,11 @@ for (const { code } of i18n.languages) for (const key of ['l10','g10','l11','g11
 for (const { code } of i18n.languages) assert.ok(/12|১২/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
+assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7:00').pass,true);
+assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7').pass,true);
+assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at seven o’clock').pass,true);
+assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7:30').pass,false);
+assert.equal(engine.compareSpeech('There are two pillows on the bed.','There are 2 pillows on the bed').pass,true);
 assert.equal(engine.compareSpeech('I am a student.','I am a cat').pass,false);
 assert.deepEqual(engine.compareSpeech('I am a student.','I am a cat').missingIndexes,[3]);
 const oldState=engine.start(engine.initial(),0);
