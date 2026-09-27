@@ -10,6 +10,7 @@ const i18n = require('./i18n.js');
 
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-extra.js'), 'utf8'), { EvoCourseI18n: i18n });
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-next.js'), 'utf8'), { EvoCourseI18n: i18n });
+vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-more.js'), 'utf8'), { EvoCourseI18n: i18n });
 
 // Editorial evidence: each listening answer must be recoverable from the
 // supplied transcript associated with that lesson's audio URL.
@@ -59,7 +60,22 @@ const evidence = {
   '9-l2': 'There is a bed next to the window',
   '9-l3': 'Near the bed, there is a small table and a lamp',
   '9-l4': 'I study English at my desk in the evening',
-  '9-l5': 'my notebook, a pen, and my phone charger'
+  '9-l5': 'my notebook, a pen, and my phone charger',
+  '10-l1': 'I usually take the bus to work',
+  '10-l2': 'The bus stop is near my home',
+  '10-l3': 'especially at eight o’clock',
+  '10-l4': 'the metro because it is faster than the bus',
+  '10-l5': 'I use a taxi only when I am late or when it is raining',
+  '11-l1': 'I wake up at 7:00',
+  '11-l2': 'go to work by bus',
+  '11-l3': 'I start work at 9:00',
+  '11-l4': 'At lunchtime, I eat a sandwich or salad and talk to my coworkers',
+  '11-l5': 'I go to bed at about 11:00',
+  '12-l1': 'I am from Canada',
+  '12-l2': 'I also study French',
+  '12-l3': 'I learn French at a language school two evenings a week',
+  '12-l4': 'My teacher is from France',
+  '12-l5': 'she speaks Spanish'
 };
 
 function canBuildOrder(question, picked = [], remaining = question.tokens.map((_, index) => index)) {
@@ -101,9 +117,9 @@ for (const lesson of bank.lessons) {
   }
 }
 assert.equal(Object.keys(evidence).length, listeningCount);
-assert.equal(bank.lessons.length, 9);
-assert.equal(listeningCount, 46);
-assert.equal(seen.size, 135);
+assert.equal(bank.lessons.length, 12);
+assert.equal(listeningCount, 61);
+assert.equal(seen.size, 180);
 assert.equal(bank.lessons[5].transcript.length, 14);
 assert.ok(!JSON.stringify(bank.lessons[5]).includes('David'));
 assert.ok(bank.lessons[3].items.find(q => q.id === '4-2').prompt.includes('sit'));
@@ -113,6 +129,8 @@ assert.ok(!engine.correct(bank.lessons[3].items.find(q => q.id === '4-9'), 'in')
 assert.equal(i18n.languages.length, 20);
 for (const { code } of i18n.languages) assert.ok(i18n.ui[code].continuousSpelling, `Missing rule translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l7','g7','l8','g8','l9','g9','aAn','pluralNouns','possessiveAdjectives','thereIsAre','placeWords','micPrompt','playModel','startMic','micListening','heardWords','micPassed','micRetry','micTimeout','micUnavailable','speechNotice','skipSpeech']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
+for (const { code } of i18n.languages) for (const key of ['l10','g10','l11','g11','l12','g12','transportPoint','transportVehicle','timeAtInOn','timeNoPreposition','questionsWithBe','questionsWithDo','pilot','speakingText','transcriptLabel','replayAudio']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
+for (const { code } of i18n.languages) assert.ok(/12|১২/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
 assert.equal(engine.compareSpeech('I am a student.','I am a cat').pass,false);
@@ -133,7 +151,44 @@ for(let index=0;index<bank.lessons.length;index++){
   state=engine.nextSpeaking(state);
   assert.equal(state.active.phase,'speaking');
   state=engine.finish(state,'2026-09-27').state;
+  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,6);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
 }
-assert.equal(Object.keys(state.completed).length,9);
+assert.equal(Object.keys(state.completed).length,12);
+assert.equal(state.xp,240);
+
+// Complete the real grammar → listening → vocabulary → speaking path for the new lessons.
+function correctDraft(question){
+  if(question.type==='choice')return question.answer;
+  if(question.type==='input')return question.answers[0];
+  if(question.type==='order')return question.answer.split(' ').map(token=>question.tokens.indexOf(token));
+  throw Error(`Unsupported new question type: ${question.id}`);
+}
+let flowState=engine.initial();
+flowState.completed=Object.fromEntries(bank.lessons.slice(0,9).map(lesson=>[lesson.id,{lesson:0,firstCorrect:15,total:15,xp:20}]));
+flowState.xp=180;
+for(let index=9;index<12;index++){
+  flowState=engine.start(flowState,index);
+  for(const phase of ['grammar','listening']){
+    if(phase==='listening')flowState=engine.startListening(flowState);
+    const items=phase==='grammar'?bank.lessons[index].items:bank.lessons[index].listeningItems;
+    for(const question of items){
+      assert.equal(engine.current(flowState).id,question.id);
+      const answer=correctDraft(question);
+      assert.ok(!Array.isArray(answer)||answer.every(position=>position>=0),`Cannot build ${question.id}`);
+      flowState=engine.draft(flowState,answer);
+      const submitted=engine.submit(flowState);
+      assert.equal(submitted.event,'correct',question.id);
+      flowState=engine.next(submitted.state,'2026-09-27').state;
+    }
+    assert.equal(flowState.active.phase,phase==='grammar'?'listening-intro':'vocabulary');
+  }
+  flowState=engine.enterSpeaking(flowState);
+  flowState=engine.nextSpeaking(flowState);
+  flowState=engine.nextSpeaking(flowState);
+  assert.equal(flowState.active.phase,'speaking');
+  flowState=engine.finish(flowState,'2026-09-27').state;
+  assert.equal(Object.keys(flowState.completed).length,index+1);
+}
+assert.equal(flowState.xp,240);
 
 console.log(`Content QA passed: ${bank.lessons.length} lessons, ${seen.size} unique questions, ${listeningCount} transcript-backed listening answers, 20 rule translations.`);

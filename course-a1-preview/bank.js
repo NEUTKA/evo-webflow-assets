@@ -185,6 +185,65 @@ lessons.push(
   {id:'9-l4',type:'choice',prompt:'Where does Sofia study English in the evening?',options:['At her desk.','On her bed.','In the kitchen.'],answer:'At her desk.',rule:'listen',source:'Describing a bedroom — Sofia'},
   {id:'9-l5',type:'choice',prompt:'Which three things does Sofia keep on her desk?',options:['A notebook, a pen and a phone charger.','A lamp, a blanket and a shelf.','Two pillows, a wardrobe and a chair.'],answer:'A notebook, a pen and a phone charger.',rule:'listen',source:'Describing a bedroom — Sofia'}]}
 );
+lessons.push(
+ {id:'transport',title:'l10',goal:'g10',person:'Anna',role:'Anna · city transport',speakingPrompt:'Tell the AI Assistant how you travel around your city. Say where you wait for the bus and when you use a taxi. Ask: “How do you get to work?”',audioTitle:'Transport in the city — Anna',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a8eb69b05aa42ee04b546_Listening%20A1%20Elementary.%20Transport%20in%20the%20city%20(Anna).mp3',transcript:[
+  'Hello. My name is Anna.','In my city, I use public transport every day.','In the morning, I usually take the bus to work.','The bus stop is near my home, so it is easy.','The bus is sometimes crowded, especially at eight o’clock.','I don’t like that, but it is cheap and quick.','When the weather is nice, I sometimes walk instead.','It takes about twenty minutes.','In the evening, I often take the metro because it is faster than the bus.','I always keep my ticket in my bag.','Sometimes there is traffic on the roads, so taxis can be slow.','I use a taxi only when I am late or when it is raining.','For me, the best transport is the metro.'
+ ],vocabulary:[['public transport',''],['bus stop',''],['crowded',''],['metro',''],['ticket',''],['traffic','']],examples:['I am at the bus stop.','I am on the bus.','I am in a taxi.'],rules:['transportPoint','transportVehicle'],items:[
+  {id:'10-1',type:'choice',prompt:'Choose the preposition for a meeting point: Meet me ___ the bus stop.',options:['at','in','on'],answer:'at',rule:'transportPoint',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-2',type:'choice',prompt:'Anna is travelling as a passenger. She is ___ the bus.',options:['on','at','under'],answer:'on',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-3',type:'input',prompt:'Use in for a taxi: Anna is ___ a taxi.',answers:['in'],modelAnswer:'Anna is in a taxi.',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-4',type:'choice',prompt:'Choose the preposition for an area: Anna lives ___ the city.',options:['in','on','at'],answer:'in',rule:'transportPoint',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-5',type:'order',prompt:'Build the sentence about travelling by bus.',tokens:['bus.','the','on','is','Anna'],answer:'Anna is on the bus.',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-6',type:'input',prompt:'Use at for a specific point: Anna waits ___ the bus stop.',answers:['at'],modelAnswer:'Anna waits at the bus stop.',rule:'transportPoint',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-7',type:'choice',prompt:'Which phrase means travelling inside a taxi?',options:['in a taxi','on a taxi','at a taxi'],answer:'in a taxi',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-8',type:'input',prompt:'Use on for public transport: Anna is ___ the metro.',answers:['on'],modelAnswer:'Anna is on the metro.',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-9',type:'choice',prompt:'Choose the preposition for a point: The ticket machine is ___ the station entrance.',options:['at','in','on'],answer:'at',rule:'transportPoint',source:'Grammar 10: Prepositions of Place'},
+  {id:'10-10',type:'order',prompt:'Build the sentence about a taxi.',tokens:['taxi.','a','in','am','I'],answer:'I am in a taxi.',rule:'transportVehicle',source:'Grammar 10: Prepositions of Place'}
+ ],listeningItems:[
+  {id:'10-l1',type:'choice',prompt:'How does Anna usually travel to work in the morning?',options:['By bus.','By taxi.','By bike.'],answer:'By bus.',rule:'listen',source:'Transport in the city — Anna'},
+  {id:'10-l2',type:'choice',prompt:'Where is the bus stop?',options:['Near Anna’s home.','Inside her office.','At the park.'],answer:'Near Anna’s home.',rule:'listen',source:'Transport in the city — Anna'},
+  {id:'10-l3',type:'choice',prompt:'When is the bus especially crowded?',options:['At eight o’clock.','At lunchtime.','At midnight.'],answer:'At eight o’clock.',rule:'listen',source:'Transport in the city — Anna'},
+  {id:'10-l4',type:'choice',prompt:'Why does Anna often take the metro in the evening?',options:['It is faster than the bus.','It is near her school.','She cannot walk.'],answer:'It is faster than the bus.',rule:'listen',source:'Transport in the city — Anna'},
+  {id:'10-l5',type:'choice',prompt:'When does Anna use a taxi?',options:['When she is late or it is raining.','Every morning.','Only when the metro is crowded.'],answer:'When she is late or it is raining.',rule:'listen',source:'Transport in the city — Anna'}]},
+ {id:'schedule',title:'l11',goal:'g11',person:'Anna',role:'Anna · daily routine',speakingPrompt:'Tell the AI Assistant about your weekday schedule. Say what time you wake up, when you start work and what you do in the evening. Ask: “What time do you start work?”',audioTitle:'Daily routines — Anna',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695e779f2a1010fe56444a17_Listening%20A1%20Elementary.%20Daily%20routines%20(Anna).mp3',transcript:[
+  'Hi, I’m Anna. On weekdays, I wake up at 7:00.','I wash my face, brush my teeth, and get dressed.','Then I have breakfast. I usually eat toast and drink coffee.','I leave home at 8:00 and go to work by bus. I start work at 9:00.','At lunchtime, I eat a sandwich or salad and talk to my coworkers.','I finish work at 5:00 and go home.','In the evening, I cook dinner and clean the kitchen.','After that, I relax. I watch a series, read a little, or listen to music.','I go to bed at about 11:00.'
+ ],vocabulary:[['weekday',''],['get dressed',''],['lunchtime',''],['coworker',''],['series',''],['go to bed','']],examples:['I wake up at 7:00.','I cook dinner in the evening.','I work on weekdays.'],rules:['timeAtInOn','timeNoPreposition'],items:[
+  {id:'11-1',type:'choice',prompt:'Choose the preposition for an exact time: Anna wakes up ___ 7:00.',options:['at','in','on'],answer:'at',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time; Anna audio'},
+  {id:'11-2',type:'input',prompt:'Use in before a part of the day: Anna has breakfast ___ the morning.',answers:['in'],modelAnswer:'Anna has breakfast in the morning.',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time'},
+  {id:'11-3',type:'choice',prompt:'Anna works on Monday to Friday. She works ___ weekdays.',options:['on','at','in'],answer:'on',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time; Anna audio'},
+  {id:'11-4',type:'input',prompt:'Use at with lunchtime: Anna talks to coworkers ___ lunchtime.',answers:['at'],modelAnswer:'Anna talks to coworkers at lunchtime.',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time; Anna audio'},
+  {id:'11-5',type:'order',prompt:'Build the sentence with an exact time.',tokens:['eight.','at','home','leave','I'],answer:'I leave home at eight.',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time; Anna audio'},
+  {id:'11-6',type:'choice',prompt:'Choose the phrase for the evening in general: Anna relaxes ___ the evening.',options:['in','on','at'],answer:'in',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time; Anna audio'},
+  {id:'11-7',type:'input',prompt:'Use every without a preposition: Anna takes the bus ___ weekday.',answers:['every'],modelAnswer:'Anna takes the bus every weekday.',rule:'timeNoPreposition',source:'Grammar 12: Prepositions of Time'},
+  {id:'11-8',type:'choice',prompt:'Choose the phrase without an extra preposition.',options:['next Monday','on next Monday','in next Monday'],answer:'next Monday',rule:'timeNoPreposition',source:'Grammar 12: Prepositions of Time'},
+  {id:'11-9',type:'input',prompt:'Use on before a specific day: I rest ___ Saturday.',answers:['on'],modelAnswer:'I rest on Saturday.',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time'},
+  {id:'11-10',type:'choice',prompt:'Choose the correct phrase for a specific time.',options:['at 9:00','in 9:00','on 9:00'],answer:'at 9:00',rule:'timeAtInOn',source:'Grammar 12: Prepositions of Time'}
+ ],listeningItems:[
+  {id:'11-l1',type:'choice',prompt:'What time does Anna wake up on weekdays?',options:['At 7:00.','At 8:00.','At 9:00.'],answer:'At 7:00.',rule:'listen',source:'Daily routines — Anna'},
+  {id:'11-l2',type:'choice',prompt:'How does Anna travel to work?',options:['By bus.','By bike.','By metro.'],answer:'By bus.',rule:'listen',source:'Daily routines — Anna'},
+  {id:'11-l3',type:'choice',prompt:'What time does Anna start work?',options:['At 9:00.','At 8:00.','At 5:00.'],answer:'At 9:00.',rule:'listen',source:'Daily routines — Anna'},
+  {id:'11-l4',type:'choice',prompt:'What does Anna do at lunchtime?',options:['She eats a sandwich or salad and talks to coworkers.','She goes home and cooks dinner.','She listens to music in her room.'],answer:'She eats a sandwich or salad and talks to coworkers.',rule:'listen',source:'Daily routines — Anna'},
+  {id:'11-l5',type:'choice',prompt:'What time does Anna go to bed?',options:['At about 11:00.','At 9:00.','At 5:00.'],answer:'At about 11:00.',rule:'listen',source:'Daily routines — Anna'}]},
+ {id:'languages',title:'l12',goal:'g12',person:'Emma',role:'Emma · languages',speakingPrompt:'Tell the AI Assistant where you are from and which languages you speak or study. Ask: “Where are you from?” and “What languages do you speak?”',audioTitle:'Countries, nationalities, and languages — Emma',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69593224763c6f46416b9942_Listening%20A1.%20Lesson%207.Countries%2C%20nationalities%2C%20and%20languages%20(Emma).mp3',transcript:[
+  'Hello. My name is Emma.','I am from Canada, and I am Canadian.','My city is Toronto.','My first language is English, but I also study French.','In Canada, many people speak English and French, so French is very useful.','I learn French at a language school two evenings a week.','It is not easy, but I like it.','My teacher is from France, and she speaks French very clearly.','I want to travel to Paris one day, so I practice every day.','I listen to short videos and repeat simple phrases.','I also have friends from different countries.','My friend Sofia is from Mexico.','She is Mexican, and she speaks Spanish.','We sometimes teach each other new words.','I think languages are fun and helpful.'
+ ],vocabulary:[['nationality',''],['first language',''],['useful',''],['language school',''],['phrase',''],['practice','']],examples:['Where are you from?','What language do you speak?','Where does Emma learn French?'],rules:['questionsWithBe','questionsWithDo'],items:[
+  {id:'12-1',type:'choice',prompt:'Ask about a place of origin: ___ is Emma from?',options:['Where','When','How old'],answer:'Where',rule:'questionsWithBe',source:'Grammar 16: Questions with Be and Do; Emma audio'},
+  {id:'12-2',type:'input',prompt:'Use be to ask about Emma: Where ___ Emma from?',answers:['is'],modelAnswer:'Where is Emma from?',rule:'questionsWithBe',source:'Grammar 16: Questions with Be and Do'},
+  {id:'12-3',type:'choice',prompt:'Ask about a language Emma speaks: What language ___ she speak?',options:['does','is','do'],answer:'does',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do'},
+  {id:'12-4',type:'order',prompt:'Build a question about your teacher’s country.',tokens:['from?','teacher','your','is','Where'],answer:'Where is your teacher from?',rule:'questionsWithBe',source:'Grammar 16: Questions with Be and Do'},
+  {id:'12-5',type:'choice',prompt:'Ask another person about a language: ___ you speak French?',options:['Do','Does','Are'],answer:'Do',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do'},
+  {id:'12-6',type:'input',prompt:'Use do before you: What language ___ you speak?',answers:['do'],modelAnswer:'What language do you speak?',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do'},
+  {id:'12-7',type:'choice',prompt:'Ask about Emma’s regular classes: When ___ she study French?',options:['does','is','do'],answer:'does',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do; Emma audio'},
+  {id:'12-8',type:'input',prompt:'Use be to ask about nationality: ___ Emma Canadian?',answers:['Is'],modelAnswer:'Is Emma Canadian?',rule:'questionsWithBe',source:'Grammar 16: Questions with Be and Do; Emma audio'},
+  {id:'12-9',type:'choice',prompt:'Choose the correctly formed question about Emma’s school.',options:['Where does she learn French?','Where she learns French?','Where is she learn French?'],answer:'Where does she learn French?',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do; Emma audio'},
+  {id:'12-10',type:'order',prompt:'Build a question about the listener’s language.',tokens:['French?','speak','you','Do'],answer:'Do you speak French?',rule:'questionsWithDo',source:'Grammar 16: Questions with Be and Do'}
+ ],listeningItems:[
+  {id:'12-l1',type:'choice',prompt:'Which country is Emma from?',options:['Canada.','France.','Mexico.'],answer:'Canada.',rule:'listen',source:'Countries, nationalities, and languages — Emma'},
+  {id:'12-l2',type:'choice',prompt:'Which language does Emma study?',options:['French.','Spanish.','Japanese.'],answer:'French.',rule:'listen',source:'Countries, nationalities, and languages — Emma'},
+  {id:'12-l3',type:'choice',prompt:'How often does Emma learn French at a language school?',options:['Two evenings a week.','Every morning.','Once a month.'],answer:'Two evenings a week.',rule:'listen',source:'Countries, nationalities, and languages — Emma'},
+  {id:'12-l4',type:'choice',prompt:'Where is Emma’s teacher from?',options:['France.','Canada.','Mexico.'],answer:'France.',rule:'listen',source:'Countries, nationalities, and languages — Emma'},
+  {id:'12-l5',type:'choice',prompt:'What language does Emma’s friend Sofia speak?',options:['Spanish.','French.','English.'],answer:'Spanish.',rule:'listen',source:'Countries, nationalities, and languages — Emma'}]}
+);
 const speakingSentences=[
  ['My name is Anna.','I am a student.'],
  ['I work in a supermarket.','I go to work by bike.'],
@@ -194,8 +253,11 @@ const speakingSentences=[
  ['I like walking in the park.','I enjoy reading easy books.'],
  ['I am a barista.','I make coffee for customers.'],
  ['My dad is a bus driver.','We eat dinner together.'],
- ['There is a bed next to the window.','There are two pillows on the bed.']
+ ['There is a bed next to the window.','There are two pillows on the bed.'],
+ ['I take the bus to work.','I am on the metro.'],
+ ['I wake up at seven.','I cook dinner in the evening.'],
+ ['I am from Canada.','I study French at a language school.']
 ];
 lessons.forEach((lesson,index)=>{lesson.speakingSentences=speakingSentences[index];});
-const data={version:5,lessons};if(typeof module==='object'&&module.exports)module.exports=data;else root.EvoCourseBank=data;
+const data={version:6,lessons};if(typeof module==='object'&&module.exports)module.exports=data;else root.EvoCourseBank=data;
 })(typeof globalThis==='object'?globalThis:this);

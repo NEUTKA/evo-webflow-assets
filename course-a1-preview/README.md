@@ -4,7 +4,7 @@ The guided course pilot is available on the Webflow staging page at `https://evo
 
 ## Lesson flow
 
-The nine pilot lessons unlock in order. Every lesson follows the same path:
+The twelve pilot lessons unlock in order. Every lesson follows the same path:
 
 1. Grammar theory.
 2. One-at-a-time grammar practice questions with a short retry for mistakes. Former open-ended writing items are now guided gap-fills with explicit accepted answers, so arbitrary free text cannot pass.
@@ -16,15 +16,15 @@ The nine pilot lessons unlock in order. Every lesson follows the same path:
 
 There is no homework step. The lesson ends after speaking. Grammar practice and listening questions are separate, and every question occupies its own screen. Guided lesson mode uses the available phone viewport, hides the page footer, and prevents page scrolling; the optional transcript has its own bounded scroll area.
 
-Feedback explains the grammar point and incorrect answers return once in a review phase. Hints are available, but a first answer after a hint is not counted as independent. The next lesson stays locked until the current lesson is complete. Repeat attempts do not add XP. The nine-lesson pilot awards 20 XP per first completion and tracks active-day streaks. Speech recognition does not contribute to XP or the first-try question score.
+Feedback explains the grammar point and incorrect answers return once in a review phase. Hints are available, but a first answer after a hint is not counted as independent. The next lesson stays locked until the current lesson is complete. Repeat attempts do not add XP. The twelve-lesson pilot awards 20 XP per first completion and tracks active-day streaks. Speech recognition does not contribute to XP or the first-try question score. Version 5 progress from the first nine lessons carries forward to lesson 10.
 
 The source lessons are represented through adapted tasks and source labels in `bank.js`; selection and editorial decisions are documented in `../evo-study-path/a1-introductions-selection.md`.
 
 ## Sound feedback
 
-The user-supplied `sounds/success.mp3` plays after a correct answer or recognized spoken sentence; `error.wav` after an incorrect grammar/listening answer; `lesson.wav` after an individual lesson; `module.wav` after the ninth lesson; and `course.wav` is reserved for future A1–C1 completion. Sound toggle and preview controls are in the header/footer. Study audio is separate from these feedback cues.
+The user-supplied `sounds/success.mp3` plays after a correct answer or recognized spoken sentence; `error.wav` after an incorrect grammar/listening answer; `lesson.wav` after an individual lesson; `module.wav` after the twelfth lesson; and `course.wav` is reserved for future A1–C1 completion. Sound toggle and preview controls are in the header/footer. Study audio is separate from these feedback cues.
 
-Lessons 4–6 cover Present Continuous with Tom’s family-at-home recording, be going to with Anna’s weekend plans, and verbs followed by -ing with Anna’s free-time recording. The free-time recording contains Anna’s part; David’s supplied text is excluded until a matching recording is available. Lessons 7–9 cover jobs and a/an with Emma’s recording, family possessives with Anna’s family recording, and there is/are with Sofia’s bedroom recording. Each of their five listening questions has a phrase in the corresponding supplied transcript. The remainder of A1 is still being developed.
+Lessons 4–6 cover Present Continuous with Tom’s family-at-home recording, be going to with Anna’s weekend plans, and verbs followed by -ing with Anna’s free-time recording. The free-time recording contains Anna’s part; David’s supplied text is excluded until a matching recording is available. Lessons 7–9 cover jobs and a/an with Emma’s recording, family possessives with Anna’s family recording, and there is/are with Sofia’s bedroom recording. Lessons 10–12 use Anna’s city transport and daily routine recordings for place and time prepositions, then Emma’s countries-and-languages recording for questions with be and do. Each new listening answer is supported by a phrase in the corresponding supplied transcript. The remainder of A1 is still being developed.
 
 ## Languages and integration
 
