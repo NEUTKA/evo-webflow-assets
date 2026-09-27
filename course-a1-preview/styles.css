@@ -66,6 +66,7 @@ body.is-learning footer{display:none}
 .speaking-card p{max-width:640px}
 .speaking-prompt{background:#f2f5ff;border:1px solid #dce5f7;border-radius:14px;padding:16px;margin:10px 0 14px;font-size:clamp(16px,2vw,20px);line-height:1.5}
 .assistant-link{align-self:flex-start;text-decoration:none;padding:11px 16px;border-radius:12px}
+.speech-card{gap:10px}.speech-sentence{border:2px solid #dce5f7;background:#f6f8ff;border-radius:18px;padding:clamp(16px,3vh,26px);font-size:clamp(21px,3vw,30px);font-weight:800;line-height:1.35;color:#182b4c}.speech-sentence .speech-missed{background:#fff0da;border-bottom:3px solid #e7a63c;border-radius:3px}.speech-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.speech-controls button{min-height:46px}.speech-status{margin:0;padding:10px 14px;border:1px solid #f0d5ae;border-radius:12px;background:#fff7eb;font-size:14px}.speech-status.speech-pass{border-color:#9fe4c4;background:#eafaf1}.speech-heard{margin:0;font-size:14px;line-height:1.45}.speech-heard span{display:inline-block;margin-inline-start:6px}.speech-note{margin:0;color:#687894;font-size:12px;line-height:1.4;max-width:600px}
 @media(max-width:520px){
  body.is-learning main{height:calc(100vh - 64px);height:calc(100dvh - 64px);padding:7px 9px 9px}
  body.is-learning header{height:64px;padding:0 10px}
@@ -105,6 +106,7 @@ body.is-learning footer{display:none}
  .vocab-flow-grid .vocab-chip{min-height:40px;padding:8px;font-size:13px}
  .speaking-prompt{padding:12px;font-size:15px;margin:6px 0 10px}
  .assistant-link{font-size:13px;padding:9px 12px}
+ .speech-card{gap:7px}.speech-sentence{font-size:clamp(18px,5vw,23px);padding:12px;line-height:1.28}.speech-controls{gap:8px}.speech-controls button{min-height:40px;padding:8px 10px;font-size:13px}.speech-status{padding:8px 10px;font-size:12px}.speech-heard{font-size:12px}.speech-note{font-size:11px}.speech-card .flow-actions .quiet{font-size:12px;padding:7px}
 }
 @media(max-width:380px){header{padding-left:7px;padding-right:7px}.brand{font-size:16px;letter-spacing:-.8px}.header-controls{gap:4px}#sound-toggle{font-size:10px;padding:8px 5px}.header-controls select{max-width:105px;padding:7px 3px}}
 @media(max-height:700px){body.is-learning main{padding-top:5px;padding-bottom:6px}.flow-card{padding-top:11px;padding-bottom:11px}.flow-card h1{margin:5px 0 8px}.flow-card .intro-examples{margin:5px 0;padding:8px 10px}.flow-card .rule-list li{margin:3px 0}.question-card .options{margin:7px 0;gap:5px}.question-card .option{padding:8px 10px}.question-card .option.selected{padding:7px 9px}.question-card .feedback{padding:8px;margin-top:5px}.flow-actions{padding-top:6px}}
