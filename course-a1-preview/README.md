@@ -7,7 +7,7 @@ Local prototype for the first guided course module. Open `index.html` through th
 The three pilot lessons unlock in order. Every lesson follows the same path:
 
 1. Grammar theory.
-2. Ten one-at-a-time grammar practice questions, including two short writing prompts, with a short retry for mistakes.
+2. One-at-a-time grammar practice questions with a short retry for mistakes. Former open-ended writing items are now guided gap-fills with explicit accepted answers, so arbitrary free text cannot pass.
 3. The supplied listening audio and optional transcript.
 4. Five or six one-at-a-time listening questions based on that audio. The audio player appears on every question so learners can replay the recording at any time. Choice answers are shuffled once per attempt and keep their order while the learner answers.
 5. English-only vocabulary with a reminder to use the site translator and Save to cards.
