@@ -105,6 +105,12 @@ for (const lesson of bank.lessons) {
     }
     if (question.type === 'order') {
       assert.ok(canBuildOrder(question), `Order cannot be solved: ${question.id}`);
+      const banks=Array.from({length:12},(_,seed)=>engine.orderBank(question,seed+1));
+      for(const bankOrder of banks){
+        assert.equal(new Set(bankOrder).size,question.tokens.length,`Word bank lost a token: ${question.id}`);
+        assert.ok(!engine.correct(question,bankOrder),`Word bank starts solved: ${question.id}`);
+      }
+      assert.ok(new Set(banks.map(order=>order.join(','))).size>1,`Word bank never changes: ${question.id}`);
     }
     if (question.type === 'input') {
       for (const answer of question.answers) assert.ok(engine.correct(question, answer), `Input answer rejected: ${question.id}`);
