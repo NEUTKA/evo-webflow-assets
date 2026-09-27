@@ -25,5 +25,27 @@ kk:{module:'A1 негіздері',l4:'Қазір не істеп жатырмы
 uz:{module:'A1 asoslari',l4:'Hozir nima qilyapmiz?',g4:'Hozir sodir bo‘layotgan harakatlarni tasvirlang.',l5:'Dam olish kunlari rejalari',g5:'Oldindan qaror qilgan rejalaringiz haqida gapiring.',l6:'Bo‘sh vaqt va sevimli mashg‘ulotlar',g6:'Sizga yoqadigan mashg‘ulotlar haqida gapiring.',pilot:'Prototip · A1 darajasidagi 6 ta dars · kursning qolgan qismi ishlab chiqilmoqda.',presentContinuous:'Present Continuous am/is/are + fe’l-ing bilan tuziladi. Ega bilan mos am, is yoki are ni tanlang.',continuousNow:'Hozir davom etayotgan harakatlar yoki vaqtinchalik holatlar uchun Present Continuous, odatlar uchun Present Simple ishlatiladi.',goingTo:'Be going to shakli: am/is/are + going to + fe’lning asosiy shakli.',goingToPlans:'Oldindan qaror qilingan rejalar va ko‘rinib turgan belgilarga asoslangan taxminlar uchun be going to ishlatiladi.',likeIng:'Bu darsda like + fe’l-ing shaklini mashq qilamiz. Like dan keyin to + fe’l ham kelishi mumkin.',enjoyIng:'Enjoy va don’t mind dan keyin -ing bilan tugaydigan fe’l ishlatiladi.'}
 };
 const speaking={en:'Open AI Assistant and practise speaking about this lesson’s topic.',es:'Abre AI Assistant y practica hablando sobre el tema de esta lección.',pt:'Abra o AI Assistant e pratique a conversação sobre o tema desta aula.',de:'Öffne den AI Assistant und übe das Sprechen über das Thema dieser Lektion.',fr:'Ouvre AI Assistant et entraîne-toi à parler du sujet de cette leçon.',it:'Apri AI Assistant e fai pratica parlando dell’argomento di questa lezione.',ru:'Откройте AI Assistant и потренируйтесь говорить на тему этого урока.',hy:'Բացեք AI Assistant-ը և վարժվեք այս դասի թեմայով խոսել։','zh-Hans':'打开 AI Assistant，练习谈论本课主题。',ja:'AI Assistantを開いて、このレッスンのテーマについて話す練習をしましょう。',ko:'AI Assistant를 열고 이 레슨의 주제로 말하기를 연습하세요.',hi:'AI Assistant खोलें और इस पाठ के विषय पर बोलने का अभ्यास करें。',bn:'AI Assistant খুলে এই পাঠের বিষয় নিয়ে কথা বলার অনুশীলন করুন।',ur:'AI Assistant کھولیں اور اس سبق کے موضوع پر بات کرنے کی مشق کریں۔',ar:'افتح AI Assistant وتدرّب على التحدث عن موضوع هذا الدرس.',id:'Buka AI Assistant dan berlatihlah berbicara tentang topik pelajaran ini.',tr:'AI Assistant’ı açın ve bu dersin konusu hakkında konuşma pratiği yapın.',vi:'Mở AI Assistant và luyện nói về chủ đề của bài học này.',kk:'AI Assistant-ті ашып, осы сабақтың тақырыбы туралы сөйлеуді жаттықтырыңыз.',uz:'AI Assistant-ni oching va ushbu dars mavzusida gapirishni mashq qiling.'};
-for(const [lang,values] of Object.entries(additions)){Object.assign(I.ui[lang],values);I.ui[lang].speakingText=speaking[lang];}
+const spelling={
+ en:'Use am/is/are + verb-ing. Double the final t in sit → sitting; add -ing to wash → washing.',
+ es:'Usa am/is/are + verbo en -ing. Duplica la t final en sit → sitting; añade -ing a wash → washing.',
+ pt:'Use am/is/are + verbo em -ing. Duplique o t final em sit → sitting; acrescente -ing a wash → washing.',
+ de:'Verwende am/is/are + Verb-ing. Verdopple das letzte t bei sit → sitting; hänge -ing an wash → washing.',
+ fr:'Utilise am/is/are + verbe en -ing. Double le t final de sit → sitting ; ajoute -ing à wash → washing.',
+ it:'Usa am/is/are + verbo in -ing. Raddoppia la t finale in sit → sitting; aggiungi -ing a wash → washing.',
+ ru:'Используйте am/is/are + глагол с -ing. В sit → sitting удваивается t; к wash → washing добавляется -ing.',
+ hy:'Օգտագործեք am/is/are + բայի -ing ձևը։ sit → sitting ձևում վերջին t-ն կրկնապատկվում է, իսկ wash → washing ձևում ավելացվում է -ing։',
+ 'zh-Hans':'使用 am/is/are + 动词-ing。sit → sitting 要双写末尾的 t；wash → washing 直接加 -ing。',
+ ja:'am/is/are + 動詞-ing を使います。sit → sitting は最後の t を重ね、wash → washing は -ing を付けます。',
+ ko:'am/is/are + 동사-ing를 사용합니다. sit → sitting은 마지막 t를 한 번 더 쓰고, wash → washing은 -ing를 붙입니다.',
+ hi:'am/is/are + क्रिया-ing का प्रयोग करें। sit → sitting में अंतिम t दोहराएँ; wash → washing में -ing जोड़ें।',
+ bn:'am/is/are + verb-ing ব্যবহার করুন। sit → sitting-এ শেষের t দ্বিগুণ হয়; wash → washing-এ -ing যোগ হয়।',
+ ur:'am/is/are + فعل-ing استعمال کریں۔ sit → sitting میں آخری t دگنا ہوتا ہے؛ wash → washing میں -ing لگتا ہے۔',
+ ar:'استخدم am/is/are + فعل ينتهي بـ -ing. في sit → sitting نضاعف حرف t الأخير، وفي wash → washing نضيف -ing.',
+ id:'Gunakan am/is/are + kata kerja-ing. Gandakan t terakhir pada sit → sitting; tambahkan -ing pada wash → washing.',
+ tr:'am/is/are + fiil-ing kullanın. sit → sitting için son t harfini iki kez yazın; wash → washing için -ing ekleyin.',
+ vi:'Dùng am/is/are + động từ-ing. Gấp đôi chữ t cuối trong sit → sitting; thêm -ing vào wash → washing.',
+ kk:'am/is/are + етістік-ing қолданыңыз. sit → sitting сөзінде соңғы t екі еселенеді; wash → washing сөзіне -ing жалғанады.',
+ uz:'am/is/are + fe’l-ing ishlating. sit → sitting shaklida oxirgi t ikki marta yoziladi; wash → washing shaklida -ing qo‘shiladi.'
+};
+for(const [lang,values] of Object.entries(additions)){Object.assign(I.ui[lang],values);I.ui[lang].speakingText=speaking[lang];I.ui[lang].continuousSpelling=spelling[lang];}
 })(typeof globalThis==='object'?globalThis:this);

@@ -23,7 +23,7 @@ The source lessons are represented through adapted tasks and source labels in `b
 
 The user-supplied `sounds/success.mp3` plays after a correct answer; `error.wav` after an incorrect answer; `lesson.wav` after an individual lesson; `module.wav` after the sixth lesson; and `course.wav` is reserved for future A1–C1 completion. Sound toggle and preview controls are in the header/footer. Study audio is separate from these feedback cues.
 
-Lessons 4–6 extend the sequence with Present Continuous and the supplied family-at-home recording, be going to and Anna’s weekend plans, then verbs followed by -ing with Anna and David’s free-time recording. The remainder of A1 is still being developed.
+Lessons 4–6 extend the sequence with Present Continuous and the supplied family-at-home recording, be going to and Anna’s weekend plans, then verbs followed by -ing with Anna’s free-time recording. The free-time recording contains Anna’s part; David’s supplied text is excluded from the listening questions and on-screen transcript until a matching recording is available. The remainder of A1 is still being developed.
 
 ## Languages and integration
 
