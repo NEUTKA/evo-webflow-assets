@@ -112,7 +112,7 @@ assert.ok(!engine.correct(bank.lessons[3].items.find(q => q.id === '4-2'), 'is l
 assert.ok(!engine.correct(bank.lessons[3].items.find(q => q.id === '4-9'), 'in'));
 assert.equal(i18n.languages.length, 20);
 for (const { code } of i18n.languages) assert.ok(i18n.ui[code].continuousSpelling, `Missing rule translation: ${code}`);
-for (const { code } of i18n.languages) for (const key of ['l7','g7','l8','g8','l9','g9','aAn','pluralNouns','possessiveAdjectives','thereIsAre','placeWords','micPrompt','playModel','startMic','micListening','heardWords','micPassed','micRetry','micUnavailable','speechNotice','skipSpeech']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
+for (const { code } of i18n.languages) for (const key of ['l7','g7','l8','g8','l9','g9','aAn','pluralNouns','possessiveAdjectives','thereIsAre','placeWords','micPrompt','playModel','startMic','micListening','heardWords','micPassed','micRetry','micTimeout','micUnavailable','speechNotice','skipSpeech']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
 assert.equal(engine.compareSpeech('I am a student.','I am a cat').pass,false);

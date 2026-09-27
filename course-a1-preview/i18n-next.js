@@ -85,5 +85,27 @@ const words={
   'Undosh tovush oldidan a, unli tovush oldidan an ishlating: a barista, an assistant.','Bir nechta buyum uchun a/an siz -s/-es ko‘plik shaklini ishlating: tables, sandwiches.','I bilan my, he bilan his, she bilan her, we bilan our ishlating. Ularni ot oldiga qo‘ying.','Bitta buyum uchun there is, ikki yoki ko‘proq uchun there are ishlating. Savol: Is there…? / Are there…?','next to — yonida, in the corner — xonaning burchagida, on — sirt ustida.',
   'Prototip · A1 uchun 9 dars · qolgan kurs tayyorlanmoqda.','Bu gapni ayting','Namunani tinglash','Mikrofonni yoqish','Tinglanmoqda…','Tanilgan so‘zlar:','So‘zlar tanildi.','Ba’zi so‘zlar tanilmadi. Namunani tinglab, yana urinib ko‘ring.','Nutqni tanish imkoni yo‘q yoki mikrofonga ruxsat berilmadi. Davom etishingiz mumkin.','Bu alohida tovushlarni emas, tanilgan so‘zlarni solishtiradi. Brauzer audioni onlayn xizmatga yuborishi mumkin.','Mikrofonsiz davom etish'],
 };
-for(const [code,strings] of Object.entries(words)){if(strings.length!==keys.length)throw Error('Missing course translation: '+code);Object.assign(I.ui[code],Object.fromEntries(keys.map((key,index)=>[key,strings[index]])));}
+const timeoutText={
+ en:'Nothing was recognized within 7 seconds. Try again.',
+ ru:'За 7 секунд слова не распознаны. Попробуйте ещё раз.',
+ es:'No se reconoció nada en 7 segundos. Inténtalo de nuevo.',
+ pt:'Nada foi reconhecido em 7 segundos. Tente novamente.',
+ de:'Innerhalb von 7 Sekunden wurde nichts erkannt. Versuche es erneut.',
+ fr:'Aucun mot reconnu en 7 secondes. Réessayez.',
+ it:'Nessuna parola riconosciuta entro 7 secondi. Riprova.',
+ hy:'7 վայրկյանում ոչինչ չճանաչվեց։ Կրկին փորձեք։',
+ 'zh-Hans':'7 秒内未识别出词语。请重试。',
+ ja:'7秒以内に単語を認識できませんでした。もう一度お試しください。',
+ ko:'7초 동안 단어를 인식하지 못했습니다. 다시 시도하세요.',
+ hi:'7 सेकंड में कोई शब्द पहचाना नहीं गया। फिर कोशिश करें।',
+ bn:'৭ সেকেন্ডে কোনো শব্দ শনাক্ত হয়নি। আবার চেষ্টা করুন।',
+ ur:'7 سیکنڈ میں کوئی لفظ نہیں پہچانا گیا۔ دوبارہ کوشش کریں۔',
+ ar:'لم يتم التعرف على كلمات خلال 7 ثوانٍ. حاول مجددًا.',
+ id:'Tidak ada kata yang dikenali dalam 7 detik. Coba lagi.',
+ tr:'7 saniye içinde hiçbir kelime algılanmadı. Tekrar dene.',
+ vi:'Không nhận dạng được từ nào trong 7 giây. Hãy thử lại.',
+ kk:'7 секунд ішінде сөздер танылмады. Қайталап көріңіз.',
+ uz:'7 soniya ichida hech bir so‘z tanilmadi. Qayta urinib ko‘ring.'
+};
+for(const [code,strings] of Object.entries(words)){if(strings.length!==keys.length||!timeoutText[code])throw Error('Missing course translation: '+code);Object.assign(I.ui[code],Object.fromEntries(keys.map((key,index)=>[key,strings[index]])),{micTimeout:timeoutText[code]});}
 })(typeof globalThis==='object'?globalThis:this);

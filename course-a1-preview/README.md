@@ -11,7 +11,7 @@ The nine pilot lessons unlock in order. Every lesson follows the same path:
 3. The supplied listening audio and optional transcript.
 4. Five or six one-at-a-time listening questions based on that audio. The audio player appears on every question so learners can replay the recording at any time. Choice answers are shuffled once per attempt and keep their order while the learner answers.
 5. English-only vocabulary with a reminder to use the site translator and Save to cards.
-6. Two short English sentences to say aloud. The browser plays a spoken example and requests microphone access only when the learner starts recognition. It compares recognized words with the sentence and highlights missing words. The learner may retry or continue without a microphone.
+6. Two short English sentences to say aloud. The browser plays a spoken example and requests microphone access only when the learner starts recognition. It compares recognized words with the sentence and highlights missing words. If nothing is recognized within seven seconds, listening stops and the learner can retry or continue without a microphone. The next sentence waits until the previous recognition session has ended.
 7. An open-ended speaking prompt and a link to AI Assistant.
 
 There is no homework step. The lesson ends after speaking. Grammar practice and listening questions are separate, and every question occupies its own screen. Guided lesson mode uses the available phone viewport, hides the page footer, and prevents page scrolling; the optional transcript has its own bounded scroll area.
