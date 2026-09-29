@@ -75,7 +75,22 @@ const evidence = {
   '12-l2': 'I also study French',
   '12-l3': 'I learn French at a language school two evenings a week',
   '12-l4': 'My teacher is from France',
-  '12-l5': 'she speaks Spanish'
+  '12-l5': 'she speaks Spanish',
+  '13-l1': 'I want to tell you about my husband',
+  '13-l2': 'He is thirty-one years old',
+  '13-l3': 'He works in an office',
+  '13-l4': 'He often cooks dinner, especially on Fridays',
+  '13-l5': 'Alex is calm and friendly',
+  '14-l1': 'It is on the third floor',
+  '14-l2': 'My living room is my favorite place',
+  '14-l3': 'I have a bed, a wardrobe, and a mirror',
+  '14-l4': 'pasta, soup, and eggs',
+  '14-l5': 'I drink coffee on the balcony',
+  '15-l1': 'I live in a small village',
+  '15-l2': 'I hear birds, not traffic',
+  '15-l3': 'I grow tomatoes and herbs',
+  '15-l4': 'a small shop, a post office, and a bus stop',
+  '15-l5': 'I go to the city once a week'
 };
 
 function canBuildOrder(question, picked = [], remaining = question.tokens.map((_, index) => index)) {
@@ -123,9 +138,9 @@ for (const lesson of bank.lessons) {
   }
 }
 assert.equal(Object.keys(evidence).length, listeningCount);
-assert.equal(bank.lessons.length, 12);
-assert.equal(listeningCount, 61);
-assert.equal(seen.size, 180);
+assert.equal(bank.lessons.length, 15);
+assert.equal(listeningCount, 76);
+assert.equal(seen.size, 225);
 assert.equal(bank.lessons[5].transcript.length, 14);
 assert.ok(!JSON.stringify(bank.lessons[5]).includes('David'));
 assert.ok(bank.lessons[3].items.find(q => q.id === '4-2').prompt.includes('sit'));
@@ -136,7 +151,8 @@ assert.equal(i18n.languages.length, 20);
 for (const { code } of i18n.languages) assert.ok(i18n.ui[code].continuousSpelling, `Missing rule translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l7','g7','l8','g8','l9','g9','aAn','pluralNouns','possessiveAdjectives','thereIsAre','placeWords','micPrompt','playModel','startMic','micListening','heardWords','micPassed','micRetry','micTimeout','micUnavailable','speechNotice','skipSpeech']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l10','g10','l11','g11','l12','g12','transportPoint','transportVehicle','timeAtInOn','timeNoPreposition','questionsWithBe','questionsWithDo','pilot','speakingText','transcriptLabel','replayAudio']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
-for (const { code } of i18n.languages) assert.ok(/12|১২/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
+for (const { code } of i18n.languages) for (const key of ['l13','g13','l14','g14','l15','g15','adjectiveBefore','adjectiveAfter','adjectiveNoPlural','articleFirst','articleSpecific','articleZero','thereExists','itRefers','itWeatherTime']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
+for (const { code } of i18n.languages) assert.ok(/15|\u09e7\u09eb|\u06f1\u06f5/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
 assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7:00').pass,true);
@@ -162,10 +178,11 @@ for(let index=0;index<bank.lessons.length;index++){
   state=engine.nextSpeaking(state);
   assert.equal(state.active.phase,'speaking');
   state=engine.finish(state,'2026-09-27').state;
-  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,6);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
+  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,7);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
+  if(index===11){const previous=engine.restore({...state,version:6});assert.equal(previous.version,7);assert.ok(engine.unlocked(previous,12),'Lesson 13 must unlock for existing learners');}
 }
-assert.equal(Object.keys(state.completed).length,12);
-assert.equal(state.xp,240);
+assert.equal(Object.keys(state.completed).length,15);
+assert.equal(state.xp,300);
 
 // Complete the real grammar → listening → vocabulary → speaking path for the new lessons.
 function correctDraft(question){
@@ -177,7 +194,7 @@ function correctDraft(question){
 let flowState=engine.initial();
 flowState.completed=Object.fromEntries(bank.lessons.slice(0,9).map(lesson=>[lesson.id,{lesson:0,firstCorrect:15,total:15,xp:20}]));
 flowState.xp=180;
-for(let index=9;index<12;index++){
+for(let index=9;index<15;index++){
   flowState=engine.start(flowState,index);
   for(const phase of ['grammar','listening']){
     if(phase==='listening')flowState=engine.startListening(flowState);
@@ -200,6 +217,6 @@ for(let index=9;index<12;index++){
   flowState=engine.finish(flowState,'2026-09-27').state;
   assert.equal(Object.keys(flowState.completed).length,index+1);
 }
-assert.equal(flowState.xp,240);
+assert.equal(flowState.xp,300);
 
-console.log(`Content QA passed: ${bank.lessons.length} lessons, ${seen.size} unique questions, ${listeningCount} transcript-backed listening answers, 20 rule translations.`);
+console.log(`Content QA passed: ${bank.lessons.length} lessons, ${seen.size} unique questions, ${listeningCount} transcript-backed listening answers, 20 interface languages.`);

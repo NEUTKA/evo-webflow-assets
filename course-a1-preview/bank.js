@@ -244,6 +244,65 @@ lessons.push(
   {id:'12-l4',type:'choice',prompt:'Where is Emma’s teacher from?',options:['France.','Canada.','Mexico.'],answer:'France.',rule:'listen',source:'Countries, nationalities, and languages — Emma'},
   {id:'12-l5',type:'choice',prompt:'What language does Emma’s friend Sofia speak?',options:['Spanish.','French.','English.'],answer:'Spanish.',rule:'listen',source:'Countries, nationalities, and languages — Emma'}]}
 );
+lessons.push(
+ {id:'describing-people',title:'l13',goal:'g13',person:'Anna',role:'Anna · Alex',speakingPrompt:'Describe someone you know. Say what they are like and one thing they do for you. Ask: “What is your friend like?”',audioTitle:'Describing people — Anna',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a9866ac968c6b738ac842_Listening%20A1%20Elementary.%20Describing%20people%20(Anna).mp3',transcript:[
+  'Hello. My name is Anna.','I want to tell you about my husband.','His name is Alex.','He is thirty-one years old, and he is very kind.','He works in an office, and he usually comes home at six o’clock.','When he comes home, he says hello and asks about my day.','Alex helps me a lot.','He often cooks dinner, especially on Fridays.','He makes pasta or rice with chicken.','After dinner, he usually washes the dishes.','On weekends, we go for a walk in the park or visit my parents.','Alex is calm and friendly, and he makes me feel safe and happy.'
+ ],vocabulary:[['husband',''],['kind',''],['office',''],['calm',''],['friendly',''],['safe','']],examples:['Alex is a kind person.','Alex is calm and friendly.','Anna feels happy.'],rules:['adjectiveBefore','adjectiveAfter','adjectiveNoPlural'],items:[
+  {id:'13-1',type:'choice',prompt:'Choose the natural word order.',options:['Alex is a kind person.','Alex is a person kind.','Alex is a kindness person.'],answer:'Alex is a kind person.',rule:'adjectiveBefore',source:'Grammar 6: Adjectives'},
+  {id:'13-2',type:'input',prompt:'Complete with the adjective after be: Alex is very ___. (kind)',answers:['kind'],modelAnswer:'Alex is very kind.',rule:'adjectiveAfter',source:'Grammar 6: Adjectives; Describing people'},
+  {id:'13-3',type:'choice',prompt:'Choose the correct sentence with two people.',options:['They are friendly people.','They are friendlies people.','They are people friendly.'],answer:'They are friendly people.',rule:'adjectiveNoPlural',source:'Grammar 6: Adjectives'},
+  {id:'13-4',type:'order',prompt:'Build a sentence describing Alex.',tokens:['kind.','very','is','Alex'],answer:'Alex is very kind.',rule:'adjectiveAfter',source:'Grammar 6: Adjectives; Describing people'},
+  {id:'13-5',type:'choice',prompt:'Which question asks about someone’s character?',options:['Is Alex friendly?','Is friendly Alex?','Does Alex friendly?'],answer:'Is Alex friendly?',rule:'adjectiveAfter',source:'Grammar 6: Adjectives'},
+  {id:'13-6',type:'input',prompt:'Use an adjective after feel: Anna feels ___. (happy)',answers:['happy'],modelAnswer:'Anna feels happy.',rule:'adjectiveAfter',source:'Grammar 6: Adjectives; Describing people'},
+  {id:'13-7',type:'choice',prompt:'Choose the adjective before a noun.',options:['a calm person','a person calm','a calmly person'],answer:'a calm person',rule:'adjectiveBefore',source:'Grammar 6: Adjectives'},
+  {id:'13-8',type:'input',prompt:'Adjectives do not take plural -s: They are ___ people. (kind)',answers:['kind'],modelAnswer:'They are kind people.',rule:'adjectiveNoPlural',source:'Grammar 6: Adjectives'},
+  {id:'13-9',type:'choice',prompt:'Choose the sentence with feel + adjective.',options:['I feel safe.','I feel safely.','I feel a safe.'],answer:'I feel safe.',rule:'adjectiveAfter',source:'Grammar 6: Adjectives'},
+  {id:'13-10',type:'order',prompt:'Build a sentence about Anna’s feelings.',tokens:['happy.','feels','Anna'],answer:'Anna feels happy.',rule:'adjectiveAfter',source:'Grammar 6: Adjectives'}
+ ],listeningItems:[
+  {id:'13-l1',type:'choice',prompt:'Who is Alex?',options:['Anna’s husband.','Anna’s brother.','Anna’s father.'],answer:'Anna’s husband.',rule:'listen',source:'Describing people — Anna'},
+  {id:'13-l2',type:'choice',prompt:'How old is Alex?',options:['Thirty-one.','Twenty-one.','Forty-one.'],answer:'Thirty-one.',rule:'listen',source:'Describing people — Anna'},
+  {id:'13-l3',type:'choice',prompt:'Where does Alex work?',options:['In an office.','In a café.','In a hospital.'],answer:'In an office.',rule:'listen',source:'Describing people — Anna'},
+  {id:'13-l4',type:'choice',prompt:'What does Alex often do, especially on Fridays?',options:['Cook dinner.','Wash the car.','Play football.'],answer:'Cook dinner.',rule:'listen',source:'Describing people — Anna'},
+  {id:'13-l5',type:'choice',prompt:'Which words does Anna use to describe Alex?',options:['Calm and friendly.','Loud and angry.','Tired and busy.'],answer:'Calm and friendly.',rule:'listen',source:'Describing people — Anna'}]},
+ {id:'apartment-articles',title:'l14',goal:'g14',person:'Anna',role:'Anna · apartment',speakingPrompt:'Describe your home. Mention a room for the first time, then say something about the room. Ask: “What is your favourite room?”',audioTitle:'My apartment — Anna',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695e62ec1bf79e8cd864b4ff_Listening%20A1%20Elementary.%20My%20apartment%20(Anna).mp3',transcript:[
+  'Hi, I’m Anna. I live in a small apartment in the city.','It is on the third floor, and it is bright.','I have a living room, a bedroom, a kitchen, and a bathroom.','My living room is my favorite place. I have a sofa, a small table, and a TV.','In the bedroom, I have a bed, a wardrobe, and a mirror.','My kitchen is small, but it is comfortable. I cook simple food there, like pasta, soup, and eggs.','I also have a balcony. In the morning, I drink coffee on the balcony and look at the street.','My apartment is not big, but it feels warm and cozy.'
+ ],vocabulary:[['apartment',''],['third floor',''],['wardrobe',''],['mirror',''],['balcony',''],['cozy','']],examples:['I have a balcony. The balcony is bright.','Anna lives in an apartment.','Anna likes coffee.'],rules:['articleFirst','articleSpecific','articleZero'],items:[
+  {id:'14-1',type:'choice',prompt:'First mention of one apartment: Anna lives in ___ apartment.',options:['an','a','the'],answer:'an',rule:'articleFirst',source:'Grammar 5: Articles; My apartment'},
+  {id:'14-2',type:'input',prompt:'First mention of one balcony: Anna has ___ balcony.',answers:['a'],modelAnswer:'Anna has a balcony.',rule:'articleFirst',source:'Grammar 5: Articles; My apartment'},
+  {id:'14-3',type:'choice',prompt:'The balcony is already mentioned: She drinks coffee on ___ balcony.',options:['the','a','an'],answer:'the',rule:'articleSpecific',source:'Grammar 5: Articles; My apartment'},
+  {id:'14-4',type:'input',prompt:'One specific floor: Anna lives on ___ third floor.',answers:['the'],modelAnswer:'Anna lives on the third floor.',rule:'articleSpecific',source:'Grammar 5: Articles; My apartment'},
+  {id:'14-5',type:'choice',prompt:'Choose the sentence about coffee in general.',options:['Anna likes coffee.','Anna likes a coffee.','Anna likes the coffee.'],answer:'Anna likes coffee.',rule:'articleZero',source:'Grammar 5: Articles'},
+  {id:'14-6',type:'order',prompt:'Build a sentence introducing a room.',tokens:['kitchen.','a','has','Anna'],answer:'Anna has a kitchen.',rule:'articleFirst',source:'Grammar 5: Articles'},
+  {id:'14-7',type:'choice',prompt:'First mention of one small table: She has ___ small table.',options:['a','an','the'],answer:'a',rule:'articleFirst',source:'Grammar 5: Articles; My apartment'},
+  {id:'14-8',type:'input',prompt:'The table is already mentioned: ___ table is small.',answers:['The'],modelAnswer:'The table is small.',rule:'articleSpecific',source:'Grammar 5: Articles'},
+  {id:'14-9',type:'choice',prompt:'Choose the sentence about rooms in general.',options:['Rooms can be bright.','A rooms can be bright.','The rooms can be bright.'],answer:'Rooms can be bright.',rule:'articleZero',source:'Grammar 5: Articles'},
+  {id:'14-10',type:'order',prompt:'Build a sentence about a specific room.',tokens:['bedroom','bright.','is','The'],answer:'The bedroom is bright.',rule:'articleSpecific',source:'Grammar 5: Articles'}
+ ],listeningItems:[
+  {id:'14-l1',type:'choice',prompt:'Which floor is Anna’s apartment on?',options:['The third floor.','The first floor.','The fifth floor.'],answer:'The third floor.',rule:'listen',source:'My apartment — Anna'},
+  {id:'14-l2',type:'choice',prompt:'Which room is Anna’s favourite place?',options:['The living room.','The bathroom.','The bedroom.'],answer:'The living room.',rule:'listen',source:'My apartment — Anna'},
+  {id:'14-l3',type:'choice',prompt:'What does Anna have in her bedroom?',options:['A bed, a wardrobe and a mirror.','A sofa, a TV and a table.','A cooker, a fridge and a sink.'],answer:'A bed, a wardrobe and a mirror.',rule:'listen',source:'My apartment — Anna'},
+  {id:'14-l4',type:'choice',prompt:'What food does Anna say she cooks in her kitchen?',options:['Pasta, soup and eggs.','Rice, chicken and fish.','Bread, salad and fruit.'],answer:'Pasta, soup and eggs.',rule:'listen',source:'My apartment — Anna'},
+  {id:'14-l5',type:'choice',prompt:'Where does Anna drink coffee in the morning?',options:['On the balcony.','In the bathroom.','In the bedroom.'],answer:'On the balcony.',rule:'listen',source:'My apartment — Anna'}]},
+ {id:'village-there-it',title:'l15',goal:'g15',person:'Isabella',role:'Isabella · village',speakingPrompt:'Describe your town or village. Say what places there are and what the place is like. Ask: “Is there a shop near you?”',audioTitle:'Living in a village — Isabella',audio:'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695bee6f5bd8940575593275_Listening%20A1%20Elementary.%20Living%20in%20a%20village%20(Isabella).mp3',transcript:[
+  'Hi, I’m Isabella. I live in a small village.','It is quiet and peaceful. There are not many cars, so the streets are calm.','In the morning, I hear birds, not traffic. I like that.','My house is small, but it has a garden. In spring and summer, I grow tomatoes and herbs. I also have flowers.','In the village, people know each other. My neighbors say hello and sometimes they help me.','We have a small shop, a post office, and a bus stop.','We do not have a big supermarket, so I go to the city once a week.','In the evenings, I walk near the fields and watch the sunset.','Village life is simple, and I feel relaxed.'
+ ],vocabulary:[['village',''],['peaceful',''],['neighbor',''],['post office',''],['field',''],['sunset','']],examples:['There is a shop in the village.','It is quiet.','There are not many cars.'],rules:['thereExists','itRefers','itWeatherTime'],items:[
+  {id:'15-1',type:'choice',prompt:'Introduce a shop for the first time: ___ a shop in the village.',options:['There is','It is','There are'],answer:'There is',rule:'thereExists',source:'Grammar 9: There vs It'},
+  {id:'15-2',type:'input',prompt:'Refer back to the village: ___ is quiet and peaceful.',answers:['It'],modelAnswer:'It is quiet and peaceful.',rule:'itRefers',source:'Grammar 9: There vs It; Living in a village'},
+  {id:'15-3',type:'choice',prompt:'Talk about several cars existing: ___ not many cars.',options:['There are','It is','There is'],answer:'There are',rule:'thereExists',source:'Grammar 9: There vs It; Living in a village'},
+  {id:'15-4',type:'order',prompt:'Build a sentence introducing a place.',tokens:['office.','post','a','is','There'],answer:'There is a post office.',rule:'thereExists',source:'Grammar 9: There vs It'},
+  {id:'15-5',type:'choice',prompt:'First mention: There is a garden. ___ has flowers.',options:['It','There','They'],answer:'It',rule:'itRefers',source:'Grammar 9: There vs It'},
+  {id:'15-6',type:'input',prompt:'Describe the weather: ___ is sunny today.',answers:['It'],modelAnswer:'It is sunny today.',rule:'itWeatherTime',source:'Grammar 9: There vs It'},
+  {id:'15-7',type:'choice',prompt:'Ask if a bus stop exists nearby.',options:['Is there a bus stop near here?','Is it a bus stop near here?','Are there a bus stop near here?'],answer:'Is there a bus stop near here?',rule:'thereExists',source:'Grammar 9: There vs It'},
+  {id:'15-8',type:'input',prompt:'Talk about the time: ___ is seven o’clock.',answers:['It'],modelAnswer:'It is seven o’clock.',rule:'itWeatherTime',source:'Grammar 9: There vs It'},
+  {id:'15-9',type:'choice',prompt:'First mention: There are two shops. ___ are small.',options:['They','It','There'],answer:'They',rule:'itRefers',source:'Grammar 9: There vs It'},
+  {id:'15-10',type:'order',prompt:'Build a sentence describing the village.',tokens:['quiet.','is','It'],answer:'It is quiet.',rule:'itRefers',source:'Grammar 9: There vs It'}
+ ],listeningItems:[
+  {id:'15-l1',type:'choice',prompt:'Where does Isabella live?',options:['In a small village.','In a large city.','Near a busy station.'],answer:'In a small village.',rule:'listen',source:'Living in a village — Isabella'},
+  {id:'15-l2',type:'choice',prompt:'What does Isabella hear in the morning instead of traffic?',options:['Birds.','Trains.','Music.'],answer:'Birds.',rule:'listen',source:'Living in a village — Isabella'},
+  {id:'15-l3',type:'choice',prompt:'What does Isabella grow in her garden in spring and summer?',options:['Tomatoes and herbs.','Apples and pears.','Rice and potatoes.'],answer:'Tomatoes and herbs.',rule:'listen',source:'Living in a village — Isabella'},
+  {id:'15-l4',type:'choice',prompt:'Which places are in Isabella’s village?',options:['A small shop, a post office and a bus stop.','A cinema, a bank and a museum.','A supermarket, an airport and a train station.'],answer:'A small shop, a post office and a bus stop.',rule:'listen',source:'Living in a village — Isabella'},
+  {id:'15-l5',type:'choice',prompt:'How often does Isabella go to the city?',options:['Once a week.','Every day.','Once a year.'],answer:'Once a week.',rule:'listen',source:'Living in a village — Isabella'}]}
+);
 const speakingSentences=[
  ['My name is Anna.','I am a student.'],
  ['I work in a supermarket.','I go to work by bike.'],
@@ -256,8 +315,11 @@ const speakingSentences=[
  ['There is a bed next to the window.','There are two pillows on the bed.'],
  ['I take the bus to work.','I am on the metro.'],
  ['I wake up at seven.','I cook dinner in the evening.'],
- ['I am from Canada.','I study French at a language school.']
+ ['I am from Canada.','I study French at a language school.'],
+ ['Alex is a kind person.','Anna feels happy with Alex.'],
+ ['I have a balcony.','The balcony is bright.'],
+ ['There is a shop in the village.','It is quiet and peaceful.']
 ];
 lessons.forEach((lesson,index)=>{lesson.speakingSentences=speakingSentences[index];});
-const data={version:6,lessons};if(typeof module==='object'&&module.exports)module.exports=data;else root.EvoCourseBank=data;
+const data={version:7,lessons};if(typeof module==='object'&&module.exports)module.exports=data;else root.EvoCourseBank=data;
 })(typeof globalThis==='object'?globalThis:this);
