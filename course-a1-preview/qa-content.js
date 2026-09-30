@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const bank = require('./bank.js');
 const engine = require('./engine.js');
+const review = require('./review.js');
+const reviewI18n = require('./review-i18n.js');
 const i18n = require('./i18n.js');
 
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-extra.js'), 'utf8'), { EvoCourseI18n: i18n });
@@ -14,84 +16,7 @@ vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-more.js'), 'utf8'), {
 
 // Editorial evidence: each listening answer must be recoverable from the
 // supplied transcript associated with that lesson's audio URL.
-const evidence = {
-  '1-l1': 'He is from Japan',
-  '1-l2': 'There are eight students',
-  '1-l3': 'She is from Mexico',
-  '1-l4': 'he works as a waiter',
-  '1-l5': 'plays the guitar',
-  '1-l6': 'She is a nurse',
-  '2-l1': 'I work in a supermarket',
-  '2-l2': 'wake up at six thirty',
-  '2-l3': 'I go to work by bike',
-  '2-l4': 'drink coffee and eat a sandwich',
-  '2-l5': 'travel and meet new people',
-  '3-l1': 'I work in a café',
-  '3-l2': 'wake up at seven o’clock',
-  '3-l3': 'I go to work by bus',
-  '3-l4': 'finish work at four o’clock',
-  '3-l5': 'I meet my friends or stay at home',
-  '4-l1': 'sitting on the sofa and studying Spanish',
-  '4-l2': 'He is cooking lunch',
-  '4-l3': 'She is doing her homework',
-  '4-l4': 'He is washing the car',
-  '4-l5': 'I am drinking tea and working on my computer',
-  '5-l1': 'clean my apartment and do the laundry',
-  '5-l2': 'meet my friend in a café',
-  '5-l3': 'cook pasta at home',
-  '5-l4': 'take a walk in the park',
-  '5-l5': 'take some photos',
-  '6-l1': 'make tea and listen to music',
-  '6-l2': 'walking in the park and taking photos',
-  '6-l3': 'On Fridays, I sometimes meet my friend in a café',
-  '6-l4': 'If the weather is bad, I stay at home and cook pasta or soup',
-  '6-l5': 'Free time helps me feel happy and calm.',
-  '7-l1': 'I am a barista',
-  '7-l2': 'I start work at eight o’clock',
-  '7-l3': 'turn on the coffee machine and clean the tables',
-  '7-l4': 'sandwiches and cakes',
-  '7-l5': 'I like my job because the team is nice',
-  '8-l1': 'We are four people',
-  '8-l2': 'She works in a small shop',
-  '8-l3': 'My dad is a bus driver',
-  '8-l4': 'he likes football and computer games',
-  '8-l5': 'we visit my grandparents or we go for a walk in the park',
-  '9-l1': 'The walls are light blue',
-  '9-l2': 'There is a bed next to the window',
-  '9-l3': 'Near the bed, there is a small table and a lamp',
-  '9-l4': 'I study English at my desk in the evening',
-  '9-l5': 'my notebook, a pen, and my phone charger',
-  '10-l1': 'I usually take the bus to work',
-  '10-l2': 'The bus stop is near my home',
-  '10-l3': 'especially at eight o’clock',
-  '10-l4': 'the metro because it is faster than the bus',
-  '10-l5': 'I use a taxi only when I am late or when it is raining',
-  '11-l1': 'I wake up at 7:00',
-  '11-l2': 'go to work by bus',
-  '11-l3': 'I start work at 9:00',
-  '11-l4': 'At lunchtime, I eat a sandwich or salad and talk to my coworkers',
-  '11-l5': 'I go to bed at about 11:00',
-  '12-l1': 'I am from Canada',
-  '12-l2': 'I also study French',
-  '12-l3': 'I learn French at a language school two evenings a week',
-  '12-l4': 'My teacher is from France',
-  '12-l5': 'she speaks Spanish',
-  '13-l1': 'I want to tell you about my husband',
-  '13-l2': 'He is thirty-one years old',
-  '13-l3': 'He works in an office',
-  '13-l4': 'He often cooks dinner, especially on Fridays',
-  '13-l5': 'Alex is calm and friendly',
-  '14-l1': 'It is on the third floor',
-  '14-l2': 'My living room is my favorite place',
-  '14-l3': 'I have a bed, a wardrobe, and a mirror',
-  '14-l4': 'pasta, soup, and eggs',
-  '14-l5': 'I drink coffee on the balcony',
-  '15-l1': 'I live in a small village',
-  '15-l2': 'I hear birds, not traffic',
-  '15-l3': 'I grow tomatoes and herbs',
-  '15-l4': 'a small shop, a post office, and a bus stop',
-  '15-l5': 'I go to the city once a week'
-};
+const evidence = require("./listening-evidence.js");
 
 function canBuildOrder(question, picked = [], remaining = question.tokens.map((_, index) => index)) {
   if (!remaining.length) return engine.correct(question, picked);
@@ -219,4 +144,25 @@ for(let index=9;index<15;index++){
 }
 assert.equal(flowState.xp,300);
 
-console.log(`Content QA passed: ${bank.lessons.length} lessons, ${seen.size} unique questions, ${listeningCount} transcript-backed listening answers, 20 interface languages.`);
+const catalogue=review.catalogue();
+assert.equal(catalogue.length,79);
+assert.ok(catalogue.every(card=>card.clue&&card.word&&card.id),'Every lesson word needs an English recall clue');
+const merged=review.merge(catalogue,[{word:'COZY',translation:'уютный'},{word:'journey',translation:'путешествие'}]);
+assert.equal(merged.length,80);
+assert.equal(merged.find(card=>card.id==='cozy').source,'course+saved');
+assert.equal(merged.find(card=>card.id==='journey').source,'saved');
+assert.ok(review.answer(merged.find(card=>card.id==='cozy'),'Cozy!'));
+let progress=review.initial();
+assert.ok(review.due(merged,progress,'2026-09-30').length===5);
+progress=review.grade(progress,'cozy',true,'2026-09-30');
+assert.equal(progress.words.cozy.due,'2026-10-01');
+assert.deepEqual(progress.days['2026-09-30'],['cozy']);
+progress=review.grade(progress,'cozy',true,'2026-10-01');
+assert.equal(progress.words.cozy.due,'2026-10-04');
+assert.equal(review.due([merged.find(card=>card.id==='cozy')],progress,'2026-10-03').length,0);
+assert.equal(review.due([merged.find(card=>card.id==='cozy')],progress,'2026-10-04').length,1);
+assert.equal(review.restore(JSON.stringify(progress)).words.cozy.stage,2);
+assert.equal(review.restore('bad JSON').version,1);
+for(const {code} of i18n.languages)for(const key of ['reviewWords','dailyCards','sessionDone','flipTitle','recallTitle','flipMode','recallMode','flipCard','again','knowIt','typeWord','showAnswer','todayGoal','goalDone','goalPrompt','practiceThese','correctAnswer'])assert.ok(reviewI18n[code]?.[key]&&reviewI18n[code][key]!==key,`Missing card UI: ${code}/${key}`);
+
+console.log(`Content QA passed: ${bank.lessons.length} lessons, ${seen.size} unique questions, ${listeningCount} transcript-backed listening answers, ${catalogue.length} review words, 20 interface languages.`);
