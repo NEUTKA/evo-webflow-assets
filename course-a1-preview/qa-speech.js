@@ -25,7 +25,7 @@ const context=vm.createContext({
  audio:{pause(){}},app:{querySelectorAll(){return[];}},render(){},play(cue){sounds.push(cue);},
  setTimeout:setTimer,clearTimeout:clearTimer
 });
-vm.runInContext('let micRecognition=null,micState="idle",speechFeedback=null,micTimer=null,micEndGuard=null,micHardTimer=null;'+lifecycle+';globalThis.startTest=startRecognition;globalThis.inspect=()=>({micState,speechFeedback,active:!!micRecognition});',context);
+vm.runInContext('let micRecognition=null,micState="idle",speechFeedback=null,micTimer=null,micEndGuard=null,micHardTimer=null,micStartupTimer=null;'+lifecycle+';globalThis.startTest=startRecognition;globalThis.inspect=()=>({micState,speechFeedback,active:!!micRecognition});',context);
 const result=(transcript,isFinal=false)=>({results:[Object.assign([{transcript}],{isFinal})]});
 
 context.startTest();
@@ -40,7 +40,8 @@ assert.deepEqual(sounds,['correct']);
 
 context.startTest();
 assert.equal(sessions.length,2,'the next speaking task starts a new session');
-tick(2000); // Mobile browsers may take a moment to begin capturing audio.
+tick(10000); // A mobile permission prompt must not consume speaking time.
+assert.equal(context.inspect().active,true,'recognition can still start after a slow permission prompt');
 sessions[1].onaudiostart();
 tick(6999);
 assert.equal(context.inspect().active,true,'the seven-second window starts when audio capture begins');
@@ -57,4 +58,35 @@ assert.equal(context.inspect().micState,'mismatch');
 assert.equal(context.inspect().speechFeedback.heard,'I am');
 sessions[0].onend();
 assert.equal(context.inspect().micState,'mismatch','late events from older sessions do not alter the current result');
-console.log('Speech QA passed: interim result, silent timeout, next task and stale event.');
+
+context.startTest();
+tick(20000);
+assert.equal(sessions[3].aborted,true,'a browser that never starts capture is released');
+tick(800);
+assert.equal(context.inspect().micState,'timeout');
+
+const cardSource=source.slice(source.indexOf('function stopCardMic()'),source.indexOf('async function openCards('))+
+ source.slice(source.indexOf('function listenCard()'),source.indexOf('function decorateMap()'));
+let cardNotice='',cardFeedback=null,cardResult=null;
+const cardContext=vm.createContext({
+ E,R:{answer:(card,heard)=>heard.trim().toLowerCase()===card.word.toLowerCase()},
+ window:{SpeechRecognition:Recognition},cardCurrent:()=>({word:'student'}),
+ cr:key=>key,render(){},rateCard:ok=>{cardResult=ok;cardFeedback=ok?'correct':'wrong';},
+ setTimeout:setTimer,clearTimeout:clearTimer
+});
+vm.runInContext('let cardMic=null,cardMicTimer=null;'+cardSource+';globalThis.startCard=listenCard;globalThis.cardActive=()=>!!cardMic;',cardContext);
+cardContext.startCard();
+const cardSession=sessions[4];
+tick(10000);
+assert.equal(cardContext.cardActive(),true,'card recognition survives a slow mobile permission prompt');
+cardSession.onaudiostart();
+tick(2000);
+cardSession.onresult(result('student',false));
+assert.equal(cardResult,true,'a correct interim word is accepted without waiting for a delayed final result');
+assert.equal(cardContext.cardActive(),false);
+cardContext.startCard();
+const nextCardSession=sessions[5];
+nextCardSession.onaudiostart();
+tick(7000);
+assert.equal(cardContext.cardActive(),false,'silent card capture stops after seven seconds');
+console.log('Speech QA passed: delayed mobile start, interim results, timeouts, next task and stale events.');
