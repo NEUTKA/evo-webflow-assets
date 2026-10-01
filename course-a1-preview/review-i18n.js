@@ -23,5 +23,7 @@ const rows={
  kk:['Сөздерді қайталау','Бүгінгі сөздер','Қайталау аяқталды','Сөзді еске түсіріңіз','Ағылшын сөзін айтыңыз не жазыңыз','Карталарды аудару','Айту не жазу','Картаны аудару','Қайта жаттығу','Мен білдім','Ағылшын сөзін жазыңыз','Жауапты көрсету','Бүгінгі мақсат','Мақсат орындалды ✓','Бір сабақ аяқтаңыз немесе бес сөзді еске түсіріңіз.','Осы сөздерді жаттығу','Дұрыс жауап'],
  uz:['So‘zlarni takrorlash','Bugungi so‘zlar','Takrorlash tugadi','So‘zni eslang','Inglizcha so‘zni ayting yoki yozing','Kartalarni aylantirish','Ayting yoki yozing','Kartani aylantiring','Qayta mashq','Bilgan edim','Inglizcha so‘zni yozing','Javobni ko‘rsatish','Bugungi maqsad','Maqsad bajarildi ✓','Bir darsni tugating yoki besh so‘zni eslang.','Bu so‘zlarni mashq qiling','To‘g‘ri javob']
 };
-const ui={en};for(const [locale,values] of Object.entries(rows)){ui[locale]={...en};keys.forEach((key,i)=>ui[locale][key]=values[i]);}root.EvoCourseReviewI18n=ui;if(typeof module==='object'&&module.exports)module.exports=ui;
+const ui={en};en.recallTitle=en.typeWord;en.recallMode='Type';
+const typeMode={ru:'Написать',es:'Escribir',pt:'Escrever',de:'Schreiben',fr:'Écrire',it:'Scrivere',hy:'Գրել','zh-Hans':'输入',ja:'入力',ko:'입력',hi:'लिखें',bn:'লিখুন',ur:'لکھیں',ar:'اكتب',id:'Ketik',tr:'Yaz',vi:'Gõ',kk:'Жазу',uz:'Yozish'};
+for(const [locale,values] of Object.entries(rows)){ui[locale]={...en};keys.forEach((key,i)=>ui[locale][key]=values[i]);ui[locale].recallTitle=ui[locale].typeWord;ui[locale].recallMode=typeMode[locale];}root.EvoCourseReviewI18n=ui;if(typeof module==='object'&&module.exports)module.exports=ui;
 })(typeof globalThis==='object'?globalThis:this);
