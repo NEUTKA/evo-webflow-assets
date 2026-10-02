@@ -8,6 +8,8 @@ const source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
 assert(!source.includes('data-action="card-mic"'));
 assert(!source.includes('function listenCard()'));
 const lifecycle=source.slice(source.indexOf('function clearMicTimers()'),source.indexOf('function exercise()'));
+assert(!lifecycle.includes('audio.pause()'),'starting lesson recognition must not touch HTML audio');
+assert(!lifecycle.includes("play('correct')"),'speech feedback must not play an HTML audio element');
 let now=0,nextTimer=0;
 const timers=new Map(),sessions=[],sounds=[];
 function setTimer(fn,delay){const id=++nextTimer;timers.set(id,{at:now+delay,fn});return id;}
@@ -23,7 +25,8 @@ const state={active:{lesson:0,speakingIndex:0}};
 const context=vm.createContext({
  E,B:{lessons:[{speakingSentences:['I am Anna.','I am a student.']}]},state,
  window:{SpeechRecognition:Recognition,speechSynthesis:{cancel(){}}},
- audio:{pause(){}},app:{querySelectorAll(){return[];}},render(){},play(cue){sounds.push(cue);},
+ audio:{pause(){throw Error('HTML audio pause during recognition');}},app:{querySelectorAll(){return[];}},render(){},
+ prepareSpeechSuccess(){},playSpeechSuccess(){sounds.push('correct');},
  setTimeout:setTimer,clearTimeout:clearTimer
 });
 vm.runInContext('let micRecognition=null,micState="idle",speechFeedback=null,micTimer=null,micEndGuard=null;'+lifecycle+';globalThis.startTest=startRecognition;globalThis.resetTest=resetSpeech;globalThis.inspect=()=>({micState,speechFeedback,active:!!micRecognition});',context);

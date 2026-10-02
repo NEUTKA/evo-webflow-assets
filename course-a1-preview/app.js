@@ -61,6 +61,9 @@ const audio=document.createElement('audio');audio.id='feedback-audio';audio.prel
 const soundKeys={correct:'correct',error:'wrong',lesson:'lessonDone',module:'moduleDone',course:'courseDone'};
 const soundFiles={correct:'success.mp3',error:'error.wav',lesson:'lesson.wav',module:'module.wav',course:'course.wav'};
 function play(name,preview=false){if(!sound&&!preview)return;audio.pause();audio.src='sounds/'+(soundFiles[name]||name+'.wav');audio.dataset.cue=name;audio.dataset.status='starting';audio.volume=.6;audio.play().then(()=>{audio.dataset.status='playing';if(preview)document.getElementById('sound-status').textContent=t(soundKeys[name]);}).catch(()=>{audio.dataset.status='blocked';document.getElementById('sound-status').textContent=t('soundBlocked');});}
+let speechAudioContext=null,speechSuccessBuffer=null,speechSuccessLoad=null;
+function prepareSpeechSuccess(){if(!sound)return;const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)return;try{if(!speechAudioContext)speechAudioContext=new AudioContext();speechAudioContext.resume?.()?.catch(()=>{});if(!speechSuccessLoad)speechSuccessLoad=fetch('sounds/success.mp3').then(response=>{if(!response.ok)throw Error('sound unavailable');return response.arrayBuffer();}).then(bytes=>speechAudioContext.decodeAudioData(bytes)).then(buffer=>{speechSuccessBuffer=buffer;}).catch(()=>{});}catch(_){}}
+function playSpeechSuccess(){if(!sound||!speechAudioContext||!speechSuccessBuffer)return;try{const source=speechAudioContext.createBufferSource(),gain=speechAudioContext.createGain();source.buffer=speechSuccessBuffer;gain.gain.value=.6;source.connect(gain);gain.connect(speechAudioContext.destination);source.start();}catch(_){}}
 audio.addEventListener('ended',()=>{audio.dataset.status='ended';});
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));saveOK=true;}catch(_){saveOK=false;}document.getElementById('storage-status').textContent=saveOK?'':t('saveError');}
 function settings(){document.documentElement.lang=locale;document.documentElement.dir=['ar','ur'].includes(locale)?'rtl':'ltr';document.title='Evo-English · '+t('module');document.getElementById('language-label').textContent=t('language');document.getElementById('language-select').value=locale;const toggle=document.getElementById('sound-toggle');toggle.textContent=(sound?'♪ ':'♩ ')+t('sound')+': '+t(sound?'on':'off');toggle.setAttribute('aria-pressed',String(sound));document.getElementById('pilot-note').textContent=t('pilot');document.getElementById('preview-toggle').textContent=t('preview');document.getElementById('sound-panel').innerHTML=Object.entries(soundKeys).map(([cue,key])=>btn(key,'preview','',`data-cue="${cue}"`)).join('');document.getElementById('storage-status').textContent=saveOK?'':t('saveError');}
@@ -97,10 +100,10 @@ function startRecognition(){
  if(micRecognition)return;
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!Recognition){micState='unavailable';speechFeedback=null;render(false);return;}
- window.speechSynthesis?.cancel();audio.pause();app.querySelectorAll('audio').forEach(el=>el.pause());
+ if(window.speechSynthesis?.speaking||window.speechSynthesis?.pending)window.speechSynthesis.cancel();
  const sentence=B.lessons[state.active.lesson].speakingSentences[state.active.speakingIndex],session=new Recognition();
  let result=null,failure=null;
- const finish=()=>{if(micRecognition!==session)return;clearMicTimers();micRecognition=null;speechFeedback=result;micState=result?(result.pass?'pass':'mismatch'):(failure||'no-speech');render(false);if(result?.pass)play('correct');};
+ const finish=()=>{if(micRecognition!==session)return;clearMicTimers();micRecognition=null;speechFeedback=result;micState=result?(result.pass?'pass':'mismatch'):(failure||'no-speech');render(false);if(result?.pass)playSpeechSuccess();};
  const abortWithGuard=()=>{if(micRecognition!==session)return;try{session.abort();}catch(_){}if(micRecognition!==session)return;clearTimeout(micEndGuard);micEndGuard=setTimeout(finish,800);};
  const armTimeout=()=>{clearTimeout(micTimer);micTimer=setTimeout(()=>{if(micRecognition!==session)return;failure='timeout';abortWithGuard();},7000);};
  micRecognition=session;micState='listening';speechFeedback=null;
@@ -109,7 +112,7 @@ function startRecognition(){
  session.onresult=event=>{if(micRecognition!==session||result)return;const options=Array.from(event.results?.[0]||[]).map(item=>E.compareSpeech(sentence,item.transcript)).sort((x,y)=>Number(y.pass)-Number(x.pass)||y.matched-x.matched);result=options[0]||null;try{session.stop();}catch(_){abortWithGuard();}};
  session.onerror=event=>{if(micRecognition!==session)return;if(!failure)failure=['not-allowed','service-not-allowed'].includes(event.error)?'denied':event.error==='no-speech'?'no-speech':'unavailable';abortWithGuard();};
  session.onend=finish;
- try{session.start();armTimeout();render(false);}catch(_){stopRecognition();micState='unavailable';render(false);}
+ try{prepareSpeechSuccess();session.start();armTimeout();render(false);}catch(_){stopRecognition();micState='unavailable';render(false);}
 }
 function exercise(){const a=state.active,q=E.current(state),l=B.lessons[a.lesson],locked=!!a.feedback,listening=a.phase.startsWith('listening'),review=a.phase.endsWith('review'),items=listening?l.listeningItems:l.items,total=review?a.queue.length:items.length,number=a.position+1,label=u(listening?'stageListeningTasks':'stagePractice'),options=q.type==='choice'?shuffledOptions(q.options,a.seed,q.id):[];
  let body='';if(q.type==='choice')body=`<div class="options">${options.map((option,i)=>`<button class="option ${a.draft===option?'selected':''}" data-action="choice" data-index="${i}" aria-pressed="${a.draft===option}" lang="en" dir="ltr" data-english ${locked?'disabled':''}><span class="key" aria-hidden="true">${i+1}</span><span>${esc(option)}</span></button>`).join('')}</div>`;
