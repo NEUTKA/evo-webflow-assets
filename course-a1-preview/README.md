@@ -1,6 +1,6 @@
 # Evo-English · A1 guided-course pilot
 
-The guided course pilot is available on the Webflow staging page at `https://evoenglish.webflow.io/a1-course-preview`. Open `index.html` through a local HTTP preview. The production site and Supabase are unchanged by this repository change.
+The guided course pilot is available on the Webflow staging page at `https://evoenglish.webflow.io/a1-course-preview`. Open `index.html` through a local HTTP preview. To show lessons 16–18 on Webflow, replace the page's current course embed with `webflow-embed-18.html` and publish the page manually. The production site and Supabase are unchanged by this repository change.
 
 ## Lesson flow
 
