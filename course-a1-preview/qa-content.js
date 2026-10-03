@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const bank = require('./bank.js');
 require('./bank-16-18.js')(bank);
+require('./bank-19-21.js')(bank);
 const engine = require('./engine.js');
 const review = require('./review.js');
 const reviewI18n = require('./review-i18n.js');
@@ -15,6 +16,8 @@ vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-extra.js'), 'utf8'), 
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-next.js'), 'utf8'), { EvoCourseI18n: i18n });
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-more.js'), 'utf8'), { EvoCourseI18n: i18n });
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-16-18.js'), 'utf8'), { EvoCourseI18n: i18n });
+
+vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-19-21.js'), 'utf8'), { EvoCourseI18n: i18n });
 
 // Editorial evidence: each listening answer must be recoverable from the
 // supplied transcript associated with that lesson's audio URL.
@@ -65,9 +68,9 @@ for (const lesson of bank.lessons) {
   }
 }
 assert.equal(Object.keys(evidence).length, listeningCount);
-assert.equal(bank.lessons.length, 18);
-assert.equal(listeningCount, 91);
-assert.equal(seen.size, 270);
+assert.equal(bank.lessons.length, 21);
+assert.equal(listeningCount, 106);
+assert.equal(seen.size, 315);
 assert.equal(bank.lessons[5].transcript.length, 14);
 assert.ok(!JSON.stringify(bank.lessons[5]).includes('David'));
 assert.ok(bank.lessons[3].items.find(q => q.id === '4-2').prompt.includes('sit'));
@@ -80,7 +83,8 @@ for (const { code } of i18n.languages) for (const key of ['l7','g7','l8','g8','l
 for (const { code } of i18n.languages) for (const key of ['l10','g10','l11','g11','l12','g12','transportPoint','transportVehicle','timeAtInOn','timeNoPreposition','questionsWithBe','questionsWithDo','pilot','speakingText','transcriptLabel','replayAudio']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l13','g13','l14','g14','l15','g15','adjectiveBefore','adjectiveAfter','adjectiveNoPlural','articleFirst','articleSpecific','articleZero','thereExists','itRefers','itWeatherTime']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l16','g16','l17','g17','l18','g18','likeGeneral','wouldLikeOffer','frequencyPosition','howOften']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
-for (const { code } of i18n.languages) assert.ok(/18|۱۸|١٨|१८|১৮/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
+for (const { code } of i18n.languages) for (const key of ['l19','g19','l20','g20','l21','g21','inviteTo','inviteReply']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
+for (const { code } of i18n.languages) assert.ok(/21|۲۱|٢١|२१|২১/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
 assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7:00').pass,true);
@@ -106,12 +110,13 @@ for(let index=0;index<bank.lessons.length;index++){
   state=engine.nextSpeaking(state);
   assert.equal(state.active.phase,'speaking');
   state=engine.finish(state,'2026-09-27').state;
-  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,8);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
-  if(index===11){const previous=engine.restore({...state,version:6});assert.equal(previous.version,8);assert.ok(engine.unlocked(previous,12),'Lesson 13 must unlock for existing learners');}
-  if(index===14){const previous=engine.restore({...state,version:7});assert.equal(previous.version,8);assert.ok(engine.unlocked(previous,15),'Lesson 16 must unlock for existing learners');}
+  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
+  if(index===11){const previous=engine.restore({...state,version:6});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,12),'Lesson 13 must unlock for existing learners');}
+  if(index===17){const previous=engine.restore({...state,version:8});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,18),'Lesson 19 must unlock for existing learners');}
+  if(index===14){const previous=engine.restore({...state,version:7});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,15),'Lesson 16 must unlock for existing learners');}
 }
-assert.equal(Object.keys(state.completed).length,18);
-assert.equal(state.xp,360);
+assert.equal(Object.keys(state.completed).length,21);
+assert.equal(state.xp,420);
 
 // Complete the real grammar → listening → vocabulary → speaking path for the new lessons.
 function correctDraft(question){
@@ -130,7 +135,7 @@ function correctDraft(question){
 let flowState=engine.initial();
 flowState.completed=Object.fromEntries(bank.lessons.slice(0,9).map(lesson=>[lesson.id,{lesson:0,firstCorrect:15,total:15,xp:20}]));
 flowState.xp=180;
-for(let index=9;index<18;index++){
+for(let index=9;index<21;index++){
   flowState=engine.start(flowState,index);
   for(const phase of ['grammar','listening']){
     if(phase==='listening')flowState=engine.startListening(flowState);
@@ -153,13 +158,13 @@ for(let index=9;index<18;index++){
   flowState=engine.finish(flowState,'2026-09-27').state;
   assert.equal(Object.keys(flowState.completed).length,index+1);
 }
-assert.equal(flowState.xp,360);
+assert.equal(flowState.xp,420);
 
 const catalogue=review.catalogue();
-assert.equal(catalogue.length,96);
+assert.equal(catalogue.length,113);
 assert.ok(catalogue.every(card=>card.clue&&card.word&&card.id),'Every lesson word needs an English recall clue');
 const merged=review.merge(catalogue,[{word:'COZY',translation:'уютный'},{word:'journey',translation:'путешествие'}]);
-assert.equal(merged.length,97);
+assert.equal(merged.length,114);
 assert.equal(merged.find(card=>card.id==='cozy').source,'course+saved');
 assert.equal(merged.find(card=>card.id==='journey').source,'saved');
 assert.ok(review.answer(merged.find(card=>card.id==='cozy'),'Cozy!'));

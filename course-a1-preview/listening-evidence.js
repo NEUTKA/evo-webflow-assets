@@ -90,7 +90,22 @@ const data={
   '18-l2': 'fresh fruit and vegetables',
   '18-l3': 'Maybe once a month',
   '18-l4': 'because they are cheaper and still good',
-  '18-l5': 'I always compare prices'
+  '18-l5': 'I always compare prices',
+"19-l1": "I usually walk after work",
+"19-l2": "for about thirty minutes",
+"19-l3": "Sometimes I do yoga at home",
+"19-l4": "On Saturdays, I often go to the park with my friend",
+"19-l5": "I do short workouts in my room",
+"20-l1": "Would you like to go for a walk after work? Yes, I would",
+"20-l2": "I like fresh air and I like to relax",
+"20-l3": "I don’t like crowded shops",
+"20-l4": "No, I wouldn’t, because I get tired",
+"20-l5": "Yes, I would, if it’s not too late",
+"21-l1": "I am going to wake up at seven o’clock",
+"21-l2": "After breakfast, I am going to go to the bank",
+"21-l3": "At noon, I am going to meet my friend",
+"21-l4": "I am going to return two books",
+"21-l5": "After dinner, I am going to call my sister"
 };
 root.EvoCourseListeningEvidence=data;if(typeof module==="object"&&module.exports)module.exports=data;
 })(typeof globalThis==="object"?globalThis:this);
