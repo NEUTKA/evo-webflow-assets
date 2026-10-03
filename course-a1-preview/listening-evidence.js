@@ -75,7 +75,22 @@ const data={
   '15-l2': 'I hear birds, not traffic',
   '15-l3': 'I grow tomatoes and herbs',
   '15-l4': 'a small shop, a post office, and a bus stop',
-  '15-l5': 'I go to the city once a week'
+  '15-l5': 'I go to the city once a week',
+  '16-l1': 'I am at a small café',
+  '16-l2': 'a long black coat and a white scarf',
+  '16-l3': 'because it is cold outside',
+  '16-l4': 'a blue jacket and jeans',
+  '16-l5': 'a hoodie and sneakers',
+  '17-l1': 'A table for one, please',
+  '17-l2': 'A glass of water. And an orange juice',
+  '17-l3': 'a chicken salad, please',
+  '17-l4': 'Soup, please',
+  '17-l5': 'Tomato soup',
+  '18-l1': 'Wednesday or Thursday',
+  '18-l2': 'fresh fruit and vegetables',
+  '18-l3': 'Maybe once a month',
+  '18-l4': 'because they are cheaper and still good',
+  '18-l5': 'I always compare prices'
 };
 root.EvoCourseListeningEvidence=data;if(typeof module==="object"&&module.exports)module.exports=data;
 })(typeof globalThis==="object"?globalThis:this);

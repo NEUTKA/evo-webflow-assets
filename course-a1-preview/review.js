@@ -16,7 +16,10 @@ const definitions={
  'nationality':'the country a person belongs to','first language':'the language you learned first','useful':'helpful for a purpose','language school':'a place where people learn languages','phrase':'a short group of words','practice':'to do something again to get better',
  'husband':'a married man in relation to his partner','kind':'caring and helpful','office':'a place where people work at desks','safe':'away from danger',
  'third floor':'the level three floors above the ground floor','mirror':'a surface where you can see yourself','balcony':'an outdoor platform attached to a room','cozy':'warm and comfortable',
- 'village':'a small community in the countryside','peaceful':'quiet and without disturbance','neighbor':'a person who lives near you','post office':'a place where you send letters and parcels','field':'an open area of land','sunset':'the time when the sun goes down'
+ 'village':'a small community in the countryside','peaceful':'quiet and without disturbance','neighbor':'a person who lives near you','post office':'a place where you send letters and parcels','field':'an open area of land','sunset':'the time when the sun goes down',
+ 'coat':'a warm outer piece of clothing','scarf':'a long piece of cloth worn around the neck','boots':'shoes that cover the ankles','jacket':'a short outer piece of clothing','hoodie':'a sweatshirt with a hood','sweater':'a warm knitted top',
+ 'menu':'a list of food and drinks at a restaurant','waiter':'a person who brings food to customers','salad':'a dish of vegetables, often served cold','soup':'a liquid food eaten from a bowl','fries':'thin pieces of fried potato',
+ 'market':'a place where people buy and sell food or other goods','seller':'a person who sells things','pharmacy':'a shop that sells medicine','try on':'to put on clothes to see how they fit','second-hand':'owned or used before by someone else','compare prices':'to look at two or more prices before buying'
 };
 const key=word=>String(word||'').normalize('NFKC').trim().toLocaleLowerCase('en');
 function catalogue(lessons=B.lessons){const found=new Map();for(const lesson of lessons)for(const [word] of lesson.vocabulary||[]){const id=key(word);if(id&&!found.has(id))found.set(id,{id,word,clue:definitions[id]||'',source:'course',lesson:lesson.id});}return [...found.values()];}
