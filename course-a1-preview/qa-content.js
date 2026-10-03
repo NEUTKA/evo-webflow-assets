@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const bank = require('./bank.js');
 require('./bank-16-18.js')(bank);
 require('./bank-19-21.js')(bank);
+require('./bank-22-30.js')(bank);
 const engine = require('./engine.js');
 const review = require('./review.js');
 const reviewI18n = require('./review-i18n.js');
@@ -19,9 +20,22 @@ vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-16-18.js'), 'utf8'), 
 
 vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-19-21.js'), 'utf8'), { EvoCourseI18n: i18n });
 
+vm.runInNewContext(fs.readFileSync(require.resolve('./i18n-22-30.js'), 'utf8'), { EvoCourseI18n: i18n });
+
 // Editorial evidence: each listening answer must be recoverable from the
 // supplied transcript associated with that lesson's audio URL.
 const evidence = require("./listening-evidence.js");
+const finalSources = require('./sources-22-30.json');
+assert.equal(finalSources.length, 9);
+for (const [offset, source] of finalSources.entries()) {
+  const lesson = bank.lessons[21 + offset];
+  assert.deepEqual(lesson.transcript, source.transcript, `${lesson.id}: original transcript mismatch`);
+  assert.equal(lesson.audio, `audio/lesson${22 + offset}.mp3`);
+  for (const question of lesson.items.filter(q => q.type === 'input')) {
+    assert.ok(!engine.correct(question, 'dsfsd'), `${question.id}: nonsense passed`);
+    assert.ok(!engine.correct(question, question.answers[0] + ' dsfsd'), `${question.id}: extra nonsense passed`);
+  }
+}
 
 function canBuildOrder(question, picked = [], remaining = question.tokens.map((_, index) => index)) {
   if (!remaining.length) return engine.correct(question, picked);
@@ -68,9 +82,9 @@ for (const lesson of bank.lessons) {
   }
 }
 assert.equal(Object.keys(evidence).length, listeningCount);
-assert.equal(bank.lessons.length, 21);
-assert.equal(listeningCount, 106);
-assert.equal(seen.size, 315);
+assert.equal(bank.lessons.length, 30);
+assert.equal(listeningCount, 151);
+assert.equal(seen.size, 450);
 assert.equal(bank.lessons[5].transcript.length, 14);
 assert.ok(!JSON.stringify(bank.lessons[5]).includes('David'));
 assert.ok(bank.lessons[3].items.find(q => q.id === '4-2').prompt.includes('sit'));
@@ -84,7 +98,8 @@ for (const { code } of i18n.languages) for (const key of ['l10','g10','l11','g11
 for (const { code } of i18n.languages) for (const key of ['l13','g13','l14','g14','l15','g15','adjectiveBefore','adjectiveAfter','adjectiveNoPlural','articleFirst','articleSpecific','articleZero','thereExists','itRefers','itWeatherTime']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l16','g16','l17','g17','l18','g18','likeGeneral','wouldLikeOffer','frequencyPosition','howOften']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
 for (const { code } of i18n.languages) for (const key of ['l19','g19','l20','g20','l21','g21','inviteTo','inviteReply']) assert.ok(i18n.ui[code][key], `Missing ${key} translation: ${code}`);
-for (const { code } of i18n.languages) assert.ok(/21|۲۱|٢١|२१|২১/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
+for (const {code} of i18n.languages) for(const lesson of bank.lessons.slice(21)) for(const key of [lesson.title,lesson.goal,...lesson.rules]) assert.ok(i18n.ui[code][key],`Missing final translation: ${code}/${key}`);
+for (const { code } of i18n.languages) assert.ok(/30/.test(i18n.ui[code].pilot), `Old pilot count: ${code}`);
 assert.equal(engine.compareSpeech('My name is Anna.','my name is anna').pass,true);
 assert.equal(engine.compareSpeech("I'm Anna.",'I am Anna').pass,true);
 assert.equal(engine.compareSpeech('I wake up at seven.','I wake up at 7:00').pass,true);
@@ -110,13 +125,14 @@ for(let index=0;index<bank.lessons.length;index++){
   state=engine.nextSpeaking(state);
   assert.equal(state.active.phase,'speaking');
   state=engine.finish(state,'2026-09-27').state;
-  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
-  if(index===11){const previous=engine.restore({...state,version:6});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,12),'Lesson 13 must unlock for existing learners');}
-  if(index===17){const previous=engine.restore({...state,version:8});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,18),'Lesson 19 must unlock for existing learners');}
-  if(index===14){const previous=engine.restore({...state,version:7});assert.equal(previous.version,9);assert.ok(engine.unlocked(previous,15),'Lesson 16 must unlock for existing learners');}
+  if(index===8){const previous=engine.restore({...state,version:5});assert.equal(previous.version,10);assert.ok(engine.unlocked(previous,9),'Lesson 10 must unlock for existing learners');}
+  if(index===11){const previous=engine.restore({...state,version:6});assert.equal(previous.version,10);assert.ok(engine.unlocked(previous,12),'Lesson 13 must unlock for existing learners');}
+  if(index===20){const previous=engine.restore({...state,version:9});assert.equal(previous.version,10);assert.ok(engine.unlocked(previous,21),'Lesson 22 must unlock for existing learners');}
+  if(index===17){const previous=engine.restore({...state,version:8});assert.equal(previous.version,10);assert.ok(engine.unlocked(previous,18),'Lesson 19 must unlock for existing learners');}
+  if(index===14){const previous=engine.restore({...state,version:7});assert.equal(previous.version,10);assert.ok(engine.unlocked(previous,15),'Lesson 16 must unlock for existing learners');}
 }
-assert.equal(Object.keys(state.completed).length,21);
-assert.equal(state.xp,420);
+assert.equal(Object.keys(state.completed).length,30);
+assert.equal(state.xp,600);
 
 // Complete the real grammar → listening → vocabulary → speaking path for the new lessons.
 function correctDraft(question){
@@ -135,7 +151,7 @@ function correctDraft(question){
 let flowState=engine.initial();
 flowState.completed=Object.fromEntries(bank.lessons.slice(0,9).map(lesson=>[lesson.id,{lesson:0,firstCorrect:15,total:15,xp:20}]));
 flowState.xp=180;
-for(let index=9;index<21;index++){
+for(let index=9;index<30;index++){
   flowState=engine.start(flowState,index);
   for(const phase of ['grammar','listening']){
     if(phase==='listening')flowState=engine.startListening(flowState);
@@ -155,16 +171,18 @@ for(let index=9;index<21;index++){
   flowState=engine.nextSpeaking(flowState);
   flowState=engine.nextSpeaking(flowState);
   assert.equal(flowState.active.phase,'speaking');
-  flowState=engine.finish(flowState,'2026-09-27').state;
+  const completion=engine.finish(flowState,'2026-09-27');
+  assert.equal(completion.event,index===29?'module':'lesson');
+  flowState=completion.state;
   assert.equal(Object.keys(flowState.completed).length,index+1);
 }
-assert.equal(flowState.xp,420);
+assert.equal(flowState.xp,600);
 
 const catalogue=review.catalogue();
-assert.equal(catalogue.length,113);
+assert.equal(catalogue.length,167);
 assert.ok(catalogue.every(card=>card.clue&&card.word&&card.id),'Every lesson word needs an English recall clue');
 const merged=review.merge(catalogue,[{word:'COZY',translation:'уютный'},{word:'journey',translation:'путешествие'}]);
-assert.equal(merged.length,114);
+assert.equal(merged.length,168);
 assert.equal(merged.find(card=>card.id==='cozy').source,'course+saved');
 assert.equal(merged.find(card=>card.id==='journey').source,'saved');
 assert.ok(review.answer(merged.find(card=>card.id==='cozy'),'Cozy!'));
