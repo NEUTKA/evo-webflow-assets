@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><base href="./"><title>Evo-English · A2 · First 30 lessons</title><link rel="stylesheet" href="styles.css"><style>
+.account-nav{display:flex;align-items:center;gap:8px;direction:ltr}.account-nav a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1px solid #ced9ee;border-radius:12px;background:#fff;color:#203254;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}.account-nav a:hover{background:#edf2ff}.account-nav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.account-nav #course-login{background:#3159ef;border-color:#3159ef;color:white}.header-controls{gap:10px}
+@media(max-width:760px){.account-nav a{width:34px;height:36px;padding:7px}.account-nav span{display:none}.account-nav{gap:4px}.header-controls label>span{display:none}}
+@media(max-width:520px){header,.header-controls{gap:5px}.brand{font-size:15px;letter-spacing:-.8px}.header-controls select{width:80px;max-width:80px;font-size:11px}.header-controls #sound-toggle{font-size:10px;padding:7px 4px;max-width:58px}.account-nav a{width:30px;height:34px;padding:5px}.account-nav svg{width:17px;height:17px}.account-nav{gap:3px}}
+</style></head><body>
+<header><a class="brand" href="https://evo-english.com/" target="_top" lang="en" dir="ltr">Evo<span>•</span>English</a><div class="header-controls"><button id="sound-toggle" type="button"></button><label><span id="language-label"></span><select id="language-select" dir="auto"></select></label><nav class="account-nav" aria-label="Account"><a id="course-account" href="https://evo-english.com/personal-account" target="_top"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Personal account</span></a><a id="course-login" href="https://evo-english.com/login?next=%2Fa2-course-preview" target="_top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h6v18h-6M3 12h12M10 7l5 5-5 5"/></svg><span>Log in</span></a></nav></div></header>
+<main id="app"></main><footer><span id="pilot-note"></span><button id="preview-toggle" type="button"></button><div id="sound-panel" hidden></div><p id="sound-status" role="status"></p><p id="storage-status" role="status"></p></footer>
+<script src="bank.js"></script>
+<script src="engine.js"></script>
+<script src="review.js"></script>
+<script src="review-i18n.js"></script>
+<script src="listening-evidence.js"></script>
+<script src="i18n.js"></script>
+<script src="i18n-extra.js"></script>
+<script src="i18n-next.js"></script>
+<script src="i18n-more.js"></script>
+<script src="i18n-a2.js"></script><script src="app.js"></script><script>(()=>{const labels={"en": ["Personal account", "Log in"], "ru": ["Личный кабинет", "Войти"], "es": ["Mi cuenta", "Iniciar sesión"], "pt": ["Minha conta", "Entrar"], "de": ["Mein Konto", "Anmelden"], "fr": ["Mon compte", "Connexion"], "it": ["Il mio account", "Accedi"], "hy": ["Անձնական հաշիվ", "Մուտք"], "zh": ["个人中心", "登录"], "ja": ["マイアカウント", "ログイン"], "ko": ["내 계정", "로그인"], "hi": ["मेरा खाता", "लॉग इन"], "bn": ["আমার অ্যাকাউন্ট", "লগ ইন"], "ur": ["میرا اکاؤنٹ", "لاگ ان"], "ar": ["حسابي", "تسجيل الدخول"], "id": ["Akun saya", "Masuk"], "tr": ["Hesabım", "Giriş yap"], "vi": ["Tài khoản", "Đăng nhập"], "kk": ["Жеке кабинет", "Кіру"], "uz": ["Shaxsiy kabinet", "Kirish"]};const select=document.getElementById("language-select");function update(){const text=labels[select.value]||labels.en;["course-account","course-login"].forEach((id,i)=>{const a=document.getElementById(id);a.querySelector("span").textContent=text[i];a.setAttribute("aria-label",text[i]);a.title=text[i];});}select.addEventListener("change",update);update();})();</script><script>(()=>{
+  // Forward a real learner selection to the host page's existing translator.
+  // The host retains its translation, authentication, quota and card-saving logic.
+  if(window.parent===window)return;
+  let timer,lastText="",lastTime=0;
+  function forward(){
+    const selection=window.getSelection();
+    const text=(selection?.toString()||"").trim();
+    if(!text||text.length>240)return;
+    const node=selection.anchorNode;
+    const element=node?.nodeType===1?node:node?.parentElement;
+    if(element?.closest("input,textarea,select,[contenteditable=true]"))return;
+    const now=Date.now();
+    if(text===lastText&&now-lastTime<700)return;
+    let host,hostSelection;
+    try{host=window.parent.document;hostSelection=window.parent.getSelection();}catch(_){return;}
+    if(!window.parent.__translatorInit||!hostSelection||host.getElementById("cards-app"))return;
+    const previous=[];
+    for(let i=0;i<hostSelection.rangeCount;i++)previous.push(hostSelection.getRangeAt(i).cloneRange());
+    const proxy=host.createElement("span");
+    proxy.textContent=text;
+    proxy.setAttribute("aria-hidden","true");
+    proxy.style.cssText="position:fixed;left:-10000px;top:0;opacity:0;pointer-events:none;user-select:text;";
+    host.body.appendChild(proxy);
+    try{
+      const range=host.createRange();range.selectNodeContents(proxy);
+      hostSelection.removeAllRanges();hostSelection.addRange(range);
+      proxy.dispatchEvent(new window.parent.MouseEvent("mouseup",{bubbles:true,view:window.parent}));
+      lastText=text;lastTime=now;
+    }finally{
+      hostSelection.removeAllRanges();
+      for(const range of previous)try{hostSelection.addRange(range);}catch(_){}
+      proxy.remove();
+    }
+  }
+  function schedule(){clearTimeout(timer);timer=setTimeout(forward,300);}
+  document.addEventListener("mouseup",schedule);
+  document.addEventListener("touchend",schedule,{passive:true});
+  document.addEventListener("selectionchange",schedule);
+})();</script><script>(()=>{
+  if(window.parent===window)return;
+  let host;
+  try{host=window.parent.document;}catch(_){return;}
+  if(window.frameElement?.id!=="evo-a2-course-preview-frame")return;
+  const sync=()=>host.body.classList.toggle("evo-a2-learning",document.body.classList.contains("is-learning"));
+  const observer=new MutationObserver(sync);
+  observer.observe(document.body,{attributes:true,attributeFilter:["class"]});
+  sync();
+  window.addEventListener("pagehide",()=>host.body.classList.remove("evo-a2-learning"));
+  window.addEventListener("pageshow",sync);
+})();</script></body></html>
