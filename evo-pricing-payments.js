@@ -1,6 +1,6 @@
 (function(){
  const root=document.querySelector('.evp[data-evo-page="pricing"]');if(!root||root.__paymentsReady)return;root.__paymentsReady=true;
- let busy=false,access=null,pending=null;const q=new URLSearchParams(location.search);
+ let busy=false,access=null,pending=null,canResume=false;const q=new URLSearchParams(location.search);
  const copy={
  en:{consent:'I authorise VTB Armenia to save a recurring binding for my MIR card and charge {{amount}} AMD today, then {{amount}} AMD automatically every month. I can turn off automatic renewal in my account. If I pay during my trial, the paid month starts after the trial and the next charge follows that paid month.',
  subscribe:'Subscribe with MIR',login:'Please sign in to continue.',unconfirmed:'Please confirm your email before paying.',consentRequired:'Please read and accept the MIR monthly payment terms.',checking:'Checking your payment…',opening:'Opening the secure bank payment page…',pending:'The bank has not confirmed the payment yet. Please check again before making another payment.',retry:'Check payment status',failed:'The payment could not be completed. Please try again or contact support.',received:'Your payment was received. We are restoring your access. Please do not pay again.',success:'Payment confirmed. Your access is active.',free:'Your access is included through your teacher. No payment is required while the connection is active.',expired:'Your free or paid access period has ended. Choose a plan to continue.',role:'Please choose a plan for your account type.',active:'Your subscription already renews automatically. Manage it in your account.'},
@@ -10,13 +10,16 @@
  subscribe:'Բաժանորդագրվել MIR քարտով',login:'Շարունակելու համար մուտք գործեք։',unconfirmed:'Վճարումից առաջ հաստատեք էլ. փոստը։',consentRequired:'Կարդացեք և ընդունեք MIR ամսական վճարման պայմանները։',checking:'Ստուգվում է վճարումը…',opening:'Բացվում է բանկի անվտանգ էջը…',pending:'Բանկը դեռ չի հաստատել վճարումը։ Նախ ստուգեք կարգավիճակը։',retry:'Ստուգել վճարումը',failed:'Վճարումը չի ավարտվել։ Փորձեք կրկին կամ գրեք աջակցությանը։',received:'Վճարումը ստացվել է։ Հասանելիությունը վերականգնվում է։ Մի վճարեք կրկին։',success:'Վճարումը հաստատված է։ Հասանելիությունն ակտիվ է։',free:'Ձեր հասանելիությունն անվճար է ուսուցչի հետ ակտիվ կապի շնորհիվ։',expired:'Անվճար կամ վճարովի շրջանն ավարտվել է։ Ընտրեք սակագին։',role:'Ընտրեք ձեր հաշվի համար համապատասխան սակագինը։',active:'Ձեր բաժանորդագրությունն արդեն ավտոմատ երկարացվում է։ Կառավարեք այն անձնական հաշվում։'}
  };
  const price={self_study_monthly:3900,teacher_starter:13900,teacher_pro:19900};
+ Object.assign(copy.en,{resume:'Continue payment',unpaid:'Your order has not been paid. Continue payment using the same order, or check its status. A new order becomes available after the bank confirms this attempt has ended.'});
+ Object.assign(copy.ru,{resume:'Продолжить оплату',unpaid:'Заказ ещё не оплачен. Продолжите оплату этого же заказа или проверьте его статус. Новый заказ будет доступен после подтверждения банком завершения этой попытки.'});
+ Object.assign(copy.hy,{resume:'Շարունակել վճարումը',unpaid:'Պատվերը դեռ վճարված չէ։ Շարունակեք նույն պատվերի վճարումը կամ ստուգեք կարգավիճակը։ Նոր պատվերը հասանելի կլինի, երբ բանկը հաստատի այս փորձի ավարտը։'});
  const t=k=>(copy[root.getAttribute('lang')]||copy.en)[k]||copy.en[k];
  const home=r=>r==='teacher'?'/teacher-dashboard':r==='student'?'/student-dashboard':'/personal-account';
  function client(){const c=window.supabaseClient||window.supabase;return c?.auth&&c?.rpc&&c?.functions?c:null;}
  async function wait(){for(let n=0;n<100;n++){const c=client();if(c)return c;await new Promise(r=>setTimeout(r,100));}throw new Error('client_unavailable');}
  function message(kind,text){root.querySelectorAll('[data-pay-message]').forEach(el=>{el.className='evp__msg '+kind;el.textContent=text;});}
  function blocked(plan){return access&&(access.has_active_teacher||(access.role==='teacher'?plan==='self_study_monthly':plan.startsWith('teacher_')));}
- function setBusy(on){busy=on;root.querySelectorAll('[data-evo-pay]').forEach(b=>{b.disabled=on||!!pending||!!blocked(b.dataset.planKey);});}
+ function setBusy(on){busy=on;root.querySelectorAll('[data-evo-pay]').forEach(b=>{b.disabled=on||!!pending||!!blocked(b.dataset.planKey);});root.querySelectorAll('[data-resume-payment]').forEach(b=>{b.hidden=!pending||!canResume;b.disabled=on;});root.querySelectorAll('[data-check-payment]').forEach(b=>{b.hidden=!pending;b.disabled=on;});}
  root.querySelectorAll('[data-evo-pay="vtb"]').forEach(btn=>{
   const label=document.createElement('label');label.className='evp__check evp__small';label.style.marginTop='14px';
   const input=document.createElement('input');input.type='checkbox';input.dataset.mirConsent='';input.autocomplete='off';
@@ -25,11 +28,13 @@
   label.append(input,text);btn.closest('.evp__card').append(label);
  });
  function refreshTerms(){root.querySelectorAll('[data-mir-terms]').forEach(el=>{el.textContent=t('consent').replaceAll('{{amount}}',new Intl.NumberFormat('en-GB').format(price[el.dataset.planKey]));});
-  root.querySelectorAll('[data-evo-pay="vtb"]').forEach(b=>b.textContent=t('subscribe'));root.querySelectorAll('[data-check-payment]').forEach(b=>b.textContent=t('retry'));}
+  root.querySelectorAll('[data-evo-pay="vtb"]').forEach(b=>b.textContent=t('subscribe'));root.querySelectorAll('[data-check-payment]').forEach(b=>b.textContent=t('retry'));root.querySelectorAll('[data-resume-payment]').forEach(b=>b.textContent=t('resume'));}
  refreshTerms();root.addEventListener('evo:language',refreshTerms);
  function retryButtons(){root.querySelectorAll('[data-pay-message]').forEach(el=>{if(el.parentNode.querySelector('[data-check-payment]'))return;
   const b=document.createElement('button');b.className='evp__btn';b.type='button';b.dataset.checkPayment='';b.textContent=t('retry');b.style.marginTop='10px';
-  b.onclick=()=>pending&&wait().then(c=>verify(c,pending,0));el.after(b);});}
+  b.onclick=()=>!busy&&pending&&wait().then(c=>verify(c,pending,0));el.after(b);
+  const resume=document.createElement('button');resume.type='button';resume.className='evp__btn';resume.dataset.resumePayment='';resume.textContent=t('resume');resume.hidden=true;resume.style.marginTop='10px';
+  resume.onclick=()=>!busy&&pending&&wait().then(c=>verify(c,pending,0,true));b.after(resume);});setBusy(busy);}
  async function loadAccess(c){
   const {data,error}=await c.rpc('evo_get_access_status');if(error||!data)throw new Error('access_unavailable');
   if(!data.ok)throw new Error(data.reason||'account_not_ready');
@@ -41,18 +46,24 @@
    message('bad',t('login'));location.href='/login?tab=login&next='+encodeURIComponent(location.pathname+location.search);return null;}
   if(!data.user.email_confirmed_at)throw new Error('email_unconfirmed');return data.user;
  }
- async function verify(c,p,attempt){
-  pending=p;setBusy(true);retryButtons();message('ok',t('checking'));
+ async function verify(c,p,attempt,resume=false){
+  pending=p;canResume=false;setBusy(true);retryButtons();message('ok',t('checking'));
   try{
    if(!await signedUser(c))return;
    const {data,error}=await c.functions.invoke(p.mode==='mir'?'evo-vtb-subscription-status':'evo-one-time-payment-status',{body:{payment_id:p.id}});
    if(error)throw error;
+   if(!pending||pending.id!==p.id)return;
    if(data?.paid){
     if(!data.processed||!data.access?.has_access){message('bad',t('received'));return;}
     message('ok',t('success'));sessionStorage.removeItem('evo.pending-payment.v1');pending=null;
     history.replaceState({},'',location.pathname);location.replace(home(data.access.role));return;
    }
    if(data?.status==='failed'||data?.status==='canceled'){pending=null;sessionStorage.removeItem('evo.pending-payment.v1');message('bad',t('failed'));return;}
+   if(data?.can_resume&&data.checkout_url){
+    const u=new URL(data.checkout_url);const hosts=p.mode==='mir'?['payment.vtb.am','gatepaysecure.com']:['epg.arca.am','payment.vtb.am','gatepaysecure.com'];
+    if(u.protocol!=='https:'||!hosts.includes(u.hostname)||u.username||u.password||u.port)throw new Error('unsafe_checkout');
+    canResume=true;message('ok',t('unpaid'));if(resume)location.assign(u.href);return;
+   }
    if(attempt<2){setTimeout(()=>verify(c,p,attempt+1),1800*(attempt+1));return;}
    message('bad',t('pending'));
   }catch{message('bad',t('pending'));}
@@ -83,6 +94,7 @@
  if(id&&/^[0-9a-f-]{36}$/i.test(id)&&['success','failed','mir-return','mir-failed'].includes(state)){
   pending={id,mode:state.startsWith('mir-')?'mir':'one-time'};
  }else{try{pending=JSON.parse(sessionStorage.getItem('evo.pending-payment.v1')||'null');}catch{}}
+ window.addEventListener('pageshow',e=>{if(e.persisted&&pending){busy=false;wait().then(c=>verify(c,pending,0)).catch(()=>message('bad',t('pending')));}});
  if(pending){setBusy(false);wait().then(c=>verify(c,pending,0)).catch(()=>message('bad',t('pending')));}
  else wait().then(async c=>{const {data}=await c.auth.getUser();if(data?.user)await loadAccess(c);}).catch(()=>message('bad',t('failed')));
 })();
