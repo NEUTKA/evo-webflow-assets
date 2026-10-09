@@ -19,7 +19,7 @@
  async function wait(){for(let n=0;n<100;n++){const c=client();if(c)return c;await new Promise(r=>setTimeout(r,100));}throw new Error('client_unavailable');}
  function message(kind,text){root.querySelectorAll('[data-pay-message]').forEach(el=>{el.className='evp__msg '+kind;el.textContent=text;});}
  function blocked(plan){return access&&(access.has_active_teacher||(access.role==='teacher'?plan==='self_study_monthly':plan.startsWith('teacher_')));}
- function setBusy(on){busy=on;root.querySelectorAll('[data-evo-pay]').forEach(b=>{b.disabled=on||!!pending||!!blocked(b.dataset.planKey);});root.querySelectorAll('[data-resume-payment]').forEach(b=>{b.hidden=!pending||!canResume;b.disabled=on;});root.querySelectorAll('[data-check-payment]').forEach(b=>{b.hidden=!pending;b.disabled=on;});}
+ function setBusy(on){busy=on;root.querySelectorAll('[data-evo-pay]').forEach(b=>{b.disabled=on||!!pending||!!blocked(b.dataset.planKey);});root.querySelectorAll('[data-resume-payment]').forEach(b=>{b.hidden=!pending||!canResume;b.style.display=b.hidden?'none':'';b.disabled=on;});root.querySelectorAll('[data-check-payment]').forEach(b=>{b.hidden=!pending;b.style.display=b.hidden?'none':'';b.disabled=on;});}
  root.querySelectorAll('[data-evo-pay="vtb"]').forEach(btn=>{
   const label=document.createElement('label');label.className='evp__check evp__small';label.style.marginTop='14px';
   const input=document.createElement('input');input.type='checkbox';input.dataset.mirConsent='';input.autocomplete='off';
