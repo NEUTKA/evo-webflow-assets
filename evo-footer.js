@@ -1,3 +1,49 @@
+/* Subscription controls on personal, student and teacher dashboards. */
+window.EvoBillingUI = {
+ async mount(){
+  if(!/^\/(personal-account|student-dashboard|teacher-dashboard|pricing|billing)(\/|$)/.test(location.pathname)||document.getElementById('evo-subscription-controls'))return;
+  const sb=window.supabaseClient||window.supabase;
+  if(!sb?.rpc)return;
+  const {data:authData}=await sb.auth.getUser();if(!authData?.user)return;
+  const host=document.createElement('section');host.id='evo-subscription-controls';
+  host.style.cssText='max-width:1100px;margin:16px auto;padding:18px 22px;border:1px solid #d9e5f2;border-radius:14px;background:#fff;color:#172033;font:15px/1.6 system-ui';
+  const heading=document.createElement('h2');heading.style.cssText='margin:0 0 8px;font-size:20px';heading.textContent='Your access and subscription';
+  const info=document.createElement('p'),status=document.createElement('p'),actions=document.createElement('div');
+  const plans=document.createElement('a');plans.href='/pricing';plans.textContent='View plans';plans.style.marginRight='18px';
+  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Turn off automatic renewal';cancel.hidden=true;
+  const error=document.createElement('p');error.setAttribute('role','status');
+  actions.append(plans,cancel);host.append(heading,info,status,actions,error);
+  const dashboard=document.querySelector('#teacher-dashboard-app, #student-dashboard-app, #personal-account-app, main');
+  if(dashboard)dashboard.parentNode.insertBefore(host,dashboard);else document.body.append(host);
+  const date=value=>value?new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Yerevan',dateStyle:'long',timeStyle:'short'}).format(new Date(value))+' (Yerevan time)':'';
+  let billing;
+  async function refresh(){
+   const {data,error:e}=await sb.rpc('evo_get_billing_status');
+   if(e||!data?.ok){error.textContent='We could not load your subscription. Please refresh to try again.';return;}
+   billing=data;
+   info.textContent=!data.has_access?'Your free or paid access period has ended. Choose a plan to continue.':data.reason==='teacher_link'?'Your access is included through your teacher. No payment is required while your connection is active.':
+    data.reason==='paid'?'Your paid access is available until '+date(data.current_period_end)+'.':
+    'Your free access is available until '+date(data.trial_ends_at)+'.';
+   if(data.auto_renews&&data.provider==='vtb'){
+    status.textContent='MIR subscription: '+new Intl.NumberFormat('en-GB').format(data.renewal_amount_amd)+' AMD per month. Next automatic payment: '+date(data.next_billing_at)+'.';
+    cancel.hidden=false;
+   }else{status.textContent='Automatic renewal is off. No future automatic payment is scheduled.';cancel.hidden=true;}
+  }
+  cancel.onclick=async()=>{
+   if(!billing||!window.confirm('Turn off monthly automatic payments? Your current paid access will remain available until its end date.'))return;
+   cancel.disabled=true;error.textContent='Turning off automatic renewal…';
+   try{
+    const {data,error:e}=await sb.functions.invoke('cancel-subscription',{body:{subscription_kind:billing.subscription_kind,reason:'User canceled in account'}});
+    if(e||!data?.ok)throw new Error('cancel_failed');
+    error.textContent='Automatic renewal is off. Your remaining access is unchanged.'+(data.inflight_payments>0?' A payment already submitted to the bank may still complete.':'');
+    await refresh();
+   }catch{error.textContent='We could not confirm cancellation. Please try again or contact evoenglish@outlook.com.';}
+   finally{cancel.disabled=false;}
+  };
+  await refresh();
+ }
+};
+
 /* evo-footer.js (global, loaded on all pages) */
 (() => {
     if (window.__evoFooterJsLoaded) return;
@@ -299,7 +345,7 @@
     const EVO_SUPPORT_MAILTO = 'mailto:evoenglish@outlook.com?subject=Evo-English%20support';
 
     // Keep teacher workspaces available until payment processing is ready.
-    const EVO_BILLING_ENFORCEMENT_ENABLED = false;
+    const EVO_BILLING_ENFORCEMENT_ENABLED = true;
     window.__evoBillingEnforcementEnabled = EVO_BILLING_ENFORCEMENT_ENABLED;
 
     const EVO_PUBLIC_PATHS = [
@@ -789,6 +835,18 @@ function evoAllowStudentApps() {
     window.dispatchEvent(new CustomEvent('evo:student-ready'));
 }
 
+    function evoShowAccessVerificationError() {
+        evoRevealPage();
+        const overlay = document.createElement('div');
+        overlay.style.cssText='position:fixed;inset:0;z-index:2147483646;background:#f6f9fd;display:grid;place-items:center;padding:24px;color:#172033;font:16px/1.6 system-ui';
+        const box=document.createElement('div');
+        box.style.cssText='max-width:520px;padding:32px;border:1px solid #d9e5f2;border-radius:18px;background:white';
+        const heading=document.createElement('h2');heading.textContent='We could not check your access';
+        const paragraph=document.createElement('p');paragraph.textContent='Please try again. If this continues, contact evoenglish@outlook.com.';
+        const retry=document.createElement('button');retry.textContent='Try again';retry.type='button';retry.onclick=()=>window.location.reload();
+        box.append(heading,paragraph,retry);overlay.append(box);document.body.append(overlay);
+    }
+
     async function initGlobalAuthGuard() {
         if (window.__evoGlobalAuthGuardDone) {
             evoRevealPage();
@@ -810,8 +868,8 @@ function evoAllowStudentApps() {
 
         if (!sb || !sb.auth || typeof sb.auth.getUser !== 'function') {
             console.warn('[Evo Auth Guard] Supabase client is not ready.');
-            evoRevealPage();
-            return true;
+            evoShowAccessVerificationError();
+            return false;
         }
 
         try {
@@ -831,60 +889,30 @@ function evoAllowStudentApps() {
                 return false;
             }
 
-            /*
-  /billing:
-  Only teacher accounts can open billing.
-  Important: billing must stay available even if trial expired,
-  because teacher needs this page to pay/reactivate.
-*/
-if (path.indexOf('/billing') === 0) {
-    if (role !== 'teacher') {
-        evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
-        return false;
-    }
-}
-
-            /*
-  /teacher-dashboard:
-  Teacher role is always required. Trial/subscription access is enforced only
-  after payment processing is ready.
-*/
+            // One access decision for all paid workspaces and lesson paths.
+            // Billing remains reachable after expiry so cancellation/support stay available.
+            if (path.indexOf('/billing') !== 0) {
+                const {data: access, error: accessError} = await sb.rpc('evo_get_access_status');
+                if (accessError || !access) throw new Error('Access verification unavailable');
+                if (!access.ok) {
+                    if (access.reason === 'profile_not_ready') evoRedirectTo('/welcome');
+                    else if (access.reason === 'email_unconfirmed') evoRedirectTo('/login?tab=login&confirm_email=1');
+                    else throw new Error('Account access unavailable');
+                    return false;
+                }
+                window.__evoCurrentAccess = access;
+                if (!access.has_access && access.payment_required) {
+                    evoRedirectTo('/pricing?reason=' + encodeURIComponent(access.reason));
+                    return false;
+                }
+                if (!access.has_access) throw new Error('Access verification unavailable');
+            }
             if (path.indexOf('/teacher-dashboard') === 0) {
                 if (role !== 'teacher') {
                     evoRedirectTo(EVO_ROLE_HOME[role] || '/welcome');
                     return false;
                 }
-
-                if (!EVO_BILLING_ENFORCEMENT_ENABLED) {
-                    evoAllowTeacherApps();
-                } else {
-                    try {
-                        const access = await evoGetTeacherAccess(sb);
-
-                        if (!access || !access.has_access) {
-                            evoShowTeacherPaywall(access || {
-                                reason: 'no_access',
-                                status: 'no_access'
-                            });
-
-                            // Continue global footer initialization. Teacher apps
-                            // will not start because evoAllowTeacherApps() was not called.
-                            return true;
-                        }
-
-                        evoAllowTeacherApps();
-
-                    } catch (err) {
-                        console.error('[Evo Teacher Access Guard]', err);
-
-                        evoShowTeacherPaywall({
-                            reason: 'verification_failed',
-                            status: 'verification_failed'
-                        });
-
-                        return false;
-                    }
-                }
+                evoAllowTeacherApps();
             }
 
             /*
@@ -927,8 +955,8 @@ if (path.indexOf('/billing') === 0) {
             return true;
         } catch (err) {
             console.error('[Evo Auth Guard]', err);
-            evoRevealPage();
-            return true;
+            evoShowAccessVerificationError();
+            return false;
         }
     }
 
@@ -3722,6 +3750,17 @@ if (path.indexOf('/billing') === 0) {
             if (!canContinue) return;
 
             initAuthUIToggleAndLogout();
+            if (window.EvoBillingUI) window.EvoBillingUI.mount();
+            if (evoIsProtectedPath(window.location.pathname) && !window.location.pathname.startsWith('/billing')) {
+                const next = window.__evoCurrentAccess?.next_check_at;
+                if (next) setTimeout(() => location.reload(), Math.min(2147483647, Math.max(1000, Date.parse(next) - Date.parse(window.__evoCurrentAccess.server_now) + 100)));
+                window.addEventListener('focus', async () => {
+                    try {
+                        const {data,error}=await window.supabaseClient.rpc('evo_get_access_status');
+                        if (!error && data?.ok && !data.has_access && data.payment_required) evoRedirectTo('/pricing?reason='+encodeURIComponent(data.reason));
+                    } catch (_) {}
+                });
+            }
             initTranslatorPopup();
             initAssistant();
             initConsentBanner();
@@ -3732,7 +3771,8 @@ if (path.indexOf('/billing') === 0) {
             initLessonTheoryBatchAdmin();
         } catch (e) {
             console.warn("[Evo] footer failed:", e?.message || e);
-            evoRevealPage();
+            if (evoIsProtectedPath(window.location.pathname)) evoShowAccessVerificationError();
+            else evoRevealPage();
         }
     }
 
