@@ -1333,8 +1333,8 @@ function renderLearn() {
           `;
         }).join('')
 : `<div class="sc-empty">
-    You don’t have a teacher yet.<br>
-    When a teacher adds your email, your vocabulary card modules will appear here.
+    No vocabulary modules have been assigned yet.<br>
+    When your teacher assigns a module, it will appear here.
   </div>`;
     return `
       <div class="sc-card">
