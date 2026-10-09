@@ -20,6 +20,7 @@
  root.querySelectorAll('[data-evo-pay="vtb"]').forEach(btn=>{
   const label=document.createElement('label');label.className='evp__check evp__small';label.style.marginTop='14px';
   const input=document.createElement('input');input.type='checkbox';input.dataset.mirConsent='';input.autocomplete='off';
+  input.style.cssText='appearance:auto!important;-webkit-appearance:checkbox!important;flex:0 0 20px!important;width:20px!important;min-width:20px!important;height:20px!important;opacity:1!important;accent-color:#2557f6;cursor:pointer;margin-top:3px';
   const text=document.createElement('span');text.dataset.mirTerms='';text.dataset.planKey=btn.dataset.planKey;
   label.append(input,text);btn.closest('.evp__card').append(label);
  });
@@ -85,4 +86,3 @@
  if(pending){setBusy(false);wait().then(c=>verify(c,pending,0)).catch(()=>message('bad',t('pending')));}
  else wait().then(async c=>{const {data}=await c.auth.getUser();if(data?.user)await loadAccess(c);}).catch(()=>message('bad',t('failed')));
 })();
-
