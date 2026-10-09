@@ -72,6 +72,12 @@
     } catch(error) {fail(error);throw error;}
   }
   window.EvoDashboardAccess={ensure,fail,get current(){return latest;}};
+  function removeSelfDeletionControls() {
+    document.querySelector('[data-eas-action="delete-account"]')?.closest('.eas-panel.is-danger')?.remove();
+    document.querySelectorAll('[data-tas-tab="delete"],[data-tas-panel="delete"]').forEach(node=>node.remove());
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeSelfDeletionControls,{once:true});
+  else removeSelfDeletionControls();
   if(dashboardPage) {
     setInterval(()=>{if(!document.hidden)ensure(null,true).catch(()=>{});},60000);
     window.addEventListener('focus',()=>ensure(null,true).catch(()=>{}));
