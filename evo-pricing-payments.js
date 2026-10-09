@@ -71,7 +71,7 @@
     body:mir?{plan_key:plan,recurring_consent:true,terms_version:'mir_monthly_amd_v1'}:{provider:'fastbank',plan_key:plan}});
    if(error){
     let payload;try{payload=await error.context.clone().json();}catch{}
-    if(payload?.payment_id){pending={id:payload.payment_id,mode:mir?'mir':'one-time'};sessionStorage.setItem('evo.pending-payment.v1',JSON.stringify(pending));retryButtons();message('bad',t('pending'));return;}
+    if(payload?.payment_id){pending={id:payload.payment_id,mode:mir?'mir':'one-time'};sessionStorage.setItem('evo.pending-payment.v1',JSON.stringify(pending));await verify(c,pending,0);return;}
     throw new Error(payload?.error||'payment_failed');
    }
    if(!data?.checkout_url||!data.payment_id)throw new Error('checkout_missing');
