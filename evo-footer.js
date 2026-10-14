@@ -53,7 +53,7 @@
     }
     latest=access;window.__evoCurrentAccess=access;checkedAt=Date.now();
     if(!access.has_access) {
-      if(access.payment_required)redirect('/pricing?reason='+encodeURIComponent(access.reason));
+      if(access.payment_required)redirect('/billing?reason='+encodeURIComponent(access.reason));
       throw new Error('Access verification unavailable');
     }
     return access;
@@ -989,7 +989,7 @@ function evoAllowStudentApps() {
                 }
                 window.__evoCurrentAccess = access;
                 if (!access.has_access && access.payment_required) {
-                    evoRedirectTo('/pricing?reason=' + encodeURIComponent(access.reason));
+                    evoRedirectTo('/billing?reason=' + encodeURIComponent(access.reason));
                     return false;
                 }
                 if (!access.has_access) throw new Error('Access verification unavailable');
@@ -3844,7 +3844,7 @@ function evoAllowStudentApps() {
                 window.addEventListener('focus', async () => {
                     try {
                         const {data,error}=await window.supabaseClient.rpc('evo_get_access_status');
-                        if (!error && data?.ok && !data.has_access && data.payment_required) evoRedirectTo('/pricing?reason='+encodeURIComponent(data.reason));
+                        if (!error && data?.ok && !data.has_access && data.payment_required) evoRedirectTo('/billing?reason='+encodeURIComponent(data.reason));
                     } catch (_) {}
                 });
             }

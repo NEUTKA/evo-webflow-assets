@@ -53,7 +53,7 @@
     }
     latest=access;window.__evoCurrentAccess=access;checkedAt=Date.now();
     if(!access.has_access) {
-      if(access.payment_required)redirect('/pricing?reason='+encodeURIComponent(access.reason));
+      if(access.payment_required)redirect('/billing?reason='+encodeURIComponent(access.reason));
       throw new Error('Access verification unavailable');
     }
     return access;
