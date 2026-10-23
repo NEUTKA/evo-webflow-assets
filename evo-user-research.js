@@ -117,7 +117,8 @@ if (!window.__evoUserResearchV1) {
       const controls = el('div', 'eur-actions');
       controls.append(button(text.start, () => void open(kind, slug), 'eur-primary'), button(text.later, () => dismissInvitation(kind, slug)));
       invitation.append(title, controls, closeButton(() => dismissInvitation(kind, slug)));
-      const anchor = isAccount() && kind === 'goals' && (document.querySelector('[data-evo-progress]') || document.querySelector('[data-evo-change-password]'));
+      const accountContent = document.querySelector('[data-evo-progress]') || document.querySelector('[data-evo-change-password]');
+      const anchor = isAccount() && kind === 'goals' && (accountContent?.closest('.w-tabs') || accountContent);
       if (anchor) anchor.before(invitation);
       else { invitation.classList.add('eur-invite-floating'); document.body.append(invitation); }
     } catch (_) { /* Feedback must never interrupt learning or checkout. */ }
