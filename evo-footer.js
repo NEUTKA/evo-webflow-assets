@@ -134,6 +134,18 @@ window.EvoBillingUI = {
 (() => {
     if (window.__evoFooterJsLoaded) return;
     window.__evoFooterJsLoaded = true;
+    const researchModuleUrl = document.currentScript?.src
+        ? new URL("evo-user-research.js", document.currentScript.src).href : null;
+
+    function initUserResearch() {
+        if (!researchModuleUrl || document.getElementById("evo-user-research-module")) return;
+        const script = document.createElement("script");
+        script.id = "evo-user-research-module";
+        script.type = "module";
+        script.src = researchModuleUrl;
+        script.onerror = () => console.warn("[EvoResearch] Feedback is temporarily unavailable");
+        document.head.appendChild(script);
+    }
 
     /* ================== helpers ================== */
     function injectStyleOnce(id, css) {
@@ -2495,6 +2507,9 @@ function evoAllowStudentApps() {
                 });
 
                 await logEvent("lesson_complete", extraMeta);
+                window.dispatchEvent(new CustomEvent("evo:lesson-complete", {
+                    detail: { trackingSlug, lessonType }
+                }));
             }
 
             // ✅ do NOT overwrite object; extend it
@@ -3856,6 +3871,7 @@ function evoAllowStudentApps() {
             initCardStatuses();
             initLessonTheoryLocalization();
             initLessonTheoryBatchAdmin();
+            initUserResearch();
         } catch (e) {
             console.warn("[Evo] footer failed:", e?.message || e);
             if (evoIsProtectedPath(window.location.pathname)) evoShowAccessVerificationError();
