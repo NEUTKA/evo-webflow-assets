@@ -40,6 +40,7 @@ if (!window.__evoUserResearchV1) {
   const REASONS = ['unclear_value', 'price', 'payment_method', 'technical_issue', 'not_ready', 'other'];
   let client, userId = null, generation = 0, dialog, form, floating, invitation, inviteTimer, previousFocus;
   let active = null, latestLesson = null, openedKind = null, activeLanguage = 'en', entryNotice;
+  let languageOverride = null;
   const path = () => location.pathname.slice(0, 180);
   const isAccount = () => /^\/personal-account\/?$/.test(location.pathname);
   const isBilling = () => /^\/billing\/?$/.test(location.pathname);
@@ -51,13 +52,50 @@ if (!window.__evoUserResearchV1) {
     return node;
   };
   function language() {
+    if (languageOverride) return languageOverride;
     const page = document.querySelector('[data-evo-page="billing"][lang]');
-    let saved = '';
-    try { saved = localStorage.getItem('evo_public_language') || ''; } catch (_) { }
+    let saved = '', research = '';
+    try {
+      saved = localStorage.getItem('evo_public_language') || '';
+      research = localStorage.getItem('evo_research_language') || '';
+    } catch (_) { }
+    if (COPY[research]) return research;
     const value = String(page?.lang || saved || document.documentElement.lang || navigator.language || 'en').slice(0, 2).toLowerCase();
     return COPY[value] ? value : 'en';
   }
   const copy = () => COPY[active ? activeLanguage : language()];
+  function refreshLanguage() {
+    const t = COPY[language()];
+    if (floating) floating.replaceChildren(createElement(MessageSquare, { width: 18, height: 18, 'aria-hidden': 'true' }), document.createTextNode(isBilling() ? t.billing : t.feedback));
+    if (invitation) {
+      invitation.lang = language();
+      invitation.querySelector('.eur-invite-title').textContent = invitation.dataset.kind === 'lesson' ? t.lesson : t.invite;
+      invitation.querySelector('.eur-primary').textContent = t.start;
+      invitation.querySelector('.eur-actions button:not(.eur-primary)').textContent = t.later;
+      invitation.querySelector('.eur-icon').setAttribute('aria-label', t.close);
+      invitation.querySelector('.eur-icon').title = t.close;
+    }
+    if (active && !active.busy) { activeLanguage = language(); render(); }
+  }
+  function languagePicker() {
+    const group = el('div', 'eur-language');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Language / Язык / Լեզու');
+    for (const [code, label] of [['ru', 'Русский'], ['en', 'English'], ['hy', 'Հայերեն']]) {
+      const item = button(label, () => {
+        if (active?.busy) return;
+        languageOverride = code;
+        try { localStorage.setItem('evo_research_language', code); } catch (_) { }
+        refreshLanguage();
+        dialog.querySelector(`[data-research-language="${code}"]`)?.focus();
+      });
+      item.lang = code;
+      item.dataset.researchLanguage = code;
+      item.setAttribute('aria-pressed', String(code === activeLanguage));
+      group.append(item);
+    }
+    return group;
+  }
   function button(label, handler, className = '') {
     const node = el('button', `eur-button ${className}`, label);
     node.type = 'button';
@@ -209,7 +247,7 @@ if (!window.__evoUserResearchV1) {
     top.append(title, closeButton(() => close()));
     if (active.saved) {
       dialog.removeAttribute('aria-describedby');
-      dialog.append(top, el('p', 'eur-success', t.thanks), button(t.close, () => close(false), 'eur-primary'));
+      dialog.append(top, languagePicker(), el('p', 'eur-success', t.thanks), button(t.close, () => close(false), 'eur-primary'));
       dialog.querySelector('button')?.focus();
       return;
     }
@@ -238,7 +276,11 @@ if (!window.__evoUserResearchV1) {
     controls.append(submit);
     form.append(privacy, controls);
     form.addEventListener('submit', event => { event.preventDefault(); void submitForm(); });
-    dialog.append(top, form);
+    dialog.append(top, languagePicker(), form);
+    if (active.snapshot) {
+      form.querySelectorAll('input,textarea,button[type="button"]').forEach(node => { node.disabled = true; });
+      submit.textContent = t.retry;
+    }
     updateDetailLabel();
   }
   function focusQuestion() {
@@ -253,6 +295,7 @@ if (!window.__evoUserResearchV1) {
     if (current.kind === 'general' && (current.draft.detail || '').trim().length < 3) { message(t.textRequired); focusQuestion(); return; }
     if (current.kind === 'goals' && current.step < 2) { current.step++; render(); focusQuestion(); return; }
     current.busy = true;
+    dialog.querySelectorAll('.eur-language button').forEach(node => { node.disabled = true; });
     form.querySelectorAll('button,input,textarea').forEach(node => { node.disabled = true; });
     form.querySelector('[type="submit"]').textContent = t.sending;
     try {
@@ -266,6 +309,7 @@ if (!window.__evoUserResearchV1) {
     } catch (_) {
       if (active !== current) return;
       current.busy = false;
+      dialog.querySelectorAll('.eur-language button').forEach(node => { node.disabled = false; });
       form.querySelector('[type="submit"]').disabled = false;
       form.querySelector('[type="submit"]').textContent = t.retry;
       message(t.error);
@@ -350,6 +394,7 @@ if (!window.__evoUserResearchV1) {
       .eur-floating{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:985;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);box-shadow:0 3px 16px #15283e15;background:#fff}
       .eur-dialog{padding:24px;width:min(600px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid #d7dee7;border-radius:8px;box-shadow:0 18px 60px #11182738;background:#fff;margin:auto}.eur-dialog::backdrop{background:#11182766}
       .eur-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.eur-top h2{font-size:21px;font-weight:700;line-height:1.35;margin:0;overflow-wrap:anywhere;min-width:0}
+      .eur-language{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0 0 20px;max-width:340px}.eur-language .eur-button{min-height:38px;padding:6px 8px;font-size:14px;font-weight:500}.eur-language [aria-pressed="true"]{border-color:#2557f6;background:#edf2ff;color:#1644ce}
       .eur-fieldset{padding:0;margin:0 0 18px;border:0;min-width:0}.eur-fieldset legend{font-weight:650;font-size:17px;line-height:1.45;margin-bottom:12px;padding:0;width:100%;overflow-wrap:anywhere}
       .eur .eur-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
       .eur-options{display:grid;gap:4px}.eur-option{display:flex;align-items:flex-start;gap:12px;padding:10px 8px;min-height:44px;border-radius:4px;cursor:pointer;overflow-wrap:anywhere}.eur-option:has(input:checked){background:#edf2ff}.eur-option input{accent-color:#2557f6;width:18px;height:18px;flex:0 0 18px;margin:3px 0 0}.eur-option span{min-width:0}
@@ -380,21 +425,7 @@ if (!window.__evoUserResearchV1) {
       clearTimeout(inviteTimer);
       inviteTimer = setTimeout(() => void offer('lesson', slug), 1000);
     });
-    document.addEventListener('evo:language', () => {
-      if (floating) {
-        floating.replaceChildren(createElement(MessageSquare, { width: 18, height: 18, 'aria-hidden': 'true' }), document.createTextNode(isBilling() ? COPY[language()].billing : COPY[language()].feedback));
-      }
-      if (active && !active.busy) { activeLanguage = language(); render(); }
-      if (invitation) {
-        const t = COPY[language()];
-        invitation.lang = language();
-        invitation.querySelector('.eur-invite-title').textContent = invitation.dataset.kind === 'lesson' ? t.lesson : t.invite;
-        invitation.querySelector('.eur-primary').textContent = t.start;
-        invitation.querySelector('.eur-actions button:not(.eur-primary)').textContent = t.later;
-        invitation.querySelector('.eur-icon').setAttribute('aria-label', t.close);
-        invitation.querySelector('.eur-icon').title = t.close;
-      }
-    }, true);
+    document.addEventListener('evo:language', refreshLanguage, true);
     window.EvoResearch = Object.freeze({ open: () => open('general') });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => void initialize(), { once: true });
