@@ -14,33 +14,12 @@ if (!window.__evoUserResearchV1) {
       billing: 'What is stopping you from subscribing?', reasons: ['The benefit is unclear', 'The price', 'The payment method', 'A technical problem', 'I am not ready yet', 'Other'], detail: 'Tell us a little more',
       general: 'What helped, what did not, or what would you like to do?', thanks: 'Thank you for sharing your experience.', error: 'Your response could not be saved. Please try again.', required: 'Please select one answer.', textRequired: 'Please add a short comment.', unavailable: 'This survey is not available for this account or activity.', done: 'You have already shared feedback here. Thank you.', retry: 'Try again',
     },
-    ru: {
-      feedback: 'Обратная связь', invite: 'Помогите сделать Evo-English полезнее', start: 'Поделиться опытом', later: 'Не сейчас', close: 'Закрыть', back: 'Назад', next: 'Далее', send: 'Отправить отзыв', sending: 'Отправляем…', optional: 'Необязательно',
-      privacy: 'Ответ связан с вашим аккаунтом и не публикуется. Не указывайте пароли, данные карты и другую чувствительную информацию.',
-      goal: 'В какой ситуации вам сейчас больше всего нужен английский?', goals: ['Работа', 'Повседневное общение', 'Поездки или переезд', 'Экзамен', 'Учёба', 'Другое'],
-      example: 'Вспомните последний случай, когда английского не хватило. Что вы хотели сделать?',
-      visit: 'Во время последнего посещения Evo-English вам удалось сделать то, ради чего вы пришли?', results: ['Да', 'Частично', 'Нет', 'Просто осматривался'], helped: 'Что помогло?', blocked: 'Что помешало?', exploring: 'Что вы искали?',
-      lesson: 'Это задание помогло вам разобраться в теме?', helpful: ['Да', 'Частично', 'Нет'], unclear: 'Что осталось непонятным?',
-      billing: 'Что мешает оформить подписку?', reasons: ['Непонятна польза', 'Стоимость', 'Способ оплаты', 'Техническая проблема', 'Пока не готов', 'Другое'], detail: 'Расскажите немного подробнее',
-      general: 'Что помогло, что оказалось бесполезным или что вы хотели бы сделать?', thanks: 'Спасибо, что поделились своим опытом.', error: 'Не удалось сохранить ответ. Попробуйте ещё раз.', required: 'Выберите один ответ.', textRequired: 'Добавьте короткий комментарий.', unavailable: 'Этот опрос недоступен для данного аккаунта или задания.', done: 'Вы уже оставили здесь отзыв. Спасибо.', retry: 'Попробовать снова',
-    },
-    hy: {
-      feedback: 'Հետադարձ կապ', invite: 'Օգնեք Evo-English-ը դարձնել ավելի օգտակար', start: 'Կիսվել փորձով', later: 'Ոչ հիմա', close: 'Փակել', back: 'Հետ', next: 'Հաջորդը', send: 'Ուղարկել կարծիքը', sending: 'Ուղարկվում է…', optional: 'Ոչ պարտադիր',
-      privacy: 'Պատասխանը կապված է ձեր հաշվի հետ և չի հրապարակվում։ Մի նշեք գաղտնաբառեր, քարտի տվյալներ կամ այլ զգայուն տեղեկություններ։',
-      goal: 'Ո՞ր իրավիճակում է ձեզ հիմա ամենից շատ անհրաժեշտ անգլերենը։', goals: ['Աշխատանք', 'Առօրյա շփում', 'Ճամփորդություն կամ տեղափոխություն', 'Քննություն', 'Ուսում', 'Այլ'],
-      example: 'Հիշեք վերջին դեպքը, երբ անգլերենի իմացությունը չբավարարեց։ Ի՞նչ էիք ցանկանում անել։',
-      visit: 'Evo-English վերջին այցելության ընթացքում կարողացա՞ք անել այն, ինչի համար եկել էիք։', results: ['Այո', 'Մասամբ', 'Ոչ', 'Պարզապես ուսումնասիրում էի'], helped: 'Ի՞նչն օգնեց։', blocked: 'Ի՞նչը խանգարեց։', exploring: 'Ի՞նչ էիք փնտրում։',
-      lesson: 'Այս առաջադրանքն օգնե՞ց հասկանալ թեման։', helpful: ['Այո', 'Մասամբ', 'Ոչ'], unclear: 'Ի՞նչը մնաց անհասկանալի։',
-      billing: 'Ի՞նչն է խանգարում բաժանորդագրվել։', reasons: ['Օգուտը պարզ չէ', 'Գինը', 'Վճարման եղանակը', 'Տեխնիկական խնդիր', 'Դեռ պատրաստ չեմ', 'Այլ'], detail: 'Պատմեք մի փոքր ավելի մանրամասն',
-      general: 'Ի՞նչն օգնեց, ի՞նչն օգտակար չէր, կամ ի՞նչ կցանկանայիք անել։', thanks: 'Շնորհակալություն ձեր փորձով կիսվելու համար։', error: 'Պատասխանը չհաջողվեց պահպանել։ Փորձեք կրկին։', required: 'Ընտրեք մեկ պատասխան։', textRequired: 'Ավելացրեք կարճ մեկնաբանություն։', unavailable: 'Այս հարցումն անհասանելի է տվյալ հաշվի կամ առաջադրանքի համար։', done: 'Դուք արդեն կարծիք եք հայտնել այստեղ։ Շնորհակալություն։', retry: 'Փորձել կրկին',
-    },
   };
   const GOALS = ['work', 'daily', 'travel', 'exam', 'studies', 'other'];
   const RESULTS = ['yes', 'partly', 'no', 'browsing'];
   const REASONS = ['unclear_value', 'price', 'payment_method', 'technical_issue', 'not_ready', 'other'];
   let client, userId = null, generation = 0, dialog, form, floating, invitation, inviteTimer, previousFocus;
-  let active = null, latestLesson = null, openedKind = null, activeLanguage = 'en', entryNotice;
-  let languageOverride = null;
+  let active = null, latestLesson = null, openedKind = null, entryNotice;
   const path = () => location.pathname.slice(0, 180);
   const isAccount = () => /^\/personal-account\/?$/.test(location.pathname);
   const isBilling = () => /^\/billing\/?$/.test(location.pathname);
@@ -48,54 +27,16 @@ if (!window.__evoUserResearchV1) {
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
     if (className) node.className = className;
+    if (className?.split(/\s+/).includes('eur')) {
+      node.lang = 'en';
+      node.translate = false;
+      node.classList.add('notranslate');
+      node.setAttribute('data-evo-keep-english', '');
+    }
     if (text !== undefined) node.textContent = text;
     return node;
   };
-  function language() {
-    if (languageOverride) return languageOverride;
-    const page = document.querySelector('[data-evo-page="billing"][lang]');
-    let saved = '', research = '';
-    try {
-      saved = localStorage.getItem('evo_public_language') || '';
-      research = localStorage.getItem('evo_research_language') || '';
-    } catch (_) { }
-    if (COPY[research]) return research;
-    const value = String(page?.lang || saved || document.documentElement.lang || navigator.language || 'en').slice(0, 2).toLowerCase();
-    return COPY[value] ? value : 'en';
-  }
-  const copy = () => COPY[active ? activeLanguage : language()];
-  function refreshLanguage() {
-    const t = COPY[language()];
-    if (floating) floating.replaceChildren(createElement(MessageSquare, { width: 18, height: 18, 'aria-hidden': 'true' }), document.createTextNode(isBilling() ? t.billing : t.feedback));
-    if (invitation) {
-      invitation.lang = language();
-      invitation.querySelector('.eur-invite-title').textContent = invitation.dataset.kind === 'lesson' ? t.lesson : t.invite;
-      invitation.querySelector('.eur-primary').textContent = t.start;
-      invitation.querySelector('.eur-actions button:not(.eur-primary)').textContent = t.later;
-      invitation.querySelector('.eur-icon').setAttribute('aria-label', t.close);
-      invitation.querySelector('.eur-icon').title = t.close;
-    }
-    if (active && !active.busy) { activeLanguage = language(); render(); }
-  }
-  function languagePicker() {
-    const group = el('div', 'eur-language');
-    group.setAttribute('role', 'group');
-    group.setAttribute('aria-label', 'Language / Язык / Լեզու');
-    for (const [code, label] of [['ru', 'Русский'], ['en', 'English'], ['hy', 'Հայերեն']]) {
-      const item = button(label, () => {
-        if (active?.busy) return;
-        languageOverride = code;
-        try { localStorage.setItem('evo_research_language', code); } catch (_) { }
-        refreshLanguage();
-        dialog.querySelector(`[data-research-language="${code}"]`)?.focus();
-      });
-      item.lang = code;
-      item.dataset.researchLanguage = code;
-      item.setAttribute('aria-pressed', String(code === activeLanguage));
-      group.append(item);
-    }
-    return group;
-  }
+  const copy = () => COPY.en;
   function button(label, handler, className = '') {
     const node = el('button', `eur-button ${className}`, label);
     node.type = 'button';
@@ -127,7 +68,7 @@ if (!window.__evoUserResearchV1) {
     return rpc('evo_research_action', {
       p_kind: kind, p_action: event, p_request_id: options.requestId || uuid(),
       p_answers: options.answers || {}, p_tracking_slug: options.slug || null,
-      p_language: active ? activeLanguage : language(), p_context_path: path(),
+      p_language: 'en', p_context_path: path(),
     }, options.generation ?? generation);
   }
   function removeInvitation() {
@@ -148,7 +89,6 @@ if (!window.__evoUserResearchV1) {
       if (!claim?.claimed || scope !== generation || active || invitation) return;
       const text = copy();
       invitation = el('aside', `eur eur-invite ${kind === 'lesson' ? 'eur-invite-lesson' : ''}`);
-      invitation.lang = language();
       invitation.dataset.kind = kind;
       invitation.setAttribute('aria-label', kind === 'lesson' ? text.lesson : text.invite);
       const title = el('p', 'eur-invite-title', kind === 'lesson' ? text.lesson : text.invite);
@@ -239,7 +179,6 @@ if (!window.__evoUserResearchV1) {
   function render() {
     if (!active) return;
     const t = copy();
-    dialog.lang = activeLanguage;
     dialog.replaceChildren();
     const top = el('div', 'eur-top');
     const title = el('h2', '', active.kind === 'goals' ? t.invite : active.kind === 'lesson' ? t.lesson : active.kind === 'billing' ? t.billing : t.feedback);
@@ -247,7 +186,7 @@ if (!window.__evoUserResearchV1) {
     top.append(title, closeButton(() => close()));
     if (active.saved) {
       dialog.removeAttribute('aria-describedby');
-      dialog.append(top, languagePicker(), el('p', 'eur-success', t.thanks), button(t.close, () => close(false), 'eur-primary'));
+      dialog.append(top, el('p', 'eur-success', t.thanks), button(t.close, () => close(false), 'eur-primary'));
       dialog.querySelector('button')?.focus();
       return;
     }
@@ -276,7 +215,7 @@ if (!window.__evoUserResearchV1) {
     controls.append(submit);
     form.append(privacy, controls);
     form.addEventListener('submit', event => { event.preventDefault(); void submitForm(); });
-    dialog.append(top, languagePicker(), form);
+    dialog.append(top, form);
     if (active.snapshot) {
       form.querySelectorAll('input,textarea,button[type="button"]').forEach(node => { node.disabled = true; });
       submit.textContent = t.retry;
@@ -295,7 +234,6 @@ if (!window.__evoUserResearchV1) {
     if (current.kind === 'general' && (current.draft.detail || '').trim().length < 3) { message(t.textRequired); focusQuestion(); return; }
     if (current.kind === 'goals' && current.step < 2) { current.step++; render(); focusQuestion(); return; }
     current.busy = true;
-    dialog.querySelectorAll('.eur-language button').forEach(node => { node.disabled = true; });
     form.querySelectorAll('button,input,textarea').forEach(node => { node.disabled = true; });
     form.querySelector('[type="submit"]').textContent = t.sending;
     try {
@@ -309,7 +247,6 @@ if (!window.__evoUserResearchV1) {
     } catch (_) {
       if (active !== current) return;
       current.busy = false;
-      dialog.querySelectorAll('.eur-language button').forEach(node => { node.disabled = false; });
       form.querySelector('[type="submit"]').disabled = false;
       form.querySelector('[type="submit"]').textContent = t.retry;
       message(t.error);
@@ -331,7 +268,6 @@ if (!window.__evoUserResearchV1) {
       await action(kind, 'opened', { slug, generation: scope });
       if (scope !== generation) return;
       removeInvitation();
-      activeLanguage = language();
       active = { kind, slug, step: 0, draft: {}, requestId: uuid(), generation: scope, busy: false, saved: false };
       ensureDialog(); render(); dialog.showModal(); focusQuestion();
     } catch (_) {
@@ -346,7 +282,7 @@ if (!window.__evoUserResearchV1) {
         if (panel.querySelector('[data-evo-research-billing]')) return;
         const section = el('div', 'eur eur-billing-entry');
         section.dataset.evoResearchBilling = '';
-        const link = button((COPY[panel.dataset.evpPanel] || t).billing, () => void open('billing'), 'eur-link');
+        const link = button(t.billing, () => void open('billing'), 'eur-link');
         section.append(link);
         const checkout = panel.querySelector('[data-checkout-plan]')?.closest('section');
         if (checkout && panel.contains(checkout)) checkout.after(section);
@@ -394,7 +330,6 @@ if (!window.__evoUserResearchV1) {
       .eur-floating{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:985;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);box-shadow:0 3px 16px #15283e15;background:#fff}
       .eur-dialog{padding:24px;width:min(600px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid #d7dee7;border-radius:8px;box-shadow:0 18px 60px #11182738;background:#fff;margin:auto}.eur-dialog::backdrop{background:#11182766}
       .eur-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.eur-top h2{font-size:21px;font-weight:700;line-height:1.35;margin:0;overflow-wrap:anywhere;min-width:0}
-      .eur-language{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0 0 20px;max-width:340px}.eur-language .eur-button{min-height:38px;padding:6px 8px;font-size:14px;font-weight:500}.eur-language [aria-pressed="true"]{border-color:#2557f6;background:#edf2ff;color:#1644ce}
       .eur-fieldset{padding:0;margin:0 0 18px;border:0;min-width:0}.eur-fieldset legend{font-weight:650;font-size:17px;line-height:1.45;margin-bottom:12px;padding:0;width:100%;overflow-wrap:anywhere}
       .eur .eur-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
       .eur-options{display:grid;gap:4px}.eur-option{display:flex;align-items:flex-start;gap:12px;padding:10px 8px;min-height:44px;border-radius:4px;cursor:pointer;overflow-wrap:anywhere}.eur-option:has(input:checked){background:#edf2ff}.eur-option input{accent-color:#2557f6;width:18px;height:18px;flex:0 0 18px;margin:3px 0 0}.eur-option span{min-width:0}
@@ -425,7 +360,6 @@ if (!window.__evoUserResearchV1) {
       clearTimeout(inviteTimer);
       inviteTimer = setTimeout(() => void offer('lesson', slug), 1000);
     });
-    document.addEventListener('evo:language', refreshLanguage, true);
     window.EvoResearch = Object.freeze({ open: () => open('general') });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => void initialize(), { once: true });
