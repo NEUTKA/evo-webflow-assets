@@ -129,7 +129,7 @@
 /* Replaces the existing Talk to AI dialog. Uses the site's client and assistant_voice. */
 (function (global) {
   'use strict';
-  const VERSION = 'lesson-voice-2';
+  const VERSION = 'lesson-voice-3';
   const IDLE_TIMEOUT_MS = 10000;
   const REPLY_WAIT_TIMEOUT_MS = 30000;
   function install({client, track = () => {}, autoStart = true}) {
@@ -142,7 +142,7 @@
     const contextAPI = global.EvoLessonContext;
     let current = null, focused = null, selection = '', sequence = 0, lastContext = '', updateTimer = null;
     let state = {mode:'idle',user:0,ai:0}, orb = null, orbPending = null, destroyed = false;
-    let registered = false, secondsLeft = 0, questionsLeft = 0, locked = false;
+    let registered = false, secondsLeft = 0, questionsLeft = 0, locked = false, accessDenied = false;
     const guestKey = 'evo_voice_guest_id_v2';
     let guestId;
     try { guestId = localStorage.getItem(guestKey); } catch {}
@@ -192,6 +192,7 @@
     function context(){return contextAPI.collect(document,focused,selection);}
     function format(sec){sec=Math.max(0,Math.floor(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
     function usage(){
+      if(accessDenied){$('.ee-v-usage').textContent='Your free or paid access period has ended.';return;}
       const remaining=current?.deadline ? Math.max(0,(current.deadline-Date.now())/1000) : secondsLeft;
       $('.ee-v-usage').textContent=locked ? (registered?'Today’s voice limit is complete.':'Free voice practice is complete.') : registered?`${format(remaining)} left today`:`${questionsLeft} free questions · ${format(remaining)} left`;
     }
@@ -201,11 +202,18 @@
       if(failure || data?.error){
         let info=data;
         try{if(failure?.context)info=await failure.context.clone().json();}catch{}
-        const issue=new Error(info?.error || 'The voice service could not connect. Please try again.');issue.code=info?.code;throw issue;
+        const issue=new Error(info?.error || 'The voice service could not connect. Please try again.');issue.code=info?.code;issue.info=info;throw issue;
       }
       return data;
     }
+    function requireSubscription(info={}){
+      stop('access');accessDenied=true;registered=true;locked=true;
+      setStatus('idle','Subscription required');error(info.error || info.message || 'Choose a subscription to continue using AI.');
+      const link=document.createElement('a');link.className='ee-v-link';link.href='/billing';link.textContent='Choose a subscription';
+      $('.ee-v-limit').replaceChildren(link);$('.ee-v-limit').hidden=false;usage();controls();
+    }
     function applyUsage(d,r){
+      if(accessDenied){usage();controls();return;}
       if(d.registered!=null)registered=!!d.registered;
       if(d.seconds_left!=null)secondsLeft=Number(d.seconds_left || 0);
       if(d.questions_left!=null)questionsLeft=Number(d.questions_left || 0);
@@ -285,7 +293,7 @@
     }
     async function heartbeat(r){
       if(!isCurrent(r) || r.heartbeatBusy)return;r.heartbeatBusy=true;
-      try{const d=await invoke('heartbeat',{voice_session_id:r.sid});if(!isCurrent(r))return;applyUsage(d,r);r.failures=0;if(d.allowed===false || secondsLeft<=0)limit(r);}
+      try{const d=await invoke('heartbeat',{voice_session_id:r.sid});if(!isCurrent(r))return;if(d.code==='SUBSCRIPTION_REQUIRED'){requireSubscription(d);return;}applyUsage(d,r);r.failures=0;if(d.allowed===false || secondsLeft<=0)limit(r);}
       catch{if(isCurrent(r) && ++r.failures>=2){error('Connection to the voice meter was lost. Start again to continue.');stop('meter-error');}}
       finally{r.heartbeatBusy=false;}
     }
@@ -346,6 +354,7 @@
         track('ai_voice_session_started',{source:'lesson_assistant',has_lesson_context:!!ctx,level:ctx?.level || 'b1'});
       }catch(e){
         if(!isCurrent(r))return;stop('error');
+        if(e.code==='SUBSCRIPTION_REQUIRED'){requireSubscription(e.info);return;}
         if(/LIMIT/.test(e.code||'')){limit();return;}
         error(e.name==='NotAllowedError'?'Microphone access was not granted. Allow the microphone when you are ready.':e.message);
       }
@@ -1343,6 +1352,25 @@ function evoAllowStudentApps() {
         window.__evoGlobalAuthGuardDone = true;
 
         const path = evoNormalizePath(window.location.pathname);
+
+        // The voice page stays public for the guest demo, but signed-in
+        // members follow the same trial/subscription decision as lessons.
+        if (path === '/ai-chat-assistant') {
+            evoHidePageDuringAuthCheck();
+            try {
+                const client = window.supabaseClient || window.supabase || window.sb;
+                if (!client?.auth?.getSession) throw new Error('Sign-in verification unavailable');
+                const session = await client.auth.getSession();
+                if (session.error) throw new Error('Sign-in verification unavailable');
+                const user = session.data?.session?.user;
+                if (user && user.is_anonymous !== true) await window.EvoDashboardAccess.ensure();
+                evoRevealPage();
+                return true;
+            } catch (error) {
+                if (!error?.redirecting) evoShowAccessVerificationError();
+                return false;
+            }
+        }
 
         if (!evoIsProtectedPath(path)) {
             evoRevealPage();
