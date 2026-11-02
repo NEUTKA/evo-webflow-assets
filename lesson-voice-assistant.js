@@ -1,7 +1,7 @@
 /* Replaces the existing Talk to AI dialog. Uses the site's client and assistant_voice. */
 (function (global) {
   'use strict';
-  const VERSION = 'lesson-voice-4';
+  const VERSION = 'lesson-voice-5';
   const IDLE_TIMEOUT_MS = 10000;
   const REPLY_WAIT_TIMEOUT_MS = 30000;
   function install({client, track = () => {}, autoStart = true}) {
@@ -227,7 +227,7 @@
             if(r.active)return;
             r.active=true;r.lastActivity=Date.now();r.replyPendingSince=r.lastActivity;clearTimeout(r.startTimer);controls();setStatus('idle','Ready — speak in your language');
             if(selection)void askSelection(r);
-            else r.dc.send(JSON.stringify({type:'session.commentary.append',event_id:'greeting_'+r.id,delegation_id:null,content:'Greet the learner briefly now, in the lesson explanation language if supplied, otherwise English. Say that they can ask in any language. Offer help with the current lesson, then pause and listen.'}));
+            else r.dc.send(JSON.stringify({type:'session.commentary.append',event_id:'greeting_'+r.id,delegation_id:null,content:'Greet the learner briefly now in English. English is the default language. Say that they can ask in any language. Offer help with the current lesson, then pause and listen. Follow the language of their question when they speak.'}));
           }
           if(message.type==='error'){error('The AI could not process part of the conversation. You can end the session and try again.');}
           captions(r,message);
