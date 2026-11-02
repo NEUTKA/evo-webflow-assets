@@ -1,7 +1,7 @@
 /* Replaces the existing Talk to AI dialog. Uses the site's client and assistant_voice. */
 (function (global) {
   'use strict';
-  const VERSION = 'lesson-voice-5';
+  const VERSION = 'lesson-voice-6';
   const IDLE_TIMEOUT_MS = 10000;
   const REPLY_WAIT_TIMEOUT_MS = 30000;
   function install({client, track = () => {}, autoStart = true}) {
@@ -14,7 +14,9 @@
     const contextAPI = global.EvoLessonContext;
     let current = null, focused = null, selection = '', selectionLanguage = '', selectionRevision = 0, sequence = 0, lastContext = '', updateTimer = null;
     let state = {mode:'idle',user:0,ai:0}, orb = null, orbPending = null, destroyed = false;
-    let registered = false, secondsLeft = 0, questionsLeft = 0, locked = false, accessDenied = false;
+    let registered = false, unlimited = false, secondsLeft = 0, questionsLeft = 0, locked = false, accessDenied = false;
+    const greetingKey='evo_voice_greeted_v1';let greeted=false;
+    try{greeted=sessionStorage.getItem(greetingKey)==='1';}catch{}
     const guestKey = 'evo_voice_guest_id_v2';
     let guestId;
     try { guestId = localStorage.getItem(guestKey); } catch {}
@@ -66,6 +68,7 @@
     function format(sec){sec=Math.max(0,Math.floor(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
     function usage(){
       if(accessDenied){$('.ee-v-usage').textContent='Your free or paid access period has ended.';return;}
+      if(unlimited){$('.ee-v-usage').textContent='Unlimited voice practice';return;}
       const remaining=current?.deadline ? Math.max(0,(current.deadline-Date.now())/1000) : secondsLeft;
       $('.ee-v-usage').textContent=locked ? (registered?'Today’s voice limit is complete.':'Free voice practice is complete.') : registered?`${format(remaining)} left today`:`${questionsLeft} free questions · ${format(remaining)} left`;
     }
@@ -88,10 +91,12 @@
     function applyUsage(d,r){
       if(accessDenied){usage();controls();return;}
       if(d.registered!=null)registered=!!d.registered;
+      if(d.time_unlimited!=null || !registered)unlimited=registered && d.time_unlimited===true;
       if(d.seconds_left!=null)secondsLeft=Number(d.seconds_left || 0);
+      if(unlimited)secondsLeft=Infinity;
       if(d.questions_left!=null)questionsLeft=Number(d.questions_left || 0);
-      locked=secondsLeft<=0 || (!registered && questionsLeft<=0);$('.ee-v-limit').hidden=registered || !locked;
-      if(r)r.deadline=Date.now()+secondsLeft*1000;usage();controls();
+      locked=(!unlimited && secondsLeft<=0) || (!registered && questionsLeft<=0);$('.ee-v-limit').hidden=registered || !locked;
+      if(r)r.deadline=unlimited?Infinity:Date.now()+secondsLeft*1000;usage();controls();
     }
     function isCurrent(r){return current===r && !r.cancelled;}
     async function endMeter(r){
@@ -177,6 +182,7 @@
     function captions(r,message){
       const kind=message.type==='session.input_transcript.delta'?'user':message.type==='session.output_transcript.delta'?'assistant':null;
       if(!kind || typeof message.delta!=='string')return;
+      if(kind==='assistant' && message.delta.trim() && r.greetingExpected){greeted=true;r.greetingExpected=false;try{sessionStorage.setItem(greetingKey,'1');}catch{}}
       if(message.delta.trim()){
         r.lastActivity=Date.now();
         r.replyPendingSince=kind==='user'?r.lastActivity:null;
@@ -202,7 +208,7 @@
     }
     async function start(){
       if(current || locked || destroyed)return;
-      const r={id:++sequence,cancelled:false,active:false,timers:[],analysers:[],lastActivity:Date.now(),lastUser:0,lastAi:0,replyPendingSince:null,voiced:0,failures:0,captions:{user:'',assistant:''}};
+      const r={id:++sequence,greet:!greeted,cancelled:false,active:false,timers:[],analysers:[],lastActivity:Date.now(),lastUser:0,lastAi:0,replyPendingSince:null,voiced:0,failures:0,captions:{user:'',assistant:''}};
       current=r;error('');$('.ee-v-caption').hidden=true;controls();setStatus('thinking','Connecting…');
       r.timers.push(setTimeout(()=>{if(isCurrent(r) && !r.active){stop('timeout');error('The voice connection timed out. Please try again.');}},45000));
       let ctx=context();lastContext=contextAPI.updateText(ctx);
@@ -227,7 +233,8 @@
             if(r.active)return;
             r.active=true;r.lastActivity=Date.now();r.replyPendingSince=r.lastActivity;clearTimeout(r.startTimer);controls();setStatus('idle','Ready — speak in your language');
             if(selection)void askSelection(r);
-            else r.dc.send(JSON.stringify({type:'session.commentary.append',event_id:'greeting_'+r.id,delegation_id:null,content:'Greet the learner briefly now in English. English is the default language. Say that they can ask in any language. Offer help with the current lesson, then pause and listen. Follow the language of their question when they speak.'}));
+            else if(r.greet){r.greetingExpected=true;r.dc.send(JSON.stringify({type:'session.commentary.append',event_id:'greeting_'+r.id,delegation_id:null,content:'Greet the learner briefly now in English. English is the default language. Say that they can ask in any language. Offer help with the current lesson, then pause and listen. Follow the language of their question when they speak.'}));}
+            else r.replyPendingSince=null;
           }
           if(message.type==='error'){error('The AI could not process part of the conversation. You can end the session and try again.');}
           captions(r,message);
@@ -236,7 +243,7 @@
         r.stream.getTracks().forEach(t=>r.pc.addTrack(t,r.stream));
         const offer=await r.pc.createOffer();if(!isCurrent(r))return;await r.pc.setLocalDescription(offer);await waitIce(r.pc);if(!isCurrent(r))return;
         ctx=context();lastContext=contextAPI.updateText(ctx);
-        const d=await invoke('session',{voice:voice.value,level:ctx?.level || 'b1',sdp:r.pc.localDescription?.sdp,...(ctx?{lesson_context:ctx}:{})});
+        const d=await invoke('session',{voice:voice.value,level:ctx?.level || 'b1',greet:r.greet,sdp:r.pc.localDescription?.sdp,...(ctx?{lesson_context:ctx}:{})});
         r.sid=d?.voice_session_id;
         if(!isCurrent(r)){void endMeter(r);return;}
         if(!d?.transport?.sdp || !r.sid)throw new Error('The voice service returned an incomplete connection. Please try again.');
