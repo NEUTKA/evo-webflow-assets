@@ -1,0 +1,15 @@
+{
+  "edition": "A2 Everyday English v2",
+  "lessons": 30,
+  "readingQuestions": 120,
+  "writingTasks": 31,
+  "dialogueReplies": 94,
+  "checkpoints": 6,
+  "final": 1,
+  "milestones": 37,
+  "legacyKey": "evo.course.a2.preview.v1",
+  "stateVersion": 11,
+  "bytes": 806345,
+  "sha256": "cd563243988ae6becc68138e8f8e71b0d1f2dbc8d7419dbbc5a2124d067df741",
+  "webflowPublished": false
+}

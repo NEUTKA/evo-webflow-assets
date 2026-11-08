@@ -1,0 +1,8 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=__dirname,pkg=JSON.parse(fs.readFileSync(path.join(root,'a2-v2-sources.json'),'utf8')),dest=path.join(root,'a2-v2-rebuilt');
+if(pkg.format!=='evo-a2-v2-source')throw Error('Invalid source package');
+for(const f of pkg.files){const file=path.resolve(dest,f.path);if(!file.startsWith(dest+path.sep)||!f.path.startsWith('v2/'))throw Error('Invalid path');if(crypto.createHash('sha256').update(f.content).digest('hex')!==f.sha256)throw Error('Source hash mismatch: '+f.path);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,f.content);}
+const assembled=path.join(dest,'v2');let html=fs.readFileSync(path.join(assembled,'index.html'),'utf8');
+html=html.replace('<base href="./">','<base href="https://cdn.jsdelivr.net/gh/NEUTKA/evo-webflow-assets@a2336b43c5cc3803079a60d8911ec7423c072385/course-a2-preview/">').replace('<link rel="stylesheet" href="styles.css">',()=>'<style>'+fs.readFileSync(path.join(assembled,'styles.css'),'utf8')+'</style>').replace(/<script src="([^"]+)"><\/script>/g,(_,f)=>'<script>'+fs.readFileSync(path.join(assembled,f),'utf8').replace(/<\/script/gi,'<\\/script')+'</script>').replace(/\r\n/g,'\n');
+const sha256=crypto.createHash('sha256').update(html).digest('hex'),manifest=JSON.parse(fs.readFileSync(path.join(root,'a2-v2-build.json'),'utf8'));if(sha256!==manifest.sha256)throw Error('Standalone hash mismatch');fs.writeFileSync(path.join(dest,'a2-everyday-v2.html'),html);console.log({identical:true,sha256,output:path.join(dest,'a2-everyday-v2.html')});

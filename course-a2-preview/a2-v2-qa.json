@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": 4206,
+  "lessons": 30,
+  "objectiveLessonQuestions": 450,
+  "readingQuestions": 120,
+  "dialogueReplies": 94,
+  "checkpoints": 6,
+  "milestones": 37,
+  "boundary": "Engine/content checks; AI/STT reviews in this test are local fixtures, not provider calls."
+}
