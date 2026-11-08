@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": 46,
+  "renders": 0,
+  "saves": 9,
+  "contexts": [
+    "reading",
+    "checkpoint"
+  ],
+  "scope": "Real choice handler with a DOM fixture; browser geometry checked separately."
+}

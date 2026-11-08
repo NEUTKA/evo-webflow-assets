@@ -56,3 +56,9 @@ The release source snapshot `a2-v2-sources.json` contains every assembled fronte
 - Authenticated AI/STT on the newly published Webflow page, physical iPhone/Android microphone behaviour, playback of all 30 original recordings and native translation editing remain acceptance checks. Original recording/transcript alignment has not been newly certified.
 
 Use the new pinned Webflow Embed to replace the **existing A2 Embed**, then Save & Close → Publish. CDN availability alone does not change the existing Webflow page. Keep the old Embed for rollback; do not delete the legacy browser backup.
+
+## Reading selection correction
+
+Option selection now updates the existing button classes, `aria-pressed` and Check availability without recreating the task card, scrolling panel or audio. Choice buttons use the same border width and padding before and after selection; pointer hover/press does not translate them.
+
+An additional 46 regression assertions exercise the actual selection handler, saved drafts and checkpoint choices with zero rerenders. Browser checks at 320×568 and 1440×900 measured identical button rectangles and scroll offsets before/after normal pointer clicks and switching selections. Checking the selected answer still produces the correct feedback. Lesson content, answer keys and progress storage are unchanged by this correction.
