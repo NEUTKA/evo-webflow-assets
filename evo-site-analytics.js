@@ -6,7 +6,7 @@
     window.__evoSiteAnalyticsLoaded = true;
 
     const CONFIG = {
-        version: "2026-08-21",
+        version: "2026-11-08-funnel-v1",
         supabaseUrl: "https://mwcvjqelccqgmvvydixi.supabase.co",
         anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Y3ZqcWVsY2NxZ212dnlkaXhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2OTE3MjgsImV4cCI6MjA2ODI2NzcyOH0.BmvFQnifp7scTPBcdQx7rOJgyijIE4EaWXMqloAiIoU",
         functionName: "site-analytics",
@@ -24,7 +24,8 @@
         "password", "pass", "email", "phone"
     ];
     const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
-    const CLICK_KEYS = ["gclid", "fbclid", "msclkid"];
+    const CLICK_KEYS = ["gclid", "fbclid", "msclkid", "yclid"];
+    const SERVER_EVENTS = new Set(["trial_expired", "checkout_started", "payment_succeeded"]);
 
     let started = false;
     let queue = [];
@@ -35,6 +36,10 @@
     let pendingEngagedMs = 0;
     let lastPageKey = "";
     let lastPageViewAt = 0;
+    let identifiedSession = "";
+    let funnelBusy = false;
+    let lastPaywallCheck = 0;
+    let paywallSession = "";
 
     function now() {
         return Date.now();
@@ -198,6 +203,9 @@
                 out.utm_medium = "paid_social";
             } else if (clickIds.msclkid) {
                 out.utm_source = "bing";
+                out.utm_medium = "cpc";
+            } else if (clickIds.yclid) {
+                out.utm_source = "yandex";
                 out.utm_medium = "cpc";
             }
         }
@@ -438,6 +446,7 @@
 
     function track(eventName, meta, opts) {
         if (!analyticsAllowed()) return false;
+        if (SERVER_EVENTS.has(cleanEventName(eventName))) return false;
 
         const engagedMsDelta = opts?.engagedMsDelta ?? (opts?.includeEngagement ? drainEngagement() : 0);
         const payload = basePayload(eventName, meta || {}, engagedMsDelta);
@@ -464,6 +473,52 @@
 
     function isVisibleAndFocused() {
         return document.visibilityState !== "hidden" && (typeof document.hasFocus !== "function" || document.hasFocus());
+    }
+
+    function visiblePaywall() {
+        if (document.visibilityState === "hidden") return false;
+        if (!/^\/(billing|pricing)\/?$/.test(safePath())) return false;
+        const root = document.querySelector('.evp[data-evo-page="billing"], .evp[data-evo-page="pricing"]');
+        if (!root) return false;
+        return Array.from(root.querySelectorAll('[data-pay-message].bad')).some((el) => {
+            const box = el.getBoundingClientRect();
+            const style = window.getComputedStyle(el);
+            return !!el.textContent.trim() && box.width > 0 && box.height > 0 &&
+                box.bottom > 0 && box.top < window.innerHeight &&
+                style.display !== "none" && style.visibility !== "hidden";
+        });
+    }
+
+    async function funnelTick() {
+        if (!started || !analyticsAllowed() || funnelBusy || document.visibilityState === "hidden") return;
+        const sb = getSupabaseClient();
+        if (!sb?.auth?.getSession || !sb?.functions?.invoke) return;
+        funnelBusy = true;
+        try {
+            const { data } = await sb.auth.getSession();
+            const userId = data?.session?.user?.id;
+            if (!userId) return;
+            const session = getSession();
+            const key = session.session_id + ":" + userId;
+            if (identifiedSession !== key) {
+                const payload = basePayload("session_start", {}, 0);
+                payload.action = "identify_session";
+                const reply = await sb.functions.invoke(CONFIG.functionName, { body: payload });
+                if (!reply.error && reply.data?.identified) identifiedSession = key;
+            }
+            // A redirect or a pricing visit alone is not evidence that a paywall was seen.
+            if (paywallSession === key || !visiblePaywall() || !sb.rpc || now() - lastPaywallCheck < 5000) return;
+            lastPaywallCheck = now();
+            const { data: access, error } = await sb.rpc("evo_get_access_status");
+            if (error || !access?.ok || !access.payment_required || access.has_access || !visiblePaywall()) return;
+            if (track("paywall_viewed", { surface: safePath() === "/pricing" ? "pricing" : "billing" }, {})) {
+                paywallSession = key;
+            }
+        } catch (_) {
+            // Analytics must never prevent access verification or payment.
+        } finally {
+            funnelBusy = false;
+        }
     }
 
     function refreshVisibility() {
@@ -504,6 +559,7 @@
         });
 
         window.addEventListener("focus", refreshVisibility);
+        window.addEventListener("focus", funnelTick);
         window.addEventListener("blur", () => {
             trackEngagement({ beacon: true });
             refreshVisibility();
@@ -525,6 +581,8 @@
         }
 
         trackPageView();
+        funnelTick();
+        window.setInterval(funnelTick, 3000);
         heartbeatTimer = window.setInterval(() => {
             if (!analyticsAllowed()) return;
             trackEngagement();
