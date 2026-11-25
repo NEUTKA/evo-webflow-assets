@@ -145,6 +145,9 @@ body.is-learning footer{display:none}
 .skill-correction{background:#eff8f4;border-radius:12px;padding:12px;margin:10px 0}.skill-support{background:#f5f6fc;border-radius:12px;padding:10px}.skill-error{font-size:14px!important;color:#a23f27;padding:8px;background:#fff3ed;border-radius:10px;margin:0!important;max-height:70px;overflow:auto}
 .skill-review{overflow-wrap:anywhere}.skill-map-tools{border-top:1px solid #dce4f4;margin-top:20px;padding-top:12px;font-size:14px}.skill-map-tools button,.skill-checkpoints button{font-size:13px;padding:8px 12px;min-height:40px;border-radius:12px;margin:5px 5px 5px 0;white-space:normal}.skill-checkpoints{display:flex;flex-wrap:wrap}.skill-scores{display:grid;grid-template-columns:1fr 1fr;gap:8px}.skill-match{display:flex;gap:8px;align-items:center;justify-content:space-between}.skill-match select{max-width:65%;min-height:40px}
 #skills-sync-notice{position:fixed;top:62px;inset-inline:12px;z-index:10000;padding:6px 10px;background:#fff4d9;color:#674c15;border:1px solid #e8d4a9;border-radius:8px;font:12px/1.35 system-ui;max-height:36px;overflow:auto;pointer-events:none}#skills-sync-notice[hidden]{display:none}
+#skills-sync-notice:has(.sync-map-link){max-height:min(8rem,25vh);pointer-events:auto}
+#skills-sync-notice .sync-map-link{display:inline-block;margin-inline-start:.5rem;color:inherit;text-decoration:underline;font:inherit;min-height:28px}
+.sync-conflict-tools{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:520px){.skills-card{gap:8px}.skills-card .flow-actions button{font-size:13px;padding:9px 12px}.skills-body{gap:9px}.skill-english{font-size:17px}.reading-text{font-size:15px;padding:10px 12px}#skill-answer{min-height:105px}.skills-body .small{font-size:12px}.record-controls{gap:7px}.record-controls button{font-size:13px;min-height:40px;padding:8px 12px}}
 </style><style>
 .account-nav{display:flex;align-items:center;gap:8px;direction:ltr}.account-nav a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1px solid #ced9ee;border-radius:12px;background:#fff;color:#203254;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}.account-nav a:hover{background:#edf2ff}.account-nav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.account-nav #course-login{background:#3159ef;border-color:#3159ef;color:white}.header-controls{gap:10px}
@@ -4115,6 +4118,31 @@ const ui=Object.fromEntries(Object.entries(rows).map(([lang,list])=>{if(list.len
 const errors=['accessAI','limitAI','aiTimeout','invalidAI','accountChanged','invalidBackup','wrongOwner','longRecording','emptyRecording'];for(const v of Object.values(ui)){for(const k of errors)v[k]=v.errorAI;v.saveError=v.syncOffline;v.unsupportedMic=v.deniedMic=v.micError;}
 const saveWarnings={en:'Cannot save in this browser. Keep this tab open and export your progress.',ru:'Не удаётся сохранить в браузере. Не закрывайте вкладку и скачайте копию прогресса.',es:'No se puede guardar en este navegador. Mantén la pestaña abierta y exporta tu progreso.',pt:'Não foi possível salvar no navegador. Mantenha a aba aberta e exporte seu progresso.',de:'Speichern im Browser nicht möglich. Lass den Tab offen und exportiere deinen Fortschritt.',fr:'Enregistrement impossible dans ce navigateur. Gardez cet onglet ouvert et exportez votre progression.',it:'Impossibile salvare nel browser. Tieni aperta la scheda ed esporta i progressi.',hy:'Չի հաջողվում պահպանել դիտարկիչում։ Մի փակեք ներդիրը և արտահանեք առաջընթացը։','zh-Hans':'无法保存在此浏览器中。请保持此标签页打开并导出进度。',ja:'このブラウザーに保存できません。タブを開いたままにし、進捗をエクスポートしてください。',ko:'브라우저에 저장할 수 없습니다. 탭을 닫지 말고 학습 기록을 내보내세요.',hi:'इस ब्राउज़र में सहेज नहीं पा रहे। टैब खुला रखें और प्रगति निर्यात करें।',bn:'এই ব্রাউজারে সংরক্ষণ করা যাচ্ছে না। ট্যাব খোলা রাখুন এবং অগ্রগতি রপ্তানি করুন।',ur:'اس براؤزر میں محفوظ نہیں ہو رہا۔ ٹیب کھلا رکھیں اور پیش رفت برآمد کریں۔',ar:'تعذّر الحفظ في هذا المتصفح. أبقِ علامة التبويب مفتوحة وصدّر تقدّمك.',id:'Tidak dapat menyimpan di peramban. Biarkan tab terbuka dan ekspor kemajuan Anda.',tr:'Tarayıcıya kaydedilemiyor. Sekmeyi açık tutun ve ilerlemenizi dışa aktarın.',vi:'Không thể lưu trong trình duyệt. Giữ tab mở và xuất tiến độ của bạn.',kk:'Браузерде сақтау мүмкін емес. Қойындыны жаппай, оқу барысын экспорттаңыз.',uz:'Brauzerda saqlab bo‘lmayapti. Varaqni ochiq qoldiring va natijalarni eksport qiling.'};
 for(const [lang,text]of Object.entries(saveWarnings))ui[lang].saveError=text;
+const syncLabels={
+ en:['New account progress is available. Open the course map to update.','Export account version'],
+ ru:['В аккаунте есть новый прогресс. Откройте карту курса, чтобы обновить данные.','Скачать версию аккаунта'],
+ es:['Hay progreso nuevo en tu cuenta. Abre el mapa del curso para actualizar.','Exportar versión de la cuenta'],
+ pt:['Há novo progresso na sua conta. Abra o mapa do curso para atualizar.','Exportar versão da conta'],
+ de:['Neuer Lernfortschritt ist verfügbar. Öffne die Kursübersicht zum Aktualisieren.','Kontoversion exportieren'],
+ fr:['Votre compte a une progression plus récente. Ouvrez le plan du cours pour l’actualiser.','Exporter la version du compte'],
+ it:['Nel tuo account sono disponibili nuovi progressi. Apri la mappa del corso per aggiornare.','Esporta versione dell’account'],
+ hy:['Հաշվում կա նոր առաջընթաց։ Թարմացնելու համար բացեք դասընթացի քարտեզը։','Արտահանել հաշվի տարբերակը'],
+ 'zh-Hans':['账户有新的学习进度。打开课程地图以更新。','导出账户版本'],
+ ja:['アカウントに新しい学習進捗があります。コースマップを開いて更新してください。','アカウント版をエクスポート'],
+ ko:['계정에 새 학습 진도가 있습니다. 코스 지도를 열어 업데이트하세요.','계정 버전 내보내기'],
+ hi:['खाते में नई प्रगति उपलब्ध है। अपडेट करने के लिए कोर्स का नक्शा खोलें।','खाते का संस्करण एक्सपोर्ट करें'],
+ bn:['অ্যাকাউন্টে নতুন অগ্রগতি আছে। আপডেট করতে কোর্সের মানচিত্র খুলুন।','অ্যাকাউন্টের সংস্করণ রপ্তানি করুন'],
+ ur:['اکاؤنٹ میں نئی پیش رفت دستیاب ہے۔ اپ ڈیٹ کے لیے کورس کا نقشہ کھولیں۔','اکاؤنٹ کا ورژن برآمد کریں'],
+ ar:['يتوفر تقدم جديد في حسابك. افتح خريطة الدورة للتحديث.','تصدير نسخة الحساب'],
+ id:['Ada progres baru di akun Anda. Buka peta kursus untuk memperbarui.','Ekspor versi akun'],
+ tr:['Hesabınızda yeni ilerleme var. Güncellemek için kurs haritasını açın.','Hesap sürümünü dışa aktar'],
+ vi:['Tài khoản có tiến độ mới. Mở sơ đồ khóa học để cập nhật.','Xuất phiên bản tài khoản'],
+ kk:['Аккаунтта жаңа оқу барысы бар. Жаңарту үшін курс картасын ашыңыз.','Аккаунт нұсқасын экспорттау'],
+ uz:['Hisobda yangi natijalar bor. Yangilash uchun kurs xaritasini oching.','Hisob nusxasini eksport qilish']
+};
+for(const [lang,[syncUpdate,exportAccount]] of Object.entries(syncLabels)){
+  Object.assign(ui[lang],{syncUpdate,exportAccount});
+}
 root.EvoA1SkillsI18n={ui,t:(lang,key)=>ui[lang]?.[key]||ui.en[key]||key};if(typeof module==='object'&&module.exports)module.exports=root.EvoA1SkillsI18n;
 })(globalThis);
 </script><script>(function(root){'use strict';
@@ -4126,27 +4154,376 @@ async function review(task,kind,text,locale,turn=0,history=[]){if(!text.trim())t
 async function transcribe(blob){if(!blob?.size)throw Error('emptyRecording');if(blob.size>8*1024*1024)throw Error('longRecording');const audio_base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('errorAI'));reader.readAsDataURL(blob);});const data=await call({action:'stt',transcription_language:'en',audio_base64,mime:blob.type.split(';')[0]||'audio/webm'});if(typeof data?.text!=='string'||!data.text.trim())throw Error('emptyRecording');return data.text.trim();}
 root.EvoA1AI={client,review,transcribe,validate,languageNames};
 })(globalThis);
-</script><script>(function(root){'use strict';
-const COURSE='a1-foundations-v2',base='evo.course.a1.v2.',legacy='evo.course.introductions.v1';
-function create({get,set,changed,engine,reviewEngine,canRefresh=()=>true}){let sb=null,owner='guest',ready=false,revision=0,epoch=0,timer=null,dirty=0,saving=false,status='loadingSync',remote=null,started=false,subscription=null,localOK=true,identityRequest=null,pullRequest=null,lastFocusCheck=0;const key=()=>base+owner;
-const valid=p=>{if(!p||p.courseId!==COURSE)throw Error('invalidBackup');return {courseId:COURSE,course:engine.restore(p.course),review:reviewEngine.restore(p.review)};};
-function blank(id=owner){let review;try{review=reviewEngine.restore(localStorage.getItem('evo.course.review.v1.'+id));}catch(_){review=reviewEngine.initial();}return {courseId:COURSE,course:engine.initial(),review};}
-function local(id){try{const raw=localStorage.getItem(base+id);return raw?JSON.parse(raw):null;}catch(_){status='saveError';return null;}}
-function put(){try{localStorage.setItem(key(),JSON.stringify({...get(),courseId:COURSE,owner,revision,dirty:!!dirty}));localOK=true;}catch(_){localOK=false;status='saveError';}changed();}
-function snapshot(){return {...get(),courseId:COURSE,accountId:owner};}
-function identify(background=false){if(identityRequest)return identityRequest;const pending=identifyOnce(background);identityRequest=pending;pending.finally(()=>{if(identityRequest===pending)identityRequest=null;}).catch(()=>{});return pending;}
-async function identifyOnce(background){let mine=background?epoch:++epoch;if(!background){ready=false;changed();}let result;try{result=await sb.auth.getUser();}catch(_){if(mine===epoch){status='syncOffline';changed();}return;}if(mine!==epoch)return;const {data,error}=result;if(error&&background){status='syncOffline';changed();return;}const id=error||!data?.user||data.user.is_anonymous?'guest':data.user.id;if(id===owner&&started){ready=true;if(owner!=='guest'&&!get().course.active&&!get().course.assessment&&canRefresh())await pull(mine);if(!background)changed();return;}if(background){mine=++epoch;pullRequest=null;}ready=false;changed();started=true;owner=id;dirty=0;revision=0;remote=null;let cached=local(owner);if(!cached&&owner==='guest')try{const raw=localStorage.getItem(legacy);if(raw)cached={courseId:COURSE,course:engine.restore(raw),review:reviewEngine.initial()};}catch(_){}try{set(cached?valid(cached):blank());}catch(_){cached=null;set(blank());status='saveError';}revision=cached?.revision||0;dirty=cached?.dirty?1:0;status=id==='guest'?'localOnly':'loadingSync';ready=true;changed();if(id!=='guest')await pull(mine);}
-function pull(mine=epoch){if(pullRequest)return pullRequest;const pending=pullOnce(mine);pullRequest=pending;pending.finally(()=>{if(pullRequest===pending)pullRequest=null;}).catch(()=>{});return pending;}
-async function pullOnce(mine){const user=owner;try{const out=await sb.from('user_course_state').select('revision,payload').eq('course_id',COURSE).eq('user_id',user).maybeSingle();if(mine!==epoch||user!==owner)return;if(out.error)throw out.error;if(out.data){const p=valid(out.data.payload);if(dirty){if(out.data.revision!==revision){remote=out.data;status='syncConflict';changed();return;}}else if(out.data.revision!==revision&&!get().course.active&&!get().course.assessment&&canRefresh()){set(p);revision=out.data.revision;put();}}else if(!dirty){revision=0;}const previous=status;status='synced';if(status!==previous)changed();if(dirty)schedule();}catch(_){if(mine===epoch){status='syncOffline';changed();}}}
-function schedule(){clearTimeout(timer);if(!ready||owner==='guest'||remote)return;timer=setTimeout(flush,800);}
-function save(){dirty++;put();if(owner==='guest')status='localOnly';else if(!remote)status='savingSync';schedule();}
-async function flush(){if(!ready||saving||owner==='guest'||remote||!dirty)return;const mine=epoch,id=owner,seq=dirty,payload=snapshot();saving=true;try{const who=await sb.auth.getUser();if(who.error||who.data?.user?.id!==id||mine!==epoch)throw Error('accountChanged');const result=await sb.rpc('evo_save_a1_course_state',{p_expected_revision:revision,p_payload:payload});if(mine!==epoch||id!==owner)return;if(result.error)throw result.error;if(result.data?.conflict){remote={revision:result.data.revision,payload:result.data.payload};status='syncConflict';}else{if(!Number.isInteger(result.data?.revision)||result.data.revision<1)throw Error('syncOffline');revision=result.data.revision;if(seq===dirty)dirty=0;status=dirty?'savingSync':'synced';put();}}catch(_){if(mine===epoch)status='syncOffline';}finally{saving=false;if(mine===epoch){changed();if(dirty&&!remote&&status!=='syncOffline')schedule();}else if(dirty&&!remote)schedule();}}
-function resolve(useLocal){if(!remote)return;if(useLocal){revision=remote.revision;remote=null;dirty++;status='savingSync';put();schedule();}else{const p=remote.payload?valid(remote.payload):blank();revision=remote.revision;remote=null;dirty=0;set(p);status='synced';put();}}
-function guestAvailable(){try{return owner!=='guest'&&!!(localStorage.getItem(base+'guest')||localStorage.getItem(legacy));}catch(_){return false;}}
-function importGuest(){if(owner==='guest')return;let raw;try{raw=localStorage.getItem(base+'guest');const p=raw?valid(JSON.parse(raw)):{courseId:COURSE,course:engine.restore(localStorage.getItem(legacy)),review:reviewEngine.initial()};if(Object.keys(get().course.completed||{}).length||get().course.active)throw Error('importNeedsChoice');p.review=get().review;set(p);save();}catch(e){throw Error(e.message||'invalidBackup');}}
-async function init(){if(started)return;for(let i=0;i<30&&!sb;i++){sb=root.EvoA1AI.client();if(!sb)await new Promise(r=>setTimeout(r,300));}if(!sb){owner='guest';const cached=local(owner);if(cached)set(valid(cached));else try{const raw=localStorage.getItem(legacy);if(raw)set({courseId:COURSE,course:engine.restore(raw),review:reviewEngine.initial()});}catch(_){}ready=true;started=true;status='localOnly';changed();return;}const value=sb.auth.onAuthStateChange((event,session)=>{const id=session?.user?(session.user.is_anonymous?'guest':session.user.id):null;if(started&&ready&&id===owner&&['INITIAL_SESSION','SIGNED_IN','TOKEN_REFRESHED','USER_UPDATED'].includes(event))return;ready=false;epoch++;identityRequest=null;pullRequest=null;clearTimeout(timer);changed();setTimeout(()=>identify(),0);});subscription=value.data?.subscription;await identify();}
-root.addEventListener('online',()=>{if(sb&&owner!=='guest'){if(dirty)flush();else if(!get().course.active&&!get().course.assessment&&canRefresh())pull();}});root.addEventListener('focus',()=>{if(sb&&ready&&!dirty&&!saving&&!get().course.active&&!get().course.assessment&&canRefresh()&&Date.now()-lastFocusCheck>=30000){lastFocusCheck=Date.now();identify(true);}});root.addEventListener('storage',e=>{if(e.key===key()&&!saving){const value=local(owner);if(value&&value.revision>revision){remote={revision:value.revision,payload:value};status='syncConflict';changed();}}});
-return {init,save,flush,resolve,importGuest,guestAvailable,pull,info:()=>({owner,ready,status:localOK?status:'saveError',conflict:!!remote,revision}),export:()=>({...snapshot(),owner}),import:p=>{if(p.owner&&p.owner!==owner&&p.owner!=='guest')throw Error('wrongOwner');set(valid(p));save();},identity:()=>owner};}
+</script><script>(function(root){
+'use strict';
+const COURSE='a1-foundations-v2';
+const BASE='evo.course.a1.v2.';
+const LEGACY='evo.course.introductions.v1';
+
+// PostgreSQL JSON objects can come back with a different key order.
+function canonical(value){
+  return JSON.stringify(value,(_,item)=>{
+    if(!item||typeof item!=='object'||Array.isArray(item))return item;
+    return Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]]));
+  });
+}
+
+function create({get,set,changed,engine,reviewEngine,canRefresh=()=>true}){
+  let sb=null,owner='guest',ready=false,started=false,epoch=0,revision=0;
+  let timer=null,dirty=0,savingEpoch=null,status='loadingSync',localOK=true;
+  let remote=null,uncertainWrite=null,identityRequest=null,pullRequest=null;
+  let lastFocusCheck=0,tabCacheRaw=null,refreshAfterSave=false;
+  const key=()=>BASE+owner;
+  const snapshot=()=>({...get(),courseId:COURSE,accountId:owner});
+  const content=p=>canonical({course:p.course,review:p.review});
+
+  function valid(p){
+    if(!p||p.courseId!==COURSE)throw Error('invalidBackup');
+    return {courseId:COURSE,course:engine.restore(p.course),review:reviewEngine.restore(p.review)};
+  }
+  function blank(id=owner){
+    let review;
+    try{review=reviewEngine.restore(localStorage.getItem('evo.course.review.v1.'+id));}
+    catch(_){review=reviewEngine.initial();}
+    return {courseId:COURSE,course:engine.initial(),review};
+  }
+  function local(id){
+    try{return JSON.parse(localStorage.getItem(BASE+id));}
+    catch(_){status='saveError';return null;}
+  }
+  function loadCache(){
+    tabCacheRaw=null;
+    if(owner!=='guest'){
+      try{
+        const raw=root.sessionStorage?.getItem(key());
+        const pending=raw&&JSON.parse(raw);
+        if(pending?.dirty&&pending.owner===owner){
+          tabCacheRaw=raw;
+          return pending;
+        }
+      }catch(_){}
+    }
+    const cached=local(owner);
+    if(cached?.dirty)tabCacheRaw=JSON.stringify(cached);
+    return cached;
+  }
+  function put(){
+    const raw=JSON.stringify({...get(),courseId:COURSE,owner,revision,dirty:!!dirty});
+    // A reload in this tab can recover its draft even if another tab has
+    // written to the shared account cache.
+    const previousTabCache=tabCacheRaw;
+    let savedPending=false;
+    if(owner!=='guest'){
+      try{
+        if(dirty&&root.sessionStorage){
+          root.sessionStorage.setItem(key(),raw);
+          tabCacheRaw=raw;
+          savedPending=true;
+        }else if(!dirty){
+          root.sessionStorage?.removeItem(key());
+          tabCacheRaw=null;
+        }
+      }catch(_){}
+    }
+    try{
+      const sharedRaw=localStorage.getItem(key());
+      const shared=JSON.parse(sharedRaw);
+      // Leave another tab's unsent work recoverable in the shared cache.
+      const otherDraft=owner!=='guest'&&shared?.dirty&&sharedRaw!==previousTabCache
+        &&sharedRaw!==raw&&(!dirty||savedPending);
+      const alreadySaved=!dirty&&otherDraft&&content(shared)===content(get());
+      if((!otherDraft||alreadySaved)&&(owner==='guest'||!(shared?.revision>revision))){
+        localStorage.setItem(key(),raw);
+        if(dirty)tabCacheRaw=raw;
+        localOK=true;
+      }else{
+        localOK=!dirty||savedPending||sharedRaw===raw;
+      }
+    }catch(_){localOK=savedPending;}
+    changed();
+  }
+  function updateStatus(next){
+    if(status===next)return;
+    status=next;
+    changed();
+  }
+  function schedule(){
+    clearTimeout(timer);
+    if(!ready||owner==='guest'||remote||!dirty)return;
+    timer=setTimeout(flush,800);
+  }
+
+  function reconcile(row,{fromWrite=false,applyOnMap=true}={}){
+    if(!row||!Number.isInteger(row.revision)||row.revision<0)throw Error('syncOffline');
+    if(!fromWrite&&row.revision<revision)return;
+    if(row.revision===revision&&row.payload&&status!=='syncConflict'&&!remote){
+      updateStatus(dirty?'savingSync':'synced');
+      return;
+    }
+    const progress=row.payload?valid(row.payload):blank();
+    const incoming=content(progress);
+    const identical=incoming===content(get());
+    const acknowledged=uncertainWrite&&row.revision===uncertainWrite.revision+1
+      &&incoming===uncertainWrite.content;
+    if(identical||acknowledged){
+      revision=row.revision;
+      remote=null;
+      uncertainWrite=null;
+      if(identical)dirty=0;
+      status=dirty?'savingSync':'synced';
+      put();
+      return;
+    }
+    if(!dirty&&applyOnMap&&canRefresh()){
+      revision=row.revision;
+      remote=null;
+      uncertainWrite=null;
+      set(progress);
+      status='synced';
+      put();
+      return;
+    }
+    remote={revision:row.revision,progress};
+    updateStatus(dirty?'syncConflict':'syncUpdate');
+  }
+
+  function identify(background=false){
+    if(identityRequest)return identityRequest;
+    const pending=identifyOnce(background);
+    identityRequest=pending;
+    pending.finally(()=>{if(identityRequest===pending)identityRequest=null;}).catch(()=>{});
+    return pending;
+  }
+  async function identifyOnce(background){
+    let mine=background?epoch:++epoch;
+    if(!background){ready=false;changed();}
+    let result;
+    try{result=await sb.auth.getUser();}
+    catch(_){if(mine===epoch)updateStatus('syncOffline');return;}
+    if(mine!==epoch)return;
+    const {data,error}=result;
+    if(error&&background){updateStatus('syncOffline');return;}
+    const id=error||!data?.user||data.user.is_anonymous?'guest':data.user.id;
+    if(id===owner&&started){
+      ready=true;
+      if(owner!=='guest'&&canRefresh())await pull(mine);
+      if(!background)changed();
+      return;
+    }
+    if(background){mine=++epoch;pullRequest=null;}
+    ready=false;
+    changed();
+    started=true;
+    owner=id;
+    dirty=0;
+    revision=0;
+    remote=null;
+    uncertainWrite=null;
+    refreshAfterSave=false;
+    let cached=loadCache();
+    if(!cached&&owner==='guest'){
+      try{
+        const raw=localStorage.getItem(LEGACY);
+        if(raw)cached={courseId:COURSE,course:engine.restore(raw),review:reviewEngine.initial()};
+      }catch(_){}
+    }
+    try{set(cached?valid(cached):blank());}
+    catch(_){cached=null;set(blank());}
+    revision=cached?.revision||0;
+    dirty=cached?.dirty?1:0;
+    status=id==='guest'?'localOnly':'loadingSync';
+    ready=true;
+    changed();
+    if(id!=='guest')await pull(mine);
+  }
+  function pull(mine=epoch){
+    if(pullRequest)return pullRequest;
+    if(!ready||owner==='guest')return Promise.resolve();
+    if(savingEpoch===mine){
+      refreshAfterSave=true;
+      return Promise.resolve();
+    }
+    const pending=pullOnce(mine);
+    pullRequest=pending;
+    pending.finally(()=>{
+      if(pullRequest!==pending)return;
+      pullRequest=null;
+      if(mine===epoch&&status!=='syncOffline')schedule();
+    }).catch(()=>{});
+    return pending;
+  }
+  async function pullOnce(mine){
+    const user=owner;
+    const stateAtRequest=get().course;
+    const hadOpenTask=!!(stateAtRequest.active||stateAtRequest.assessment);
+    try{
+      const out=await sb.from('user_course_state').select('revision,payload').eq('course_id',COURSE).eq('user_id',user).maybeSingle();
+      if(mine!==epoch||user!==owner)return;
+      if(out.error)throw out.error;
+      const current=get().course;
+      const openedDuringRequest=!hadOpenTask&&!!(current.active||current.assessment);
+      if(out.data)reconcile(out.data,{applyOnMap:!openedDuringRequest});
+      else if(!dirty){revision=0;updateStatus('synced');}
+      else updateStatus(remote?'syncConflict':'savingSync');
+    }catch(_){if(mine===epoch&&!remote)updateStatus('syncOffline');}
+  }
+  function save(){
+    dirty++;
+    if(remote){
+      // Re-evaluate a deferred update against the text the learner just entered.
+      if(content(remote.progress)===content(get())){
+        revision=remote.revision;
+        remote=null;
+        uncertainWrite=null;
+        dirty=0;
+        status='synced';
+      }else status='syncConflict';
+    }else status=owner==='guest'?'localOnly':'savingSync';
+    put();
+    schedule();
+  }
+  async function flush(){
+    if(!ready||savingEpoch===epoch||owner==='guest'||remote||!dirty)return;
+    if(pullRequest){
+      await pullRequest;
+      return flush();
+    }
+    const mine=epoch,id=owner,seq=dirty,expected=revision;
+    const payload=JSON.parse(JSON.stringify(snapshot()));
+    const attempt={revision:expected,content:content(payload)};
+    let attemptedWrite=false;
+    savingEpoch=mine;
+    try{
+      const who=await sb.auth.getUser();
+      if(who.error||who.data?.user?.id!==id||mine!==epoch)throw Error('accountChanged');
+      attemptedWrite=true;
+      const result=await sb.rpc('evo_save_a1_course_state',{p_expected_revision:expected,p_payload:payload});
+      if(mine!==epoch||id!==owner)return;
+      if(result.error)throw result.error;
+      if(result.data?.conflict){
+        reconcile(result.data,{fromWrite:true});
+      }else{
+        if(!Number.isInteger(result.data?.revision)||result.data.revision<1)throw Error('syncOffline');
+        revision=result.data.revision;
+        uncertainWrite=null;
+        if(seq===dirty)dirty=0;
+        status=dirty?'savingSync':'synced';
+        put();
+      }
+    }catch(_){
+      if(mine===epoch){
+        if(attemptedWrite&&!uncertainWrite)uncertainWrite=attempt;
+        updateStatus('syncOffline');
+      }
+    }finally{
+      if(savingEpoch===mine)savingEpoch=null;
+      if(mine===epoch&&refreshAfterSave){
+        refreshAfterSave=false;
+        pull();
+      }else if(mine===epoch&&status!=='syncOffline')schedule();
+    }
+  }
+  function resolve(useLocal){
+    if(!remote||!dirty)return;
+    revision=remote.revision;
+    const progress=remote.progress;
+    remote=null;
+    uncertainWrite=null;
+    if(useLocal){dirty++;status='savingSync';}
+    else{dirty=0;set(progress);status='synced';}
+    put();
+    schedule();
+  }
+  function refreshOnMap(){
+    if(!ready||dirty||!remote||!canRefresh())return;
+    const pending=remote;
+    Promise.resolve().then(()=>{
+      if(!ready||dirty||remote!==pending||!canRefresh())return;
+      revision=pending.revision;
+      remote=null;
+      uncertainWrite=null;
+      set(pending.progress);
+      status='synced';
+      put();
+      pull();
+    });
+  }
+  function guestAvailable(){
+    try{return owner!=='guest'&&!!(localStorage.getItem(BASE+'guest')||localStorage.getItem(LEGACY));}
+    catch(_){return false;}
+  }
+  function importGuest(){
+    if(owner==='guest')return;
+    const raw=localStorage.getItem(BASE+'guest');
+    const p=raw?valid(JSON.parse(raw)):{courseId:COURSE,course:engine.restore(localStorage.getItem(LEGACY)),review:reviewEngine.initial()};
+    if(Object.keys(get().course.completed||{}).length||get().course.active)throw Error('importNeedsChoice');
+    p.review=get().review;
+    set(p);
+    save();
+  }
+  async function init(){
+    if(started)return;
+    for(let i=0;i<30&&!sb;i++){
+      sb=root.EvoA1AI.client();
+      if(!sb)await new Promise(r=>setTimeout(r,300));
+    }
+    if(!sb){
+      owner='guest';
+      const cached=local(owner);
+      if(cached)set(valid(cached));
+      else try{
+        const raw=localStorage.getItem(LEGACY);
+        if(raw)set({courseId:COURSE,course:engine.restore(raw),review:reviewEngine.initial()});
+      }catch(_){}
+      ready=true;
+      started=true;
+      status='localOnly';
+      changed();
+      return;
+    }
+    sb.auth.onAuthStateChange((event,session)=>{
+      const id=session?.user?(session.user.is_anonymous?'guest':session.user.id):null;
+      if(started&&ready&&id===owner&&['INITIAL_SESSION','SIGNED_IN','TOKEN_REFRESHED','USER_UPDATED'].includes(event))return;
+      ready=false;
+      epoch++;
+      identityRequest=null;
+      pullRequest=null;
+      clearTimeout(timer);
+      changed();
+      setTimeout(()=>identify(),0);
+    });
+    await identify();
+  }
+  root.addEventListener('online',()=>{
+    if(!sb||owner==='guest')return;
+    if(remote||uncertainWrite||!dirty)pull();
+    else flush();
+  });
+  root.addEventListener('focus',()=>{
+    if(!sb||!ready||dirty||savingEpoch===epoch||!canRefresh()||Date.now()-lastFocusCheck<30000)return;
+    lastFocusCheck=Date.now();
+    identify(true);
+  });
+  root.addEventListener('storage',event=>{
+    if(event.key!==key()||owner==='guest'||!ready)return;
+    const saved=local(owner);
+    if(!saved||saved.dirty||saved.revision<=revision)return;
+    // A shared-cache write is a signal. Only the server can confirm its contents.
+    pull();
+  });
+  return {
+    init,save,flush,resolve,refreshOnMap,importGuest,guestAvailable,pull,
+    info:()=>({owner,ready,status:localOK?status:'saveError',conflict:!!remote&&!!dirty,revision}),
+    export:()=>({...snapshot(),owner}),
+    exportAccount:()=>remote?{...remote.progress,accountId:owner,owner}:null,
+    import:p=>{
+      if(p.owner&&p.owner!==owner&&p.owner!=='guest')throw Error('wrongOwner');
+      set(valid(p));
+      save();
+    },
+    identity:()=>owner
+  };
+}
 root.EvoA1Sync={create};
 })(globalThis);
 </script><script>(function(root){'use strict';
@@ -4174,15 +4551,76 @@ function stopRecording(clear=true){clearTimeout(recordTimer);if(recorder?.state=
 async function record(){error='';stopRecording();try{if(!navigator.mediaDevices?.getUserMedia||!root.MediaRecorder)throw Error('unsupportedMic');stream=await navigator.mediaDevices.getUserMedia({audio:true});const types=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus'],mime=types.find(x=>MediaRecorder.isTypeSupported(x));recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);const myStream=stream,myRecorder=recorder,myToken=recordToken,parts=[],owner=sync.identity(),ctx=context(),n=ctx.n,turn=S.entry(get(),n).speaking.turn;recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data);};recorder.onstop=()=>{myStream?.getTracks().forEach(x=>x.stop());if(myToken!==recordToken||myRecorder!==recorder)return;recording=false;if(sync.identity()===owner&&context().n===n&&S.entry(get(),n).speaking.turn===turn){blob=new Blob(parts,{type:myRecorder.mimeType});if(recordUrl)URL.revokeObjectURL(recordUrl);recordUrl=URL.createObjectURL(blob);A.render();}};recorder.start();recording=true;recordTimer=setTimeout(()=>stopRecording(false),60000);A.render();}catch(_){stopRecording();error='micError';A.render();}}
 async function analyse(){if(busy)return;stopRecording(false);const ctx=context(),{n,task}=ctx,p=S.entry(get(),n),kind=(ctx.stage||'').startsWith('dialogue')?'speaking':'writing',turn=p.speaking.turn||0,text=(kind==='writing'?p.writing.text:p.speaking.answers[turn]||'').trim(),ticket=++aiTicket,owner=sync.identity();if(!text){error='emptyAnswer';A.render();return;}busy=true;error='';A.render();try{const feedback=await root.EvoA1AI.review(task,kind,text,A.locale(),turn,p.speaking.answers.slice(0,turn));if(ticket!==aiTicket||owner!==sync.identity())return;set(S.acceptReview(get(),n,kind,text,feedback,turn));save();if(context().n===n)stage(kind==='writing'?'writing-review':'dialogue-review');}catch(e){if(ticket===aiTicket)error=e.message;}finally{if(ticket===aiTicket){busy=false;A.render();}}}
 async function transcribe(){if(busy||!blob)return;busy=true;error='';const owner=sync.identity(),ctx=context(),n=ctx.n,turn=S.entry(get(),n).speaking.turn,ticket=++aiTicket;A.render();try{const text=await root.EvoA1AI.transcribe(blob);if(owner===sync.identity()&&ticket===aiTicket){set(S.edit(get(),n,'speaking',text,turn));save();}}catch(e){if(ticket===aiTicket)error=e.message;}finally{if(ticket===aiTicket){busy=false;A.render();}}}
-const sync=root.EvoA1Sync.create({engine:E,reviewEngine:root.EvoCourseReview,canRefresh:()=>A.currentView()==='map',get:()=>({course:get(),review:A.getReview()}),set:p=>{aiTicket++;busy=false;error='';stopRecording();set(p.course);A.setReview(p.review);A.view('map');},changed:()=>{const info=sync.info();let notice=document.getElementById('skills-sync-notice');if(!notice){notice=document.createElement('div');notice.id='skills-sync-notice';notice.setAttribute('role','status');document.body.appendChild(notice);}notice.hidden=!['syncOffline','syncConflict','saveError'].includes(info.status);notice.textContent=tr(info.status);if(A.currentView()==='map'||!info.ready||!lastSyncReady)A.render(false);lastSyncReady=info.ready;},});
-function mapExtras(){const info=sync.info(),progress=S.courseProgress(get()),box=document.createElement('section');box.className='skill-map-tools';box.innerHTML=`<p><strong>${esc(t('course'))}: ${progress.percent}%</strong> · ${esc(tr('checkpoint'))} ${progress.checks}/6 · ${esc(tr('finalAssessment'))} ${progress.final?'✓':'—'}</p><p role="status">${esc(tr(info.status))}</p>${info.conflict?labelled('useCloud','skill-use-cloud')+labelled('useLocal','skill-use-local'):''}${info.owner!=='guest'&&sync.guestAvailable()?`<p>${esc(tr('guestNotice'))}</p>${labelled('importGuest','skill-import-guest')}`:''}<div>${labelled('grammarReview','skill-practice')} <span>${S.due(get()).length}</span></div>${get().assessment?button(t('resume'),'skill-assessment-resume'):''}<div class="skill-checkpoints">${[5,10,15,20,25,30,'final'].map(id=>{const end=id==='final'?30:id,open=!!get().completed[B.lessons[end-1].id],r=get().checkpoints[id];return `<button data-action="skill-assessment-${r?'result':'start'}" data-id="${id}" ${open?'':'disabled'}>${esc(tr(id==='final'?'finalAssessment':'checkpoint'))} ${id==='final'?'':id} ${r?.passed?'✓':''}</button>`;}).join('')}</div>`;app.querySelector('.map-head').appendChild(box);app.querySelectorAll('.node-card').forEach((card,n)=>{const r=get().completed[B.lessons[n].id];if(!r)return;const badge=document.createElement('p');badge.className='completion-badge';badge.textContent=tr(S.classification(get(),n));card.appendChild(badge);});}
-function render(view){error=error&&root.EvoA1SkillsI18n.ui.en[error]?error:error?'errorAI':'';if(!sync.info().ready){shell(tr('loadingSync'),'', '');return true;}if(view==='skill-practice'){practiceScreen();return true;}if(view.startsWith('skill-result:')){assessmentResult(view.split(':')[1]);return true;}if(view==='skill-assessment'&&get().assessment){assessment();return true;}if(view==='exercise'&&get().active?.phase.startsWith('reading')){reading();return true;}if(view==='exercise'&&get().active?.phase==='speaking'){production();return true;}return false;}
+function renderSyncNotice(){
+ const {status,ready}=sync.info();
+ let notice=document.getElementById('skills-sync-notice');
+ if(!notice){
+  notice=document.createElement('div');
+  notice.id='skills-sync-notice';
+  notice.setAttribute('role','status');
+  document.body.appendChild(notice);
+ }
+ const needsMap=ready&&['syncConflict','syncUpdate'].includes(status);
+ const hidden=needsMap?A.currentView()==='map':!['syncOffline','saveError'].includes(status);
+ const label=tr(status),mapLabel=needsMap?t('map'):'';
+ notice.hidden=hidden;
+ // Keep the same button in the DOM during autosave, so it retains focus.
+ if(notice.dataset.message===label&&notice.dataset.mapLabel===mapLabel)return;
+ notice.dataset.message=label;
+ notice.dataset.mapLabel=mapLabel;
+ notice.textContent=label;
+ if(needsMap){
+  const go=document.createElement('button');
+  go.type='button';
+  go.className='quiet sync-map-link';
+  go.dataset.action='map';
+  go.textContent=mapLabel;
+  notice.appendChild(go);
+ }
+}
+const sync=root.EvoA1Sync.create({
+ engine:E,reviewEngine:root.EvoCourseReview,canRefresh:()=>A.currentView()==='map',
+ get:()=>({course:get(),review:A.getReview()}),
+ set:p=>{aiTicket++;busy=false;error='';stopRecording();set(p.course);A.setReview(p.review);A.view('map');},
+ changed:()=>{
+  const info=sync.info();
+  renderSyncNotice();
+  if(A.currentView()==='map'||!info.ready||!lastSyncReady)A.render(false);
+  lastSyncReady=info.ready;
+ }
+});
+function conflictTools(info){
+ if(!info.conflict)return '';
+ return '<div class="sync-conflict-tools">'+labelled('exportAccount','skill-export-account')
+  +labelled('useCloud','skill-use-cloud')
+  +labelled('useLocal','skill-use-local')+'</div>';
+}
+function mapExtras(){sync.refreshOnMap();const info=sync.info(),progress=S.courseProgress(get()),box=document.createElement('section');box.className='skill-map-tools';box.innerHTML=`<p><strong>${esc(t('course'))}: ${progress.percent}%</strong> · ${esc(tr('checkpoint'))} ${progress.checks}/6 · ${esc(tr('finalAssessment'))} ${progress.final?'✓':'—'}</p><p role="status">${esc(tr(info.status))}</p>${conflictTools(info)}${info.owner!=='guest'&&sync.guestAvailable()?`<p>${esc(tr('guestNotice'))}</p>${labelled('importGuest','skill-import-guest')}`:''}<div>${labelled('grammarReview','skill-practice')} <span>${S.due(get()).length}</span></div>${get().assessment?button(t('resume'),'skill-assessment-resume'):''}<div class="skill-checkpoints">${[5,10,15,20,25,30,'final'].map(id=>{const end=id==='final'?30:id,open=!!get().completed[B.lessons[end-1].id],r=get().checkpoints[id];return `<button data-action="skill-assessment-${r?'result':'start'}" data-id="${id}" ${open?'':'disabled'}>${esc(tr(id==='final'?'finalAssessment':'checkpoint'))} ${id==='final'?'':id} ${r?.passed?'✓':''}</button>`;}).join('')}</div>`;app.querySelector('.map-head').appendChild(box);app.querySelectorAll('.node-card').forEach((card,n)=>{const r=get().completed[B.lessons[n].id];if(!r)return;const badge=document.createElement('p');badge.className='completion-badge';badge.textContent=tr(S.classification(get(),n));card.appendChild(badge);});}
+function render(view){renderSyncNotice();error=error&&root.EvoA1SkillsI18n.ui.en[error]?error:error?'errorAI':'';if(!sync.info().ready){shell(tr('loadingSync'),'', '');return true;}if(view==='skill-practice'){practiceScreen();return true;}if(view.startsWith('skill-result:')){assessmentResult(view.split(':')[1]);return true;}if(view==='skill-assessment'&&get().assessment){assessment();return true;}if(view==='exercise'&&get().active?.phase.startsWith('reading')){reading();return true;}if(view==='exercise'&&get().active?.phase==='speaking'){production();return true;}return false;}
 function currentQuestion(){return get().assessment&&A.currentView()==='skill-assessment'?S.assessment(get().assessment.id)[get().assessment.position]:practice&&A.currentView()==='skill-practice'?practice[0]:get().active?.phase.startsWith('reading')?E.current(get()):null;}
 function getDraft(){return A.currentView()==='exercise'?get().active?.draft:assessmentDraft;}
 function setDraft(value){if(A.currentView()==='exercise'){set(E.draft(get(),value));save();}else{assessmentDraft=value;if(get().assessment&&A.currentView()==='skill-assessment'){get().assessment.draft=value;save();}}}
+function downloadProgress(data,name){
+ if(!data)return;
+ const file=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(file),link=document.createElement('a');
+ link.href=url;
+ link.download=name;
+ link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+document.addEventListener('click',e=>{
+ const control=e.target.closest('[data-action="export-progress"],[data-action="skill-export-account"]');
+ if(!control||control.disabled)return;
+ e.preventDefault();
+ e.stopImmediatePropagation();
+ if(control.dataset.action==='skill-export-account'){
+  downloadProgress(sync.exportAccount(),'evo-a1-account-progress.json');
+ }else downloadProgress(sync.export(),'evo-a1-skills-progress.json');
+},true);
 document.addEventListener('input',e=>{if(e.target.id==='skill-answer'){const ctx=context(),kind=(ctx.stage||'').startsWith('dialogue')?'speaking':'writing',turn=S.entry(get(),ctx.n).speaking.turn||0;set(S.edit(get(),ctx.n,kind,e.target.value,turn));save();const b=app.querySelector('[data-action="skill-analyse"]');if(b)b.disabled=busy||!e.target.value.trim();}if(e.target.id==='skill-short-answer'){setDraft(e.target.value);const q=currentQuestion(),b=app.querySelector('[data-action$="-check"]');if(b)b.disabled=!E.ready(q,e.target.value);}});
 document.addEventListener('change',e=>{if(e.target.hasAttribute('data-skill-match')){const d=[...(getDraft()||[])];d[Number(e.target.dataset.skillMatch)]=e.target.value;setDraft(d);A.render(false);}});
-document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;const action=el.dataset.action;if(action==='map'||action==='view-theory'){stopRecording();error='';return;}if(action==='export-progress'){e.preventDefault();e.stopImmediatePropagation();const data=JSON.stringify(sync.export(),null,2),file=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download='evo-a1-skills-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);return;}if(action==='import-progress'){e.preventDefault();e.stopImmediatePropagation();const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=async()=>{try{const file=input.files?.[0];if(!file||file.size>1500000)throw Error('invalidBackup');let p=JSON.parse(await file.text());if(p.format==='evo-a1-progress')p={courseId:'a1-foundations-v2',course:p.course,review:p.review,owner:'guest'};sync.import(p);}catch(err){error=err.message;alert(tr(error));}};input.click();return;}if(!action.startsWith('skill-'))return;e.preventDefault();e.stopImmediatePropagation();error='';if(action==='skill-use-cloud'||action==='skill-use-local'){sync.resolve(action==='skill-use-local');return;}if(action==='skill-import-guest'){try{sync.importGuest();}catch(err){error=err.message;}A.render();return;}if(action==='skill-reading-start'){set(E.startReading(get()));save();A.render();return;}if(action==='skill-reading-check'){set(E.submit(get()).state);save();A.render();return;}if(action==='skill-reading-next'){set(E.next(get(),E.localDay()).state);save();A.render();return;}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;const action=el.dataset.action;if(action==='map'||action==='view-theory'){stopRecording();error='';return;}if(action==='import-progress'){e.preventDefault();e.stopImmediatePropagation();const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=async()=>{try{const file=input.files?.[0];if(!file||file.size>1500000)throw Error('invalidBackup');let p=JSON.parse(await file.text());if(p.format==='evo-a1-progress')p={courseId:'a1-foundations-v2',course:p.course,review:p.review,owner:'guest'};sync.import(p);}catch(err){error=err.message;alert(tr(error));}};input.click();return;}if(!action.startsWith('skill-'))return;e.preventDefault();e.stopImmediatePropagation();error='';if(action==='skill-use-cloud'||action==='skill-use-local'){sync.resolve(action==='skill-use-local');return;}if(action==='skill-import-guest'){try{sync.importGuest();}catch(err){error=err.message;}A.render();return;}if(action==='skill-reading-start'){set(E.startReading(get()));save();A.render();return;}if(action==='skill-reading-check'){set(E.submit(get()).state);save();A.render();return;}if(action==='skill-reading-next'){set(E.next(get(),E.localDay()).state);save();A.render();return;}
 if(action==='skill-choice'){const q=currentQuestion();setDraft(A.shuffle(q.options,get().assessment?.seed||get().active?.seed||317,q.id)[Number(el.dataset.index)]);A.render(false);return;}if(action==='skill-token'||action==='skill-remove'){const q=currentQuestion();setDraft(action==='skill-token'?E.selectOrderToken(q,getDraft(),Number(el.dataset.index)):E.removeOrderToken(q,getDraft(),Number(el.dataset.index)));A.render(false);return;}
 if(action==='skill-write-open'){stage('writing-edit');return;}if(action==='skill-write-brief'){stage('writing-brief');return;}if(action==='skill-edit'){stage(context().stage.startsWith('writing')?'writing-edit':'dialogue-edit');return;}if(action==='skill-analyse'){analyse();return;}if(action==='skill-record'){record();return;}if(action==='skill-record-stop'){stopRecording(false);return;}if(action==='skill-transcribe'){transcribe();return;}if(action==='skill-turn-back'){stopRecording();S.entry(get(),context().n).speaking.turn--;stage('dialogue-edit');return;}
 if(action==='skill-production-next'){const ctx=context(),s=get(),p=S.entry(s,ctx.n);if(ctx.stage.startsWith('writing')){if(!S.writingOK(s,ctx.n))return;stage('dialogue-edit');}else{const turn=p.speaking.turn||0;if(!S.reviewOK(p.speaking.reviews[turn],p.speaking.answers[turn]))return;stopRecording();if(turn+1<ctx.task.speaking.turns.length){p.speaking.turn=turn+1;stage('dialogue-edit');}else if(ctx.n==='final'){set(S.finishAssessment(s));A.view('skill-result:final');save();A.render();}else{const out=E.finish(s,E.localDay());set(out.state);A.view(out.state.active?'exercise':'result');save();A.render();if(out.event&&out.event!=='incomplete')A.play(out.event);}}return;}
@@ -4292,7 +4730,8 @@ function decorateVocabulary(){const actions=app.querySelector('.vocab-card .flow
 function specificAnswer(q){if(q.modelAnswer)return q.modelAnswer;if(q.type==='match')return q.pairs.map(p=>p.join(' → ')).join('; ');if(q.type==='fields')return q.fields.map(f=>f.label+': '+f.answers[0]).join('; ');if(q.type==='order')return q.answer;const answer=(q.answers||[q.answer])[0];if(q.prompt.includes('___')){let sentence=q.prompt.slice(q.prompt.lastIndexOf(':')+1).trim();return sentence.replace('___',answer).replace(/\s*\(or write the full sentence\)\.?/i,'');}return answer;}
 function decorateFeedback(q){const box=app.querySelector('.feedback');if(!box)return;const answer=specificAnswer(q),snippet=EvoCourseListeningEvidence?.[q.id];box.querySelectorAll('.model,.answer-detail').forEach(node=>node.remove());const detail=document.createElement('div');detail.className='answer-detail';detail.innerHTML=`<span>${esc(cr('correctAnswer'))}</span><strong lang="en" dir="ltr" data-english>${esc(answer||'')}</strong>${snippet?`<blockquote lang="en" dir="ltr" data-english>🎧 ${esc(snippet)}</blockquote>`:''}`;box.appendChild(detail);}
 function completedCount(){return Object.values(state.completed).filter(r=>r.skillsVersion===1&&!r.needsReview&&!r.unresolved).length;}
-function map(){const done=completedCount(),total=B.lessons.length,next=Math.max(0,B.lessons.findIndex(l=>!state.completed[l.id]||!state.completed[l.id].skillsVersion||state.completed[l.id].needsReview));app.innerHTML=`<div class="dashboard"><section><div class="map-head"><span class="pill">A1 · 01</span><h1>${esc(t('module'))}</h1><p>${esc(t('course'))} · ${done}/${total}</p><div class="stats"><div class="stat"><strong>${state.xp} XP</strong>Evo-English</div><div class="stat"><strong>🔥 ${E.streak(state)}</strong>${esc(t('series'))}</div><div class="stat"><strong>${done}/${total}</strong>${esc(t('module'))}</div></div>${btn(state.active?'resume':done===total?'retry':'continue',state.active?'resume':'intro','primary',`data-lesson="${done===total?0:next}"`)}<div class="progress-tools">${btn('exportProgress','export-progress','quiet')}${btn('importProgress','import-progress','quiet')}</div></div><div class="journey">${B.lessons.map((l,i)=>{const record=state.completed[l.id],finished=record&&record.skillsVersion===1&&!record.needsReview&&!record.unresolved,open=E.unlocked(state,i),active=state.active?.lesson===i;return `<article class="node ${finished?'done':open?'current':''}"><div class="orb" aria-hidden="true">${finished?'✓':i+1}</div><div class="node-card"><h2>${esc(t(l.title))}</h2><p>${esc(t(l.goal))}</p>${btn(active?'resume':finished?'retry':'begin',active?'resume':'intro',open&&!finished?'primary':'',`data-lesson="${i}" ${!open||(state.active&&!active)?'disabled':''}`)}${record?.needsReview?`<p class="notice compact-notice">${esc(t('unresolved'))}: ${record.unresolved}. ${esc(t('legacyProgress'))}</p>`:''}${finished?`<p class="completion-badge">✓ ${esc(t('lessonDone'))}</p>`:''}${open?btn('theory','view-theory','quiet',`data-lesson="${i}"`):''}${finished?`<p class="small">${esc(t('independent'))}: ${record.firstCorrect}/${record.total||8}${record.unresolved?' · '+esc(t('unresolved'))+': '+record.unresolved:''}</p>`:''}</div></article>`;}).join('')}</div></section><aside><section class="aside-card"><div class="goal-icon" aria-hidden="true">✦</div><h2>${esc(t('goal'))}</h2><div class="welcome-illustration" dir="ltr"><div class="avatar">A</div><div class="bubble" lang="en">Hi!</div><div class="avatar warm">D</div></div><p class="muted">${esc(t('keepGoing'))}</p></section><section class="aside-card"><span class="pill">A1 → C1</span><div class="levels" dir="ltr">${['A1','A2','B1','B2','C1'].map(l=>`<span class="${l==='A1'?'active':''}">${l}</span>`).join('')}</div><p class="small">${esc(t('pilot'))}</p></section></aside></div>`;}
+function nextUnfinishedLesson(){return B.lessons.findIndex(l=>!state.completed[l.id]||!state.completed[l.id].skillsVersion||state.completed[l.id].needsReview);}
+function map(){const done=completedCount(),total=B.lessons.length,next=Math.max(0,nextUnfinishedLesson());app.innerHTML=`<div class="dashboard"><section><div class="map-head"><span class="pill">A1 · 01</span><h1>${esc(t('module'))}</h1><p>${esc(t('course'))} · ${done}/${total}</p><div class="stats"><div class="stat"><strong>${state.xp} XP</strong>Evo-English</div><div class="stat"><strong>🔥 ${E.streak(state)}</strong>${esc(t('series'))}</div><div class="stat"><strong>${done}/${total}</strong>${esc(t('module'))}</div></div>${btn(state.active?'resume':done===total?'retry':'continue',state.active?'resume':'intro','primary',`data-lesson="${done===total?0:next}"`)}<div class="progress-tools">${btn('exportProgress','export-progress','quiet')}${btn('importProgress','import-progress','quiet')}</div></div><div class="journey">${B.lessons.map((l,i)=>{const record=state.completed[l.id],finished=record&&record.skillsVersion===1&&!record.needsReview&&!record.unresolved,open=E.unlocked(state,i),active=state.active?.lesson===i;return `<article class="node ${finished?'done':open?'current':''}"><div class="orb" aria-hidden="true">${finished?'✓':i+1}</div><div class="node-card"><h2>${esc(t(l.title))}</h2><p>${esc(t(l.goal))}</p>${btn(active?'resume':finished?'retry':'begin',active?'resume':'intro',open&&!finished?'primary':'',`data-lesson="${i}" ${!open||(state.active&&!active)?'disabled':''}`)}${record?.needsReview?`<p class="notice compact-notice">${esc(t('unresolved'))}: ${record.unresolved}. ${esc(t('legacyProgress'))}</p>`:''}${finished?`<p class="completion-badge">✓ ${esc(t('lessonDone'))}</p>`:''}${open?btn('theory','view-theory','quiet',`data-lesson="${i}"`):''}${finished?`<p class="small">${esc(t('independent'))}: ${record.firstCorrect}/${record.total||8}${record.unresolved?' · '+esc(t('unresolved'))+': '+record.unresolved:''}</p>`:''}</div></article>`;}).join('')}</div></section><aside><section class="aside-card"><div class="goal-icon" aria-hidden="true">✦</div><h2>${esc(t('goal'))}</h2><div class="welcome-illustration" dir="ltr"><div class="avatar">A</div><div class="bubble" lang="en">Hi!</div><div class="avatar warm">D</div></div><p class="muted">${esc(t('keepGoing'))}</p></section><section class="aside-card"><span class="pill">A1 → C1</span><div class="levels" dir="ltr">${['A1','A2','B1','B2','C1'].map(l=>`<span class="${l==='A1'?'active':''}">${l}</span>`).join('')}</div><p class="small">${esc(t('pilot'))}</p></section></aside></div>`;}
 function model(q){if(q.type==='writing')return en(q.modelAnswer,'div','model');if(q.type==='input'&&q.modelAnswer)return en(q.modelAnswer,'div','model');if(q.type==='fields')return q.fields.map(f=>en(f.label+': '+f.answers[0],'div','model')).join('');if(q.type==='match')return q.pairs.map(p=>en(p.join(' → '),'div','model')).join('');return en((q.answers||[q.answer])[0],'div','model');}
 function intro(){const l=B.lessons[introLesson],paged=true,ruleKeys=paged?[l.rules[introRule]]:l.rules,examples=[l.theoryExamples?.[introRule]||l.examples[Math.min(introRule,l.examples.length-1)]];app.innerHTML=`<div class="lesson-flow"><div class="flow-top"><button class="quiet" data-action="map">← ${esc(t('map'))}</button><span class="pill">${esc(u('stageGrammar'))}</span><span class="small">${paged?`${introRule+1} / ${l.rules.length}`:"1 / 6"}</span></div><section class="lesson-card flow-card"><span class="pill">A1 · ${introLesson+1}/${B.lessons.length}</span><h1>${esc(t(l.title))}</h1><p class="muted">${esc(t(l.goal))}</p><h2>${esc(t('theory'))}</h2><div class="intro-examples">${examples.map(x=>en(x,'div')).join('')}</div><ul class="rule-list">${ruleKeys.map(k=>`<li>${explain(k)}</li>`).join('')}</ul><div class="flow-actions">${paged&&introRule>0?btn('back','theory-back','quiet'):btn(theoryReturn==='exercise'?'resume':'map',theoryReturn==='exercise'?'resume':'map','quiet')}${paged&&introRule<l.rules.length-1?btn('continue','theory-next','primary'):state.active?btn('resume','resume','primary'):btn('begin','start','primary',`data-lesson="${introLesson}"`)}</div></section></div>`;}
 function listeningScreen(){const l=B.lessons[state.active.lesson],transcript=(l.transcript||[]).map((line,i)=>`<li><span class="transcript-num">${i+1}</span><span lang="en" dir="ltr" data-english>${esc(line)}</span></li>`).join('');app.innerHTML=`<div class="lesson-flow"><div class="flow-top"><button class="quiet" data-action="map">← ${esc(t('map'))}</button><span class="pill">${esc(u('stageListening'))}</span></div><section class="lesson-card flow-card listen-card"><span class="pill">🎧 ${esc(u('stageListening'))}</span><h1 lang="en" dir="ltr" data-english>${esc(l.audioTitle||'Listening')}</h1><p class="muted">${esc(u('listenHint'))}</p><audio class="lesson-audio" controls preload="metadata" src="${esc(l.audio)}"></audio><details class="transcript-details"><summary>${esc(u('transcriptLabel'))}</summary><ol class="transcript">${transcript}</ol></details><div class="flow-actions">${btn('continueCourse','start-listening','primary')}</div></section></div>`;}
@@ -4331,7 +4770,7 @@ function exercise(){const a=state.active,q=E.current(state),l=B.lessons[a.lesson
  if(q.type==='match')body=`<p class="small">${esc(t('match'))}</p>${q.pairs.map((p,i)=>`<div class="match-row" dir="ltr"><label for="match-${i}" lang="en" data-english>${esc(p[0])}</label><select id="match-${i}" data-match="${i}" lang="en" dir="ltr" data-english ${locked?'disabled':''}><option value=""></option>${[...q.pairs].reverse().map(pair=>`<option ${a.draft?.[i]===pair[1]?'selected':''}>${esc(pair[1])}</option>`).join('')}</select></div>`).join('')}`;
  if(locked){const submitted=q.type==='order'?E.orderIndexes(q,a.draft||[]).map(index=>q.tokens[index]).join(' '):String(a.draft||'');body=a.feedback==='wrong'?`<p class="submitted-answer">${esc(t('yourAnswer'))}: <span lang="en" dir="ltr" data-english>${esc(submitted)}</span></p>`:'';}
  app.innerHTML=`<div class="lesson-flow"><div class="flow-top">${btn('map','map','quiet')}<span class="pill">${esc(label)}${review?' · '+esc(t('review')):''}</span><div class="progress" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${a.position}"><i style="width:${100*a.position/total}%"></i></div><span class="small">${number}/${total}</span></div><section class="lesson-card flow-card question-card${locked?' answer-reviewed':''}"><h1 lang="en" dir="ltr" data-english>${esc(q.prompt)}</h1>${listening?`<audio class="question-audio" controls preload="metadata" src="${esc(l.audio)}" aria-label="${esc(u('replayAudio'))}"></audio>`:''}${!locked&&q.role?en(q.role,'div','role'):''}${locked?'':body}${hintOpen?`<div class="hint">${explain(q.rule)}</div>`:''}${locked?`<section class="feedback ${a.feedback}" role="status"><h2>${a.feedback==='correct'?'✓':'↻'} ${esc(t(a.feedback))}</h2>${listening?'':`<p>${explain(feedbackRule)}</p>`}${body}${a.feedback==='wrong'?model(q):''}</section><div class="flow-actions">${btn('theory','view-theory','quiet',`data-lesson="${a.lesson}"`)}${btn('continue','next','primary')}</div>`:`<div class="flow-actions"><div class="question-help">${btn('help','hint','quiet')}${btn('theory','view-theory','quiet',`data-lesson="${a.lesson}"`)}</div>${btn('check','check','primary',E.ready(q,a.draft)?'':'disabled')}</div>`}</section></div>`;}
-function result(){const r=state.lastResult;if(!r){view='map';map();return;}const done=completedCount()===B.lessons.length;app.innerHTML=`<section class="result"><div class="trophy" aria-hidden="true">${done?'✦':'✓'}</div><span class="pill">A1 · ${esc(t('module'))}</span><h1>${esc(t(done&&S.courseProgress(state).finished?'moduleDone':'lessonDone'))}</h1><p class="muted">${esc(t(B.lessons[r.lesson].goal))}</p><p class="completion-badge">✓ ${r.mastered||r.total}/${r.total} ${esc(t('correct'))}</p><div class="result-stats"><div class="result-stat"><strong>+${r.xp} XP</strong>${esc(t('lessonDone'))}</div><div class="result-stat"><strong>${r.firstCorrect}/${r.total}</strong>${esc(t('independent'))}</div><div class="result-stat"><strong>${r.reviewed}</strong>${esc(t('reviewed'))}</div></div>${r.unresolved?`<p class="notice">${esc(t('unresolved'))}: ${r.unresolved}</p>`:''}<div class="actions">${!done?btn('nextLesson','intro','primary',`data-lesson="${Math.min(r.lesson+1,B.lessons.length-1)}"`):btn('map','map')}${btn('retry','intro','',`data-lesson="${r.lesson}"`)}${!done?btn('map','map','quiet'):''}</div><p class="small" style="margin-top:25px">${esc(t('pilot'))}</p></section>`;}
+function result(){const r=state.lastResult;if(!r){view='map';map();return;}const next=nextUnfinishedLesson(),done=next<0;app.innerHTML=`<section class="result"><div class="trophy" aria-hidden="true">${done?'✦':'✓'}</div><span class="pill">A1 · ${esc(t('module'))}</span><h1>${esc(t(done&&S.courseProgress(state).finished?'moduleDone':'lessonDone'))}</h1><p class="muted">${esc(t(B.lessons[r.lesson].goal))}</p><p class="completion-badge">✓ ${r.mastered||r.total}/${r.total} ${esc(t('correct'))}</p><div class="result-stats"><div class="result-stat"><strong>+${r.xp} XP</strong>${esc(t('lessonDone'))}</div><div class="result-stat"><strong>${r.firstCorrect}/${r.total}</strong>${esc(t('independent'))}</div><div class="result-stat"><strong>${r.reviewed}</strong>${esc(t('reviewed'))}</div></div>${r.unresolved?`<p class="notice">${esc(t('unresolved'))}: ${r.unresolved}</p>`:''}<div class="actions">${!done?btn('nextLesson','intro','primary',`data-lesson="${next}"`):btn('map','map')}${btn('retry','intro','',`data-lesson="${r.lesson}"`)}${!done?btn('map','map','quiet'):''}</div><p class="small" style="margin-top:25px">${esc(t('pilot'))}</p></section>`;}
 function render(focus=true){settings();if(skillsUI?.render(view)){storageNotice();return;}const learning=view==='intro'||view==='cards'||(view!=='map'&&!!state.active);document.body.classList.toggle('is-learning',learning);if(view==='map'){map();decorateMap();skillsUI?.decorateMap();}else if(view==='cards')cardScreen();else if(view==='intro')intro();else if(view==='result')result();else if(state.active){const phase=state.active.phase;if(phase==='listening-intro')listeningScreen();else if(phase==='vocabulary'){vocabularyScreen();decorateVocabulary();}else if(phase==='speaking-practice')speechScreen();else if(phase==='speaking')speakingScreen();else{exercise();if(state.active.feedback)decorateFeedback(E.current(state));}}else{view='map';map();decorateMap();}storageNotice();if(focus){const h=app.querySelector('h1');if(h){h.tabIndex=-1;h.focus({preventScroll:true});}window.scrollTo({top:0,behavior:'instant'});}}
 function updateDraft(value){state=E.draft(state,value);persist();const button=app.querySelector('[data-action=check]');if(button)button.disabled=!E.ready(E.current(state),state.active.draft);}
 app.addEventListener('input',event=>{const el=event.target;if(el.id==='card-input'){cardInput=el.value;const button=app.querySelector('[data-action=card-check]');if(button)button.disabled=!cardInput.trim();return;}if(!state.active)return;if(el.id==='answer')updateDraft(el.value);if(el.hasAttribute('data-field')){const d=[...(state.active.draft||[])];d[Number(el.dataset.field)]=el.value;updateDraft(d);}});
